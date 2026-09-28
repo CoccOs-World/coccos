@@ -15,6 +15,19 @@
         android:glEsVersion="0x00030000"
         android:required="true" />
 
+    <!-- Visibilité des paquets (remplace QUERY_ALL_PACKAGES, interdit par la
+         politique Play) : l'intent MAIN+LAUNCHER couvre la logithèque phase B
+         (les applications lançables du téléphone) ET getLaunchIntentForPackage ;
+         TuxPaint/GCompris nommés en ceinture-bretelles (détection du catalogue). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <package android:name="org.tuxpaint.android" />
+        <package android:name="net.gcompris.full" />
+    </queries>
+
     <application
         android:label="@string/godot_project_name_string"
         android:allowBackup="false"
