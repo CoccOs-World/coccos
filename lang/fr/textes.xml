@@ -7,7 +7,7 @@
 
 	<!-- ═══ Bureau de l'enfant ═══ -->
 	<texte cle="bureau_menu">Menu</texte>
-	<texte cle="bureau_menu_titre">Les jeux</texte>
+	<texte cle="bureau_menu_titre">Toutes les applications</texte>
 	<texte cle="bureau_categorie_souris">La souris</texte>
 	<texte cle="bureau_categorie_clavier">Le clavier</texte>
 	<texte cle="bureau_jeu_decouverte">Découverte</texte>
@@ -94,6 +94,19 @@
 	<texte cle="logitheque_raccourci_android">✔ Confirmer l'ajout sur l'écran du téléphone</texte>
 	<texte cle="logitheque_titre_telephone">Les applications du téléphone (cochée = sur le bureau)</texte>
 	<texte cle="logitheque_tel_info">Toute application du téléphone peut rejoindre le bureau de l'enfant, avec sa vraie icône — à choisir avec soin : le bureau reste son espace protégé.</texte>
+	<texte cle="logitheque_recherche">Rechercher une application…</texte>
+	<texte cle="logitheque_etiquettes">Étiquettes</texte>
+	<texte cle="logitheque_toutes">Toutes</texte>
+	<texte cle="logitheque_sur_bureau">Sur le bureau</texte>
+	<texte cle="logitheque_masquee">Masquée</texte>
+	<texte cle="logitheque_retour_liste">Retour à la logithèque</texte>
+	<texte cle="logitheque_ajouter_etiquette">+ étiquette…</texte>
+	<texte cle="logitheque_etiquette_placeholder">nouvelle étiquette…</texte>
+	<texte cle="logitheque_type_jeu">Jeu CoccOs</texte>
+	<texte cle="logitheque_type_externe">Application externe</texte>
+	<texte cle="logitheque_type_telephone">Application du téléphone</texte>
+	<texte cle="logitheque_galerie">Galerie — les captures arriveront ici</texte>
+	<texte cle="logitheque_aucun_resultat">Aucune application ne correspond.</texte>
 
 	<!-- ═══ Réglages — Langue (sélecteur + éditeur de traduction) ═══ -->
 	<texte cle="reglages_langue">Langue de CoccOs</texte>

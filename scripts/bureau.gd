@@ -2,7 +2,8 @@
 ## Un vrai bureau d'ordinateur en miniature :
 ## - icônes d'applications sur le fond prairie (colonnes depuis le haut-gauche)
 ## - barre des tâches en bas : bouton Menu (étoile), horloge, roue crantée (adulte)
-## - menu déroulant listant les mêmes applications
+## - menu « boîte à icônes » : TOUTES les applications en grille alphabétique
+##   (fenêtre CoccOs au-dessus de la barre — l'icône est le geste de notre époque)
 ## - fenêtres façon OS : une icône-catégorie (ex. « La souris ») ouvre une
 ##   fenêtre déplaçable, fermable par sa croix, contenant les icônes des jeux
 ## Les applications non développées ouvrent l'écran « Bientôt disponible ».
@@ -55,7 +56,7 @@ const COULEURS_FLEURS: Array[Color] = [
 	Color(1.0, 0.45, 0.7), Color(0.8, 0.5, 0.95), Color(0.5, 0.6, 1.0), Color(1.0, 0.6, 0.85),
 ]
 
-var _menu: PanelContainer
+var _menu: Control = null  # voile plein écran portant la boîte à icônes (null = fermé)
 var _horloge: Label
 var _panneau_volume: PanelContainer = null
 var _fenetres_ouvertes := {}  # id catégorie → instance de Fenetre
@@ -92,7 +93,6 @@ func _ready() -> void:
 	_appliquer_fond_bureau()
 	_creer_icones()
 	_creer_barre_taches()
-	_creer_menu()
 	_mettre_a_jour_horloge()
 	_creer_curseur_et_effets()
 
@@ -186,6 +186,11 @@ func _creer_curseur_et_effets() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	# Échap ferme la boîte à icônes si elle est ouverte (avant tout le reste)
+	if _menu != null and event.is_action_pressed("ui_cancel"):
+		_fermer_menu()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion:
 		_curseur.position = event.position
 		if _trainee_active:
@@ -299,8 +304,7 @@ func _creer_icones() -> void:
 
 
 func _lancer_appli(id: String) -> void:
-	if _menu != null:
-		_menu.visible = false
+	_fermer_menu()
 	for appli in _applis_bureau():
 		if appli["id"] == id:
 			if appli.has("telephone"):
@@ -584,59 +588,118 @@ func _eteindre() -> void:
 		get_tree().quit()
 
 
-# --- Menu des applications --------------------------------------------------
+# --- Menu des applications (boîte à icônes) ----------------------------------
 
-func _creer_menu() -> void:
-	_menu = PanelContainer.new()
-	_menu.visible = false
-	_menu.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_menu.offset_left = 12
-	_menu.offset_bottom = -(HAUTEUR_BARRE + 10)
-	var style := StyleBoxFlat.new()
-	style.bg_color = COULEUR_BARRE
-	style.set_corner_radius_all(18)
-	_menu.add_theme_stylebox_override("panel", style)
-	add_child(_menu)
+const COULEUR_TITRE_MENU := Color(0.90, 0.33, 0.24)  # barre de titre de la boîte
+const COLONNES_MENU := 5
 
-	var marge := MarginContainer.new()
-	for cote in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		marge.add_theme_constant_override(cote, 14)
-	_menu.add_child(marge)
-
-	var colonne := VBoxContainer.new()
-	colonne.add_theme_constant_override("separation", 10)
-	marge.add_child(colonne)
-
-	var titre := Label.new()
-	titre.text = Lang.t("bureau_menu_titre")
-	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	titre.add_theme_font_size_override("font_size", 26)
-	titre.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-	colonne.add_child(titre)
-
-	for appli in _applis_bureau():
-		var btn := Button.new()
-		btn.text = Lang.t(appli["nom_cle"])
-		btn.custom_minimum_size = Vector2(280, 62)
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.add_theme_font_size_override("font_size", 28)
-		UIStyle.styliser(btn, appli["couleur"], 14)
-		for etat in ["normal", "hover", "focus", "pressed"]:
-			var s: StyleBoxFlat = btn.get_theme_stylebox(etat)
-			s.content_margin_left = 66.0
-		var picto: Control = Pictogramme.new()
-		picto.id = appli.get("picto", appli["id"])
-		picto.couleur_creux = (appli["couleur"] as Color).darkened(0.25)
-		picto.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-		picto.offset_left = 12
-		picto.offset_right = 56
-		picto.offset_top = 9
-		picto.offset_bottom = -9
-		btn.add_child(picto)
-		btn.pressed.connect(_lancer_appli.bind(appli["id"]))
-		colonne.add_child(btn)
+## TOUTES les applications lançables, à plat : les jeux des catégories, les
+## applis directes, les externes cochées et les applis du téléphone — triées
+## par ordre alphabétique, articles ignorés (« Les mots » se range à M).
+func _toutes_les_applis() -> Array:
+	var liste := []
+	for appli in Registre.APPLIS:
+		if Registre.existe_ici(appli) and Registre.est_active(appli["id"]):
+			liste.append(appli)
+	liste.append_array(AppliExternes.applis_actives())
+	var telephone: Dictionary = Android.choisies()
+	for paquet in telephone:
+		liste.append({"id": "tel:" + paquet, "nom_cle": telephone[paquet],
+			"couleur": Color(0.35, 0.45, 0.60), "telephone": paquet,
+			"image": Android.chemin_icone(paquet)})
+	liste.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _cle_tri(Lang.t(a["nom_cle"])) < _cle_tri(Lang.t(b["nom_cle"])))
+	return liste
 
 
+## Clé de tri alphabétique d'un nom affiché : minuscules, accents aplanis
+## (sinon « é » se range après « z ») et article initial ignoré
+## (sinon La/Le/Les/Ma/Mon regrouperaient tout n'importe comment).
+static func _cle_tri(nom: String) -> String:
+	var bas := nom.to_lower().strip_edges()
+	const ACCENTS := {"é": "e", "è": "e", "ê": "e", "ë": "e", "à": "a", "â": "a",
+		"ä": "a", "î": "i", "ï": "i", "ô": "o", "ö": "o", "ù": "u", "û": "u",
+		"ü": "u", "ç": "c", "œ": "oe"}
+	for accent in ACCENTS:
+		bas = bas.replace(accent, ACCENTS[accent])
+	if bas.begins_with("l'") or bas.begins_with("l’"):
+		return bas.substr(2)
+	var premier := bas.get_slice(" ", 0)
+	if bas.contains(" ") and premier in ["le", "la", "les", "un", "une", "des", "mon", "ma", "mes"]:
+		return bas.substr(premier.length() + 1)
+	return bas
+
+
+## Ouvre/ferme la boîte à icônes : une fenêtre CoccOs (barre de titre + croix)
+## posée sur un voile transparent — croix, Échap, bouton Menu ou tap à côté
+## la referment. La grille réutilise IconeBureau : mêmes icônes que le bureau
+## (livrée coccinelle, icônes système du téléphone…).
 func _basculer_menu() -> void:
-	_menu.visible = not _menu.visible
+	if _menu != null:
+		_fermer_menu()
+		return
+	# Voile plein écran : un tap à côté de la boîte la ferme
+	var voile := Control.new()
+	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
+	voile.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_fermer_menu())
+	add_child(voile)
+	_menu = voile
+
+	var fenetre: PanelContainer = Fenetre.new()
+	fenetre.titre = Lang.t("bureau_menu_titre")
+	fenetre.couleur = COULEUR_TITRE_MENU
+	fenetre.limite_basse = HAUTEUR_BARRE
+	voile.add_child(fenetre)
+	# La croix de la fenêtre la libère elle-même (comportement Fenetre) : le
+	# voile doit suivre — sans double libération quand c'est nous qui fermons
+	fenetre.tree_exiting.connect(func() -> void:
+		if _menu == voile:
+			_menu = null
+			voile.queue_free())
+
+	var grille := GridContainer.new()
+	grille.columns = COLONNES_MENU
+	grille.add_theme_constant_override("h_separation", 10)
+	grille.add_theme_constant_override("v_separation", 18)
+	var premiere: Control = null
+	for appli in _toutes_les_applis():
+		var icone: Control = IconeBureau.new()
+		icone.id = appli["id"]
+		icone.nom = Lang.t(appli["nom_cle"])
+		icone.couleur = appli["couleur"]
+		icone.picto = appli.get("picto", "")
+		icone.chemin_image = appli.get("image", "")
+		icone.lancee.connect(_lancer_depuis_menu)
+		grille.add_child(icone)
+		if premiere == null:
+			premiere = icone
+	fenetre.contenu.add_child(grille)
+
+	# Centrage différé (taille connue après layout) + focus clavier initial
+	fenetre.position = Vector2.ZERO
+	_centrer_fenetre.call_deferred(fenetre)
+	if premiere != null:
+		premiere.ready.connect(premiere.focus, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+
+func _fermer_menu() -> void:
+	if _menu == null:
+		return
+	var voile := _menu
+	_menu = null
+	voile.queue_free()
+
+
+## Lancement depuis la boîte à icônes : les jeux des catégories n'existent pas
+## dans _applis_bureau() (ils vivent dans leurs fenêtres) — on passe donc par
+## le registre d'abord, puis par le chemin standard (externes, téléphone).
+func _lancer_depuis_menu(id: String) -> void:
+	_fermer_menu()
+	var jeu: Dictionary = Registre.appli(id)
+	if not jeu.is_empty() and jeu.has("scene"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		get_tree().change_scene_to_file(jeu["scene"])
+		return
+	_lancer_appli(id)
