@@ -42,7 +42,7 @@ FORCE = os.environ.get("VOIX_FORCE") == "1"
 
 # Le compteur du jeu des ballons n'a PAS de plafond dans le code : on couvre la
 # plage réellement atteignable dans une partie d'enfant, au-delà = synthèse.
-CHIFFRE_MAX = 100
+CHIFFRE_MAX = 200
 
 _re_db = re.compile(r"max_volume:\s*(-?[0-9.]+)\s*dB")
 _RE_CAPS = re.compile(r"[A-ZÀ-ÖØ-ÞŒŸ]{2,}")
