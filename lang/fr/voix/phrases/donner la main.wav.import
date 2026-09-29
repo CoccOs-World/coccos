@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://drtopu08pard4"
+path="res://.godot/imported/donner la main.wav-a9e9de0f73763fa5442d0185daa7fa58.sample"
+
+[deps]
+
+source_file="res://lang/fr/voix/phrases/donner la main.wav"
+dest_files=["res://.godot/imported/donner la main.wav-a9e9de0f73763fa5442d0185daa7fa58.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

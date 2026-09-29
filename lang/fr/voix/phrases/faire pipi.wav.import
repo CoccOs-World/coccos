@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://c4l81mi1bimv2"
+path="res://.godot/imported/faire pipi.wav-2f680e8d31403be59fe9e4ea706d7acf.sample"
+
+[deps]
+
+source_file="res://lang/fr/voix/phrases/faire pipi.wav"
+dest_files=["res://.godot/imported/faire pipi.wav-2f680e8d31403be59fe9e4ea706d7acf.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
