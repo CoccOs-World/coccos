@@ -6,6 +6,8 @@
 ## Espace et ponctuation s'affichent aussi et sont prononcés par leur nom
 ## (« espace », « point », « virgule »… — ce que GCompris ne fait pas).
 ## Retour arrière = efface le dernier caractère · bouton croix = efface tout.
+## À gauche du tableau, le bouton au visage jaune qui parle : il prononce le
+## mot écrit (rien si le tableau est vide).
 ## Majuscules partout, lettres accentuées et chiffres acceptés.
 ## Aucun échec possible, aucun chrono, aucun texte d'instruction.
 ##
@@ -41,6 +43,8 @@ const CLES_SPECIAUX := {
 const AFFICHAGES_SPECIAUX := {" ": "_"}
 const LONGUEUR_MAX_MOT := 14  # au-delà, la ligne « glisse » (les plus anciennes sortent)
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
+const COULEUR_BOUTON_DIRE := Color(0.30, 0.62, 0.45)   # vert doux : le bouton « dire le mot »
+const COULEUR_PACMAN := Color(1.0, 0.85, 0.25)          # jaune : le visage qui parle
 const COULEURS_LETTRES: Array[Color] = [
 	Color(0.90, 0.30, 0.40), Color(0.95, 0.55, 0.15), Color(0.80, 0.65, 0.10),
 	Color(0.25, 0.65, 0.35), Color(0.20, 0.60, 0.90), Color(0.45, 0.40, 0.85),
@@ -187,6 +191,17 @@ func _creer_bulle_et_mot() -> void:
 	ligne_tableau.alignment = BoxContainer.ALIGNMENT_CENTER
 	ligne_tableau.add_theme_constant_override("separation", 18)
 	colonne.add_child(ligne_tableau)
+
+	# Bouton « dire le mot » : en première position, à gauche du tableau.
+	# Icône seule (l'enfant ne lit pas encore) : un visage jaune bouche ouverte
+	# d'où sortent de petits traits — le signe qu'il parle.
+	var btn_dire := _creer_bouton_rond(COULEUR_BOUTON_DIRE)
+	var bouche := _IconeDireMot.new()
+	bouche.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bouche.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn_dire.add_child(bouche)
+	btn_dire.pressed.connect(_dire_mot)
+	ligne_tableau.add_child(btn_dire)
 
 	var tableau := PanelContainer.new()
 	tableau.custom_minimum_size = Vector2(720, 104)
@@ -398,6 +413,16 @@ func _effacer_tout() -> void:
 	_label_lettre.text = ""
 
 
+## Prononce le mot entier du tableau blanc (bouton visage jaune, à gauche).
+## Tableau vide = rien à dire : aucun son, le bouton reste sans effet.
+## Catégorie « mots » : enregistrement lang/<code>/voix/mots/ s'il existe,
+## synthèse vocale du système sinon (même repli que les lettres).
+func _dire_mot() -> void:
+	if _mot.is_empty():
+		return
+	Voix.dire(self, _mot, "mots")
+
+
 ## Prononce le caractère avec la voix française du système (si disponible).
 ## Les caractères spéciaux sont prononcés par leur nom (« espace », « point »…).
 ## Le précédent est interrompu : en tapant vite, on entend le dernier.
@@ -481,6 +506,32 @@ class _IconeRetourArriere extends Control:
 			centre + Vector2(-u * 0.15, -u * 0.38),
 			centre + Vector2(-u * 0.15, u * 0.38),
 		]), Color.WHITE)
+
+
+## Visage jaune qui ouvre la bouche, avec de petits traits qui en sortent :
+## le bouton « dire le mot ». Dessiné en code, sans texte — l'enfant ne lit pas.
+class _IconeDireMot extends Control:
+	func _draw() -> void:
+		var centre := size / 2.0
+		var u := minf(size.x, size.y) / 2.0
+		var rayon := u * 0.56
+		var pivot := centre - Vector2(u * 0.16, 0.0)  # décalé à gauche : place aux traits
+		var demi_bouche := deg_to_rad(30.0)
+		# Disque privé du secteur de la bouche (ouverte vers la droite)
+		var contour := PackedVector2Array([pivot])
+		var pas := 48
+		for i in range(pas + 1):
+			var angle := demi_bouche + (TAU - 2.0 * demi_bouche) * float(i) / float(pas)
+			contour.append(pivot + Vector2(cos(angle), sin(angle)) * rayon)
+		draw_colored_polygon(contour, COULEUR_PACMAN)
+		# L'œil : ce qui en fait un visage et non une pastille
+		draw_circle(pivot + Vector2(-rayon * 0.10, -rayon * 0.46), maxf(u * 0.08, 1.5), Color(0.22, 0.18, 0.08))
+		# Les petits traits devant la bouche : il parle
+		for i in range(3):
+			var direction := Vector2.RIGHT.rotated(deg_to_rad(-21.0 + 21.0 * float(i)))
+			var depart := pivot + direction * (rayon * 1.24)
+			var longueur := u * (0.28 if i == 1 else 0.21)
+			draw_line(depart, depart + direction * longueur, Color.WHITE, maxf(u * 0.09, 2.0))
 
 
 ## Bouton Retour d'Android (mode bureau/launcher) : même geste que la croix.

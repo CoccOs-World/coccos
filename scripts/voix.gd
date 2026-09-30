@@ -3,7 +3,9 @@
 ##   1) user://lang/<code>/voix/<categorie>/   (déposé par l'adulte, sans rebuild —
 ##      la voix de papa/maman peut remplacer la synthèse)
 ##   2) res://lang/<code>/voix/<categorie>/    (embarqué dans l'application)
-##   3) à défaut : synthèse vocale du système/navigateur.
+##   3) synthèse Piper à la volée (voix siwis femme, scripts/voix_piper.gd) —
+##      même timbre et même recette que les clips embarqués ;
+##   4) à défaut seulement : synthèse vocale du système/navigateur.
 ## Catégories : chiffres, lettres, mots, phrases (spec-lang.md).
 ## Le lecteur audio est créé à la volée (enfant "_VoixLecteur" de la scène appelante).
 ## La voix de synthèse est résolue paresseusement : sur le web les voix du
@@ -21,6 +23,7 @@ extends Object
 
 const Lang = preload("res://scripts/lang.gd")
 const PinConfig = preload("res://scripts/pin_config.gd")
+const VoixPiper = preload("res://scripts/voix_piper.gd")
 const NOM_LECTEUR := "_VoixLecteur"
 const EXTENSIONS := ["wav", "ogg", "mp3"]
 const SEUIL_SECOURS := 3
@@ -37,6 +40,9 @@ static var _callbacks_poses := false
 static func dire(noeud: Node, terme: String, categorie: String) -> void:
 	DisplayServer.tts_stop()
 	var flux := _flux_enregistre(terme, categorie)
+	if flux == null:
+		# Hors du vocabulaire fixe : la MÊME voix femme, synthétisée à la volée.
+		flux = VoixPiper.flux(terme, categorie)
 	if flux != null:
 		_jouer(noeud, flux)
 		return
@@ -60,6 +66,7 @@ static func dire(noeud: Node, terme: String, categorie: String) -> void:
 
 ## Amorce la résolution de la voix de synthèse (à appeler en _ready).
 static func amorcer() -> void:
+	VoixPiper.disponible()
 	_voix_tts()
 
 

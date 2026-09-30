@@ -21,3 +21,12 @@ android/build/src/main/java/**
 !android/build/src/main/java/com/godot/
 !android/build/src/main/java/com/godot/game/
 !android/build/src/main/java/com/godot/game/GodotApp.java
+
+# Voix Piper temps réel : le code source du GDExtension est versionné,
+# ses artefacts binaires et le modèle de 61 Mo ne le sont pas.
+bin/*.so
+outils/piper_gdextension/.include_tiers/
+outils/piper_gdextension/.sconsign.dblite
+outils/piper_gdextension/**/*.o
+outils/piper_gdextension/**/*.os
+__pycache__/
