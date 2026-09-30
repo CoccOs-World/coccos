@@ -12,8 +12,15 @@
 //   3. rééchantillonnage 22050 -> 44100 Hz ;
 //   4. normalisation de crête à -4 dB.
 //
-// Ni le modèle (61 Mo) ni les bibliothèques Piper n'entrent dans le dépôt :
+// Ni le modèle (61 Mo) ni les bibliothèques n'entrent dans le dépôt :
 // l'extension reçoit leurs chemins au chargement.
+//
+// DEUX MOTEURS, UNE SEULE RECETTE
+//   - bureau (Linux) : Piper natif (piper.hpp), chemin historique, INCHANGÉ ;
+//   - Android arm64  : sherpa-onnx, API C (c-api.h), mêmes poids siwis.
+// La compilation choisit par COCCOS_TTS_SHERPA (posé par le SConstruct pour
+// android). Tout le reste — casse, length_scale 1.3, 22050->44100, crête -4 dB —
+// est commun aux deux : le son doit rester le même d'une plateforme à l'autre.
 #ifndef COCCOS_PIPER_TTS_H
 #define COCCOS_PIPER_TTS_H
 
@@ -24,10 +31,12 @@
 #include <memory>
 #include <vector>
 
+#ifndef COCCOS_TTS_SHERPA
 namespace piper {
 struct PiperConfig;
 struct Voice;
 }  // namespace piper
+#endif
 
 namespace coccos {
 
@@ -68,8 +77,15 @@ protected:
 private:
 	static PiperTTS *singleton;
 
+#ifdef COCCOS_TTS_SHERPA
+	// L'état sherpa (greffon TTS + fréquence annoncée par le modèle) reste
+	// opaque ici : c-api.h n'entre pas dans l'en-tête.
+	struct EtatSherpa;
+	std::unique_ptr<EtatSherpa> sherpa;
+#else
 	std::unique_ptr<piper::PiperConfig> config;
 	std::unique_ptr<piper::Voice> voice;
+#endif
 	godot::String erreur;
 
 	double length_scale = 1.3;

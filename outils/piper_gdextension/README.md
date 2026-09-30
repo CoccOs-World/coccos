@@ -8,7 +8,7 @@ débit** que les 395 clips embarqués dans `lang/fr/voix/`.
 Avant, un mot inconnu tombait sur la synthèse du système : une autre voix, un
 autre timbre, souvent robotique. Pour un enfant qui apprend à lire, ce
 changement de voix en plein milieu est un décrochage. C'est ce que ce jalon
-supprime — sur Linux desktop (le web et Android viennent ensuite).
+supprime — sur Linux desktop, et sur Android arm64 (voir plus bas).
 
 ## Ce qui est versionné, ce qui ne l'est pas
 
@@ -45,6 +45,45 @@ scons -j4
 
 Les emplacements se surchargent par variables d'environnement — voir l'en-tête
 du `SConstruct`.
+
+## Construire pour Android arm64 (moteur sherpa-onnx)
+
+Sur Android, Piper natif n'est pas disponible : le même modèle siwis est joué
+par **sherpa-onnx** (Apache-2.0) via son **API C**. Un seul interrupteur de
+compilation, `COCCOS_TTS_SHERPA`, échange le moteur ; la recette de son — casse,
+`length_scale` 1.3, 22050 → 44100 Hz, crête −4 dB — est le **code commun**, donc
+le son reste le même d'une plateforme à l'autre.
+
+```bash
+# NDK (version par défaut de godot-cpp)
+export ANDROID_HOME=$HOME/Android/Sdk
+$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;28.1.13356709"
+
+# sherpa-onnx : l'AAR officiel, dont on ne garde que l'arm64
+curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-1.13.8.aar
+unzip -d aar sherpa-onnx-1.13.8.aar
+mkdir -p ~/dev/tiers/sherpa-onnx/{arm64-v8a,include}
+cp aar/jni/arm64-v8a/lib{onnxruntime,sherpa-onnx-c-api}.so ~/dev/tiers/sherpa-onnx/arm64-v8a/
+curl -Lo ~/dev/tiers/sherpa-onnx/include/c-api.h \
+  https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/v1.13.8/sherpa-onnx/c-api/c-api.h
+
+# godot-cpp pour arm64, puis l'extension
+scons -C ~/dev/tiers/godot-cpp platform=android arch=arm64 target=template_debug api_version=4.7 -j8
+scons platform=android arch=arm64 target=template_debug
+```
+
+Le lien se fait avec `--no-undefined` : **si un symbole sherpa ne résout pas, le
+`.so` n'est pas produit**. C'est la preuve du build, puisqu'on ne peut pas
+exécuter de l'arm64 sur un poste x86.
+
+Deux différences à connaître côté sherpa :
+
+- la **table de jetons** est un fichier à part (Piper la lisait dans le
+  `.onnx.json`). L'extension la cherche en `tokens.txt` à côté du modèle, sinon
+  en `<modele>.tokens.txt` — la signature de `charger()` ne bouge pas ;
+- le paramètre `speed` de `SherpaOnnxOfflineTtsGenerate` **écrase**
+  `length_scale` (`length_scale = 1/speed`). On passe donc `speed = 1.0` et on
+  garde notre 1.3 posé dans la config VITS au chargement.
 
 ## API vue de GDScript
 
