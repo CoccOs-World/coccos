@@ -5,6 +5,8 @@
 ## les lettres s'accumulent — l'enfant voit son prénom se construire.
 ## Espace et ponctuation s'affichent aussi et sont prononcés par leur nom
 ## (« espace », « point », « virgule »… — ce que GCompris ne fait pas).
+## Un petit trait bleu clignote dans le tableau, là où la prochaine lettre
+## arrivera — le repère des champs de texte, visible même tableau vide.
 ## Retour arrière = efface le dernier caractère · bouton croix = efface tout.
 ## À gauche du tableau, le bouton au visage jaune qui parle : il prononce le
 ## mot écrit (rien si le tableau est vide).
@@ -81,7 +83,8 @@ var _style_bulle: StyleBoxFlat
 var _label_lettre: Label
 var _label_mot: Label
 var _mot := ""
-var _curseur: Node2D
+var _trait_ecriture: Control        # le curseur clignotant du tableau blanc
+var _curseur: Node2D                # le gros curseur de souris (tout autre chose)
 var _calque_effets: Node2D
 var _lecteurs := {}
 var _dernier_point := Vector2.ZERO
@@ -223,6 +226,11 @@ func _creer_bulle_et_mot() -> void:
 	_label_mot.add_theme_font_size_override("font_size", 60)
 	_label_mot.add_theme_color_override("font_color", Color(0.16, 0.22, 0.34))  # bleu feutre
 	tableau.add_child(_label_mot)
+
+	# Le trait clignotant : enfant du Label, donc dans le repère du texte —
+	# le mot étant centré, le trait se pose simplement au bout de ce centrage.
+	_trait_ecriture = _TraitEcriture.new(_label_mot)
+	_label_mot.add_child(_trait_ecriture)
 
 	# Bouton retour arrière : efface caractère par caractère (comme la touche)
 	var btn_retour_arriere := _creer_bouton_rond(Color(0.40, 0.50, 0.65))
@@ -397,6 +405,7 @@ func _ajouter_au_mot(caractere: String) -> void:
 	if _mot.length() > LONGUEUR_MAX_MOT:
 		_mot = _mot.substr(_mot.length() - LONGUEUR_MAX_MOT)
 	_label_mot.text = _mot
+	_trait_ecriture.reveiller()
 
 
 func _effacer_derniere() -> void:
@@ -404,6 +413,7 @@ func _effacer_derniere() -> void:
 		return
 	_mot = _mot.substr(0, _mot.length() - 1)
 	_label_mot.text = _mot
+	_trait_ecriture.reveiller()
 
 
 ## Efface tout le tableau (bouton croix) — ardoise propre, bulle comprise.
@@ -411,6 +421,7 @@ func _effacer_tout() -> void:
 	_mot = ""
 	_label_mot.text = ""
 	_label_lettre.text = ""
+	_trait_ecriture.reveiller()
 
 
 ## Prononce le mot entier du tableau blanc (bouton visage jaune, à gauche).
@@ -469,6 +480,66 @@ func _quitter() -> void:
 		get_tree().change_scene_to_file(CHEMIN_BUREAU)
 	else:
 		get_tree().quit()
+
+
+## Le trait vertical qui clignote à l'endroit où la PROCHAINE lettre s'écrira —
+## le repère que l'enfant voit dans toutes les fenêtres. Enfant du Label du
+## tableau : il hérite de son rectangle, et comme le Label est centré, le bout
+## du mot se déduit de la largeur du texte mesurée avec la même police.
+## Tableau vide = largeur nulle = trait au milieu : il montre où ça commence.
+## Clignotement doux (fondu sinusoïdal), jamais un clignotement sec.
+class _TraitEcriture extends Control:
+	const LARGEUR := 4.0        # épaisseur du trait, à l'échelle du feutre
+	const ECART := 4.0          # blanc entre la dernière lettre et le trait
+	const DEMI_PERIODE := 0.55  # fondu plein → presque éteint (et retour)
+	const REPOS := 0.20         # temps plein avant de commencer à s'éteindre
+	const OPACITE_BASSE := 0.12
+	const COULEUR := Color(0.16, 0.22, 0.34)  # le bleu feutre du mot
+
+	var _label: Label
+	var _battement: Tween
+
+	func _init(label: Label) -> void:
+		_label = label
+
+	func _ready() -> void:
+		# Pas d'ancrage : on reste cale sur l'origine du Label et on lit SA taille
+		# a chaque dessin — un Control enfant n'est pas redimensionne par un Label,
+		# et son propre rectangle mentirait sur la place reelle du texte.
+		position = Vector2.ZERO
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_label.resized.connect(queue_redraw)  # la mise en page bouge → on se replace
+		reveiller()
+
+	## Repositionne le trait et le rallume plein pour un cycle neuf : à chaque
+	## frappe on le voit tout de suite à sa nouvelle place, jamais dans un creux.
+	func reveiller() -> void:
+		queue_redraw()
+		if _battement != null:
+			_battement.kill()
+		modulate.a = 1.0
+		_battement = create_tween().set_loops()
+		_battement.tween_interval(REPOS)
+		_battement.tween_property(self, "modulate:a", OPACITE_BASSE, DEMI_PERIODE) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_battement.tween_property(self, "modulate:a", 1.0, DEMI_PERIODE) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	func _draw() -> void:
+		var police: Font = _label.get_theme_font("font")
+		if police == null:
+			return
+		var taille: int = _label.get_theme_font_size("font_size")
+		var largeur_mot: float = police.get_string_size(
+			_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+		# Le Label centre le mot : son bout droit est à mi-largeur du mot du centre
+		var cadre := _label.size
+		var x := cadre.x / 2.0 + largeur_mot / 2.0 + ECART + LARGEUR / 2.0
+		x = clampf(x, LARGEUR, maxf(cadre.x - LARGEUR, LARGEUR))
+		var demi_hauteur := float(taille) * 0.46
+		var milieu := cadre.y / 2.0
+		draw_line(Vector2(x, milieu - demi_hauteur), Vector2(x, milieu + demi_hauteur),
+			COULEUR, LARGEUR)
 
 
 ## Croix blanche du bouton Quitter — « fermer », le geste universel des fenêtres
