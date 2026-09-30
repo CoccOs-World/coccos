@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://outils/preuve_curseur_lettres.gd" id="1_preuve"]
+
+[node name="PreuveCurseur" type="Node"]
+script = ExtResource("1_preuve")
