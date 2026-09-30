@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+"""
+Build du GDExtension PiperTTS (Linux x86_64) — voix siwis femme à la volée.
+
+Voie choisie : on RÉUTILISE les bibliothèques déjà livrées par le binaire Piper
+natif (libpiper_phonemize, libonnxruntime, libespeak-ng) et on ne recompile que
+piper.cpp + le pont Godot. Aucun rebuild d'onnxruntime.
+
+Les sources tierces et le modèle restent HORS du dépôt. Leurs emplacements sont
+donnés par ces variables d'environnement (valeurs par défaut = poste de Fabrice) :
+  GODOT_CPP        godot-cpp compilé          ~/dev/tiers/godot-cpp
+  PIPER_SRC        sources rhasspy/piper      ~/dev/tiers/piper/src/cpp
+  PHONEMIZE_SRC    sources piper-phonemize    ~/dev/tiers/piper-phonemize/src
+  ORT_INCLUDE      en-têtes onnxruntime 1.14  /tmp/ort/onnxruntime-linux-x64-1.14.1/include
+  ESPEAK_INCLUDE   dossier contenant espeak-ng/speak_lib.h
+  PIPER_LIBS       dossier des .so Piper      ~/.local/opt/piper
+
+Sortie : ../../bin/libpiper_tts.linux.<target>.x86_64.so (hors dépôt, .gitignore).
+"""
+import os
+
+HOME = os.path.expanduser("~")
+
+def chemin(var, defaut):
+    return os.path.abspath(os.environ.get(var, defaut))
+
+GODOT_CPP = chemin("GODOT_CPP", HOME + "/dev/tiers/godot-cpp")
+PIPER_SRC = chemin("PIPER_SRC", HOME + "/dev/tiers/piper/src/cpp")
+PHONEMIZE_SRC = chemin("PHONEMIZE_SRC", HOME + "/dev/tiers/piper-phonemize/src")
+ORT_INCLUDE = chemin("ORT_INCLUDE", "/tmp/ort/onnxruntime-linux-x64-1.14.1/include")
+ESPEAK_INCLUDE = chemin("ESPEAK_INCLUDE", "/tmp/espeak_include")
+PIPER_LIBS = chemin("PIPER_LIBS", HOME + "/.local/opt/piper")
+
+ICI = Dir(".").srcnode().abspath
+CIBLE = ARGUMENTS.get("target", "template_debug")
+
+# piper.hpp inclut <piper-phonemize/...> : on monte l'arborescence attendue par
+# lien symbolique plutôt que de recopier les en-têtes dans le dépôt.
+PONT = os.path.join(ICI, ".include_tiers")
+lien = os.path.join(PONT, "piper-phonemize")
+if not os.path.isdir(PONT):
+    os.makedirs(PONT)
+if os.path.islink(lien):
+    os.remove(lien)
+os.symlink(PHONEMIZE_SRC, lien)
+
+env = Environment(ENV=os.environ, tools=["default"], CXX="g++")
+env.Append(CXXFLAGS=["-std=c++17", "-O2", "-fPIC", "-fexceptions", "-Wno-deprecated-declarations"])
+env.Append(CPPPATH=[
+    os.path.join(ICI, "src"),
+    os.path.join(ICI, "shim"),      # bouchon spdlog
+    PONT,                           # piper-phonemize/*.hpp
+    PIPER_SRC,                      # piper.hpp, json.hpp, utf8.h, wavfile.hpp
+    ORT_INCLUDE,
+    ESPEAK_INCLUDE,
+    os.path.join(GODOT_CPP, "include"),
+    os.path.join(GODOT_CPP, "gen", "include"),
+    os.path.join(GODOT_CPP, "gdextension"),
+])
+env.Append(LIBPATH=[os.path.join(GODOT_CPP, "bin"), PIPER_LIBS])
+env.Append(LIBS=["godot-cpp.linux.%s.x86_64" % CIBLE, "piper_phonemize", "onnxruntime", "espeak-ng"])
+# Les .so de Piper vivent hors des chemins système : on grave leur emplacement.
+env.Append(LINKFLAGS=["-Wl,-rpath," + PIPER_LIBS, "-Wl,-rpath,$$ORIGIN"])
+
+sources = [
+    os.path.join(ICI, "src", "piper_tts.cpp"),
+    os.path.join(ICI, "src", "register_types.cpp"),
+    os.path.join(PIPER_SRC, "piper.cpp"),
+]
+
+sortie = os.path.join(ICI, "..", "..", "bin", "libpiper_tts.linux.%s.x86_64.so" % CIBLE)
+bibliotheque = env.SharedLibrary(target=sortie, source=sources)
+Default(bibliotheque)
