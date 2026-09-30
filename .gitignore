@@ -32,3 +32,12 @@ outils/piper_gdextension/.sconsign.dblite
 outils/piper_gdextension/**/*.o
 outils/piper_gdextension/**/*.os
 __pycache__/
+
+# Voix embarquée pour Android (étape 2) : ~62 Mo d'artefacts tiers — le paquet
+# sherpa `vits-piper-fr_FR-siwis-medium` (modèle, tokens.txt, espeak-ng-data
+# réduit au français). Reconstituable par le README du GDExtension.
+voix_android/
+# Bibliothèques natives sherpa-onnx arm64 embarquées dans l'APK (26 Mo).
+bin/**/*.so
+# Paquets installables produits localement.
+installable_android/

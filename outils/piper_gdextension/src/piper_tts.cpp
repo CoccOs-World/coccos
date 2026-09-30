@@ -1,10 +1,15 @@
 #include "piper_tts.h"
 
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/core/error_macros.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#ifdef COCCOS_TTS_SHERPA
+#include <c-api.h>
+#else
 #include <piper.hpp>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -68,6 +73,74 @@ String PiperTTS::texte_pour_tts(const String &texte) {
 
 // --- Chargement -------------------------------------------------------------------
 
+#ifdef COCCOS_TTS_SHERPA
+
+// sherpa-onnx attend la table de jetons à part, là où Piper la lisait dans le
+// .onnx.json. Convention retenue : « tokens.txt » à côté du modèle, sinon
+// « <modele>.tokens.txt ». Rien à changer côté GDScript : même signature.
+static godot::String chemin_jetons(const String &chemin_modele) {
+	const String voisin = chemin_modele.get_base_dir().path_join("tokens.txt");
+	if (FileAccess::file_exists(voisin)) {
+		return voisin;
+	}
+	return chemin_modele + String(".tokens.txt");
+}
+
+struct PiperTTS::EtatSherpa {
+	const SherpaOnnxOfflineTts *tts = nullptr;
+	int frequence_modele = 22050;
+
+	~EtatSherpa() {
+		if (tts) {
+			SherpaOnnxDestroyOfflineTts(tts);
+		}
+	}
+};
+
+bool PiperTTS::charger(const String &chemin_modele, const String &chemin_espeak_data) {
+	decharger();
+	erreur = "";
+
+	const String jetons = chemin_jetons(chemin_modele);
+	const CharString c_modele = chemin_modele.utf8();
+	const CharString c_jetons = jetons.utf8();
+	const CharString c_espeak = chemin_espeak_data.utf8();
+
+	SherpaOnnxOfflineTtsConfig config_tts;
+	std::memset(&config_tts, 0, sizeof(config_tts));
+	config_tts.model.vits.model = c_modele.get_data();
+	config_tts.model.vits.tokens = c_jetons.get_data();
+	config_tts.model.vits.data_dir = c_espeak.get_data();
+	// Mêmes réglages VITS que Piper : le grain de voix ne doit pas bouger.
+	config_tts.model.vits.noise_scale = 0.667f;
+	config_tts.model.vits.noise_scale_w = 0.8f;
+	config_tts.model.vits.length_scale = float(length_scale);
+	config_tts.model.num_threads = 1;
+	config_tts.model.provider = "cpu";
+	config_tts.model.debug = 0;
+	config_tts.max_num_sentences = 1;
+
+	auto etat = std::make_unique<EtatSherpa>();
+	etat->tts = SherpaOnnxCreateOfflineTts(&config_tts);
+	if (etat->tts == nullptr) {
+		erreur = "sherpa-onnx : modèle « " + chemin_modele + " » refusé (jetons : " + jetons + ").";
+		return false;
+	}
+	etat->frequence_modele = SherpaOnnxOfflineTtsSampleRate(etat->tts);
+	sherpa = std::move(etat);
+	return true;
+}
+
+bool PiperTTS::est_pret() const {
+	return sherpa != nullptr && sherpa->tts != nullptr;
+}
+
+void PiperTTS::decharger() {
+	sherpa.reset();
+}
+
+#else
+
 bool PiperTTS::charger(const String &chemin_modele, const String &chemin_espeak_data) {
 	decharger();
 	erreur = "";
@@ -101,6 +174,8 @@ void PiperTTS::decharger() {
 		config.reset();
 	}
 }
+
+#endif  // COCCOS_TTS_SHERPA
 
 String PiperTTS::derniere_erreur() const {
 	return erreur;
@@ -192,6 +267,32 @@ Ref<AudioStreamWAV> PiperTTS::synthese(const String &texte) {
 
 	std::vector<int16_t> brut;
 	int frequence_source = 22050;
+#ifdef COCCOS_TTS_SHERPA
+	frequence_source = sherpa->frequence_modele;
+	// ATTENTION : dans sherpa, le « speed » passé ici REMPLACE length_scale
+	// (length_scale = 1/speed). On laisse donc 1.0 et on garde notre 1.3 posé
+	// dans la config VITS au chargement — sinon le débit repasserait à 1.0.
+	const SherpaOnnxGeneratedAudio *rendu = SherpaOnnxOfflineTtsGenerate(
+			sherpa->tts, prepare.utf8().get_data(), 0, 1.0f);
+	if (rendu == nullptr || rendu->samples == nullptr || rendu->n <= 0) {
+		if (rendu != nullptr) {
+			SherpaOnnxDestroyOfflineTtsGeneratedAudio(rendu);
+		}
+		erreur = "sherpa-onnx : synthèse vide pour « " + texte + " ».";
+		return Ref<AudioStreamWAV>();
+	}
+	if (rendu->sample_rate > 0) {
+		frequence_source = rendu->sample_rate;
+	}
+	// sherpa rend des flottants dans [-1, 1] ; la recette de sortie travaille
+	// en entiers 16 bits comme Piper.
+	brut.reserve(size_t(rendu->n));
+	for (int32_t i = 0; i < rendu->n; i++) {
+		const double v = std::clamp(double(rendu->samples[i]), -1.0, 1.0) * 32767.0;
+		brut.push_back(int16_t(std::lround(v)));
+	}
+	SherpaOnnxDestroyOfflineTtsGeneratedAudio(rendu);
+#else
 	try {
 		voice->synthesisConfig.lengthScale = float(length_scale);
 		frequence_source = voice->synthesisConfig.sampleRate;
@@ -206,6 +307,7 @@ Ref<AudioStreamWAV> PiperTTS::synthese(const String &texte) {
 		erreur = "Piper : synthèse vide pour « " + texte + " ».";
 		return Ref<AudioStreamWAV>();
 	}
+#endif
 
 	const std::vector<int16_t> audio = mettre_au_format(brut, frequence_source);
 
@@ -224,6 +326,9 @@ Ref<AudioStreamWAV> PiperTTS::synthese(const String &texte) {
 
 // --- Réglages -----------------------------------------------------------------------
 
+// Sur sherpa, length_scale est gravé dans la config au chargement : le changer
+// ensuite ne prend effet qu'au prochain charger(). Sur Piper il est relu à
+// chaque synthèse. Dans CoccOs il vaut 1.3 et ne bouge pas.
 void PiperTTS::set_length_scale(double v) { length_scale = v; }
 double PiperTTS::get_length_scale() const { return length_scale; }
 void PiperTTS::set_crete_db(double v) { crete_db = v; }

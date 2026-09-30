@@ -7,3 +7,20 @@ compatibility_minimum = "4.3"
 
 linux.debug.x86_64 = "res://bin/libpiper_tts.linux.template_debug.x86_64.so"
 linux.release.x86_64 = "res://bin/libpiper_tts.linux.template_release.x86_64.so"
+android.debug.arm64 = "res://bin/libpiper_tts.android.template_debug.arm64.so"
+android.release.arm64 = "res://bin/libpiper_tts.android.template_release.arm64.so"
+
+[dependencies]
+
+; Sur Android, le moteur de synthèse est sherpa-onnx : ses deux bibliothèques
+; natives arm64 doivent voyager DANS l'APK, à côté de la nôtre. Godot les
+; dépose dans lib/arm64-v8a/, là où le chargeur du système les trouvera.
+; Au bureau, rien de tout cela : Piper est lié à ses .so de ~/.local/opt/piper.
+android.debug.arm64 = {
+"res://bin/android/arm64/libsherpa-onnx-c-api.so" : "",
+"res://bin/android/arm64/libonnxruntime.so" : ""
+}
+android.release.arm64 = {
+"res://bin/android/arm64/libsherpa-onnx-c-api.so" : "",
+"res://bin/android/arm64/libonnxruntime.so" : ""
+}
