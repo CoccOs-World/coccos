@@ -98,6 +98,71 @@ réglables ; leurs valeurs par défaut sont exactement celles des 395 clips.
 Le jeu passe par `scripts/voix_piper.gd`, qui trouve le modèle, met les mots en
 cache dans `user://` et s'efface proprement si l'extension est absente.
 
+## Reconstituer l'APK Android de test (étape 2, 30-09-2026)
+
+Ni la voix (62 Mo), ni les `.so` (26 Mo), ni l'APK n'entrent dans le dépôt.
+Voici la recette complète, dans l'ordre.
+
+**1. Les deux bibliothèques natives de l'extension** (arm64, `template_debug`
+ET `template_release` — l'export release en aura besoin chez Freddy) :
+
+```bash
+export ANDROID_HOME=$HOME/Android/Sdk          # sinon le SConstruct de godot-cpp échoue
+for cible in template_debug template_release; do
+  scons -C ~/dev/tiers/godot-cpp platform=android arch=arm64 target=$cible api_version=4.7 -j8
+  scons -C outils/piper_gdextension platform=android arch=arm64 target=$cible -j8
+done
+```
+
+**2. Les bibliothèques sherpa arm64, dans le dépôt-artefact** (l'AAR officiel
+est décrit plus haut) :
+
+```bash
+mkdir -p bin/android/arm64
+cp ~/dev/tiers/sherpa-onnx/arm64-v8a/lib{sherpa-onnx-c-api,onnxruntime}.so bin/android/arm64/
+```
+
+`bin/piper_tts.gdextension` les déclare en `[dependencies]` sous
+`android.debug.arm64` / `android.release.arm64` : Godot les dépose dans
+`lib/arm64-v8a/` de l'APK, où le chargeur du système les trouvera.
+
+**3. La voix embarquée** — on prend le paquet **sherpa** plutôt que le nôtre :
+son `espeak-ng-data` est celui contre lequel sherpa a été compilé (plus de
+risque de version), et il fournit le `tokens.txt` que Piper gardait, lui, dans
+le `.onnx.json`. Son `fr_FR-siwis-medium.onnx.json` est **identique octet pour
+octet** au nôtre : c'est la même voix, au même réglage.
+
+```bash
+curl -L -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-siwis-medium.tar.bz2
+tar xjf vits-piper-fr_FR-siwis-medium.tar.bz2
+mkdir -p voix_android
+cp vits-piper-fr_FR-siwis-medium/{fr_FR-siwis-medium.onnx,fr_FR-siwis-medium.onnx.json,tokens.txt} voix_android/
+# espeak-ng réduit au français : 19 Mo -> 1,2 Mo, phonèmes prouvés identiques (jalon 3)
+bash espeak_fr_seul.sh vits-piper-fr_FR-siwis-medium/espeak-ng-data voix_android/espeak-ng-data
+```
+
+**4. L'export.** `export_presets.cfg` est LOCAL (hors dépôt) : preset
+« Android », `gradle_build/use_gradle_build=false`, `arm64-v8a` seul,
+`include_filter="voix_android/*"` — sans ce filtre la voix reste sur le disque
+et **manque du paquet**. Puis, avec le Godot du projet (**4.7.2**, pas le
+`godot4` du PATH qui est un 4.7.0 : une extension bâtie pour 4.7.2 est refusée
+par un 4.7.0) :
+
+```bash
+~/.local/opt/godot-4.7.2/Godot_v4.7.2-stable_linux.x86_64 \
+  --headless --export-debug "Android" installable_android/coccos_voix_test.apk
+```
+
+`--export-debug` signe avec la clé de développement ; il n'y a **aucun**
+keystore de publication ici.
+
+**5. Sur la tablette**, `res://` n'est pas un chemin système : c'est une adresse
+dans le paquet, et sherpa est une bibliothèque C qui ouvre de vrais fichiers.
+`scripts/voix_piper.gd` recopie donc `res://voix_android/` vers
+`user://voix_android/` au premier lancement (~65 Mo, par blocs d'un mégaoctet),
+pose un témoin `installee.txt` **en dernier** — une copie interrompue
+recommence proprement — et donne au moteur le chemin globalisé.
+
 ## Licences
 
 CoccOs est en **GPLv3**. Les briques utilisées : piper, piper-phonemize,
@@ -110,3 +175,7 @@ absorbe MIT et espeak-ng partage sa licence : l'ensemble est compatible.
   casse, branchement de `Voix.dire`.
 - `outils/preuve_voix_identite.py` — timbre, niveau et débit face aux clips
   embarqués (à lancer après la précédente).
+- Android : la preuve du paquet est le `readelf`/`nm -D` des `.so` EXTRAITS de
+  l'APK. Attention, `readelf --dyn-syms` **tronque les noms longs**
+  (`SherpaOnnxDestro[...]`) : chercher un symbole précis se fait au `nm -D`.
+  La preuve à l'oreille, elle, n'appartient qu'à Fabrice, sur l'appareil.
