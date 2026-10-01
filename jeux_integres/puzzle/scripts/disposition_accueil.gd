@@ -30,7 +30,7 @@ class_name DispositionAccueil
 const ECH_MIN := 0.05
 const ECH_MAX := 8.0
 
-# 56 éléments, cuits depuis le fichier de l'outil DEV. ⚠ LES CIBLES PORTÉES SONT : linux_4_3 · linux_16_9 · android_paysage. Android DEBOUT et
+# 60 éléments, cuits depuis le fichier de l'outil DEV. ⚠ LES CIBLES PORTÉES SONT : linux_4_3 · linux_16_9 · android_paysage. Android DEBOUT et
 # iOS n'y sont PAS — Fabrice ne les a pas disposées, et le brief de la phase 3 dit « les cibles non présentes
 # restent inchangées » : elles gardent la disposition que l'accueil CALCULE (cf. `entree_pour()`).
 const CIBLES := {
@@ -73,17 +73,19 @@ const CIBLES := {
 			4: {"present": true, "rel": Rect2(0.01204, 0.17053, 0.52179, 0.37948), "echelle": 3.0333},
 		}},
 
-# --- linux_16_9 — canvas [1366.0, 768.0] · tableau « La moto » · curseur « Coccinelle » · enregistré le 2026-08-20 11:56:46 · 16 élément(s) · 5 boîte(s) de modèle par tableau ---
+# --- linux_16_9 — canvas [1366, 768] · tableau « La ferme » · curseur « Coccinelle » · enregistré le 2026-10-01 10:29:18 · 20 élément(s) · 5 boîte(s) de modèle par tableau ---
 	"linux_16_9": {
-		"canvas": Vector2(1366, 768), "enregistre_le": "2026-08-20 11:56:46", "elements": [
+		"canvas": Vector2(1366, 768), "enregistre_le": "2026-10-01 10:29:18", "elements": [
 			{"cle": "croix_quitter", "present": true, "rel": Rect2(0.91942, 0.02712, 0.06907, 0.12285), "echelle": 1.4742},
 			{"cle": "case_curseur_0", "present": true, "rel": Rect2(0.54824, 0.22558, 0.11976, 0.31408), "echelle": 1.2129},
 			{"cle": "case_curseur_1", "present": true, "rel": Rect2(0.70654, 0.22856, 0.11976, 0.31408), "echelle": 1.2129},
 			{"cle": "case_curseur_2", "present": true, "rel": Rect2(0.86577, 0.23164, 0.11406, 0.29913), "echelle": 1.1551},
 			{"cle": "volume", "present": true, "rel": Rect2(0.43336, 0.65767, 0.64461, 0.07218), "echelle": 0.6446},
-			{"cle": "modele_image", "present": true, "rel": Rect2(0.08466, 0.13037, 0.35317, 0.73592), "echelle": 5.8825},
+			{"cle": "modele_image", "present": true, "rel": Rect2(0.06783, 0.11575, 0.37083, 0.77272), "echelle": 6.1766},
+			{"cle": "piece_nombre", "present": true, "rel": Rect2(0.51247, 0.09717, 0.05461, 0.09385), "echelle": 0.9999},
+			{"cle": "fleche_pieces_moins", "present": true, "rel": Rect2(0.45943, 0.10962, 0.04478, 0.07965), "echelle": 1.8859},
+			{"cle": "fleche_pieces_plus", "present": true, "rel": Rect2(0.57251, 0.10962, 0.04478, 0.07965), "echelle": 1.8859},
 			{"cle": "selecteur_numero", "present": true, "rel": Rect2(0.71932, 0.5574, 0.10425, 0.09271), "echelle": 1.5479},
-			{"cle": "fleche_image_gauche", "present": true, "rel": Rect2(0.61419, 0.55779, 0.05224, 0.09292), "echelle": 1.5513},
 			{"cle": "fleche_image_droite", "present": true, "rel": Rect2(0.86881, 0.56, 0.04975, 0.08849), "echelle": 1.4774},
 			{"cle": "jouer", "present": true, "rel": Rect2(0.62006, 0.76173, 0.28992, 0.11173), "echelle": 1.1001, "parties": [{"cle": "jouer/p2_label", "present": true, "rel": Rect2(0.58136, 0.76333, 0.37003, 0.10055), "echelle": 1.2763}]},
 			{"cle": "texte_titre", "present": true, "rel": Rect2(-0.08786, -0.00762, 1.27628, 0.0914), "echelle": 1.2763},
@@ -91,17 +93,19 @@ const CIBLES := {
 			{"cle": "texte_regle_2", "present": false, "rel": Rect2(0, 0.14198, 1, 0.04557), "echelle": 1},
 			{"cle": "texte_choisis", "present": true, "rel": Rect2(0.07958, 0.13502, 1.3401, 0.0698), "echelle": 1.3401},
 			{"cle": "texte_legende_tableau", "present": true, "rel": Rect2(-0.51662, 0.05851, 1.27628, 0.0565), "echelle": 1.2763},
+			{"cle": "texte_mot_pieces", "present": true, "rel": Rect2(0.04, 0.18213, 1, 0.04297), "echelle": 1},
 			{"cle": "fond_ecran", "present": true, "rel": Rect2(0, 0, 1, 1), "echelle": 1},
+			{"cle": "fleche_image_gauche", "present": true, "rel": Rect2(0.61419, 0.55779, 0.05224, 0.09292), "echelle": 1.5513},
 		],
 		"modeles": {
-			0: {"present": true, "rel": Rect2(0.08683, 0.11397, 0.37083, 0.77272), "echelle": 6.1766},
-			1: {"present": true, "rel": Rect2(0.0286, 0.14935, 0.47328, 0.72301), "echelle": 5.7793},
+			0: {"present": true, "rel": Rect2(0.06783, 0.11575, 0.37083, 0.77272), "echelle": 6.1766},
+			1: {"present": true, "rel": Rect2(0.04987, 0.21104, 0.45074, 0.68858), "echelle": 5.5041},
 			2: {"present": true, "rel": Rect2(0.08566, 0.13037, 0.35317, 0.73592), "echelle": 5.8825},
-			3: {"present": true, "rel": Rect2(0.08466, 0.13037, 0.35317, 0.73592), "echelle": 5.8825},
-			4: {"present": true, "rel": Rect2(0.01235, 0.23896, 0.52179, 0.50623), "echelle": 4.0465},
+			3: {"present": true, "rel": Rect2(0.05466, 0.12503, 0.35317, 0.73592), "echelle": 5.8825},
+			4: {"present": true, "rel": Rect2(0.01235, 0.23896, 0.52179, 0.50623), "echelle": 4.0464},
 		}},
 
-# --- android_paysage — canvas [1664, 768] · tableau « L'hélicoccos » · curseur « Sans curseur » · enregistré le 2026-09-12 16:57:04 · 20 élément(s) · 7 boîte(s) de modèle par tableau ---
+# --- android_paysage — canvas [1664.0, 768.0] · tableau « L'hélicoccos » · curseur « Sans curseur » · enregistré le 2026-09-12 16:57:04 · 20 élément(s) · 7 boîte(s) de modèle par tableau ---
 	"android_paysage": {
 		"canvas": Vector2(1664, 768), "enregistre_le": "2026-09-12 16:57:04", "elements": [
 			{"cle": "croix_quitter", "present": true, "rel": Rect2(0.91942, 0.02712, 0.06907, 0.14965), "echelle": 1.7958},
