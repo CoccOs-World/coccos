@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+; L'ACCUEIL DU JEU DES PUZZLES (PUZZLE-B2) — la scène par laquelle le jeu s'ouvre désormais.
+; Un nœud, un script : la page se construit par code (`scripts/accueil.gd`), il n'y a rien à assembler ici.
+; C'est cette scène que `project.godot` démarre. Elle passe la main à `scenes/puzzle.tscn` au clic sur « JOUER »,
+; en l'ajoutant dans son propre parent (cf. l'encadré de `accueil.gd` : ni `change_scene_to_file`, ni global).
+
+[ext_resource type="Script" path="res://jeux_integres/puzzle/scripts/accueil.gd" id="1_acc"]
+
+[node name="Accueil" type="Node2D"]
+script = ExtResource("1_acc")

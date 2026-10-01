@@ -41,7 +41,13 @@ func _lister(racine: String, extension: String) -> Array[String]:
 func _initialize() -> void:
 	# On ne balaye PAS res://outils : recharger le script en cours d'execution
 	# avec CACHE_MODE_IGNORE invalide sa propre table d'adresses.
+	# (LOGITHÈQUE, 01-10) res://jeux_integres est balaye AU MEME TITRE que res://scripts et
+	# res://scenes : c'est la ou vivent les sous-projets freres integres au bureau (le jeu des
+	# puzzles, et les autres a venir). Sans cette ligne, un jeu integre entrait dans le bureau
+	# SANS JAMAIS passer sous la preuve — la verification serait restee muette sur lui.
 	var scripts := _lister("res://scripts", "gd")
+	scripts.append_array(_lister("res://jeux_integres", "gd"))
+	scripts.sort()
 	print("=== SCRIPTS (%d) ===" % scripts.size())
 	for chemin in scripts:
 		if ResourceLoader.load(chemin, "GDScript", ResourceLoader.CACHE_MODE_IGNORE) == null:
@@ -51,6 +57,8 @@ func _initialize() -> void:
 			print("  ok ", chemin)
 
 	_scenes = _lister("res://scenes", "tscn")
+	_scenes.append_array(_lister("res://jeux_integres", "tscn"))
+	_scenes.sort()
 	print("=== SCENES MONTEES DANS L'ARBRE (%d) ===" % _scenes.size())
 
 func _process(_delta: float) -> bool:

@@ -16,6 +16,7 @@
 	<texte cle="bureau_jeu_mots">Les mots</texte>
 	<texte cle="bureau_jeu_chasse">La chasse</texte>
 	<texte cle="bureau_jeu_pousse">Pousse-Pollen</texte>
+	<texte cle="bureau_jeu_puzzle">Le jeu du puzzle</texte>
 	<texte cle="bureau_app_classeur">Mon classeur</texte>
 	<texte cle="bureau_app_tele">Ma télé</texte>
 	<texte cle="bureau_app_dessin">Dessin</texte>
@@ -153,6 +154,7 @@
 	<texte cle="logitheque_desc_mots">Les mots — recopier les mots du classeur et de la famille</texte>
 	<texte cle="logitheque_desc_chasse">La chasse — attraper les lettres au clavier ou à la souris</texte>
 	<texte cle="logitheque_desc_pousse">Pousse-Pollen — pousser et tirer le pollen vers les bonnes lettres (conçu par Fabrice)</texte>
+	<texte cle="logitheque_desc_puzzle">Le jeu du puzzle — reconstituer l'image, pièce après pièce (conçu par Fabrice)</texte>
 	<texte cle="logitheque_desc_classeur">Mon classeur — les vignettes qui parlent (communication)</texte>
 	<texte cle="logitheque_desc_tele">Ma télé — les vidéos choisies par les parents</texte>
 	<texte cle="applis_info">Tout ce qui est coché apparaît sur le bureau de l'enfant — rien d'autre.</texte>
