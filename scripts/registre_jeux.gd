@@ -38,6 +38,13 @@ const APPLIS := [
 	{"id": "pousse", "nom_cle": "bureau_jeu_pousse", "description_cle": "logitheque_desc_pousse",
 		"couleur": Color(0.60, 0.45, 0.25), "scene": "res://scenes/pousse_pollen.tscn", "categorie": "clavier",
 		"etiquettes": ["clavier", "logique"]},
+	# (LOGITHÈQUE, 01-10) Le jeu des puzzles — sous-projet frère intégré : il vit entier dans
+	# res://jeux_integres/puzzle/ (ses propres copies des images, sons, planches et curseurs), et sa
+	# couleur est le rouge MESURÉ sur sa plaque livrée (assets/icones/puzzle.png, teinte dominante).
+	# "categorie" vide = icône directe sur le bureau, donc « déjà installé » à l'ouverture.
+	{"id": "puzzle", "nom_cle": "bureau_jeu_puzzle", "description_cle": "logitheque_desc_puzzle",
+		"couleur": Color(0.82, 0.13, 0.13), "scene": "res://jeux_integres/puzzle/scenes/accueil.tscn",
+		"categorie": "", "etiquettes": ["souris", "logique", "images"]},
 	{"id": "classeur", "nom_cle": "bureau_app_classeur", "description_cle": "logitheque_desc_classeur",
 		"couleur": Color(0.90, 0.40, 0.45), "scene": "res://scenes/classeur.tscn", "categorie": "",
 		"etiquettes": ["communication"]},

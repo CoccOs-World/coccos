@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+; SCÈNE PRINCIPALE DU JEU DES PUZZLES (PUZZLE-B1) — et la seule du projet.
+; Un nœud, un script : tout le jeu se construit par code (`scripts/puzzle.gd`), il n'y a rien à assembler ici.
+; C'est cette scène que `project.godot` démarre, en développement comme dans le build Linux installé.
+
+[ext_resource type="Script" path="res://jeux_integres/puzzle/scripts/puzzle.gd" id="1_puz"]
+
+[node name="Puzzle" type="Node2D"]
+script = ExtResource("1_puz")
