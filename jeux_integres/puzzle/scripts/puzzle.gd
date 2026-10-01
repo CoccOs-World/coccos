@@ -458,6 +458,39 @@ const FIN_ECART := 26.0
 const FIN_MARGE := 18.0
 const STOP_TAILLE := Vector2(112.0, 96.0)
 
+# ============================================================================================================
+# (B24 · §32) LA COLONNE DE DROITE DE L'ÉCRAN DE RÉCOMPENSE — LE STOP **REMONTÉ**, ET SOUS LUI LA JAUGE DE SON
+# ============================================================================================================
+# Mots de Fabrice (01-10) : « il appuie sur le triangle rouge pour arrêter le chant mais il n'a rien pour baisser
+# le son. Je voudrais qu'on REMONTE notre bouton qui arrête la musique et que l'on mette une barre réglable
+# potentiomètre de son jaune pour que l'enfant puisse baisser le son. »
+# ⚠ « REMONTER » N'EST PAS « AJOUTER » : il n'y a toujours QU'UN SEUL bouton STOP. Il quitte seulement le milieu
+#   exact du bord droit (où `cadre_stop` le posait depuis B3) pour le HAUT d'une colonne qu'il partage désormais
+#   avec la jauge. Les deux tiennent dans la même largeur, au même bord droit, et se centrent ENSEMBLE en hauteur.
+# ⚠ LA JAUGE EST **VERTICALE** PARCE QUE FABRICE L'A CHOISIE AINSI, et la verticale dit d'elle-même ce qu'elle
+#   règle : le jaune REMPLIT par le BAS, rempli jusqu'en haut = son à fond, on descend = le son baisse. C'est le
+#   sens natif d'un `VSlider` (sa part remplie part du bas), pas une inversion qu'il faudrait maintenir.
+# ⚠ ELLE NE VIT QUE PENDANT LE CHANT : elle naît avec le STOP (`_batir_stop`) et disparaît avec lui
+#   (`_montrer_boutons_fin`). Il n'y a AUCUNE barre de volume pendant le montage du puzzle — il n'y a pas de
+#   musique à ce moment-là, un réglage sans objet serait un bouton de plus à comprendre.
+# ⚠ LE MOTEUR DU SON EST CELUI DE L'ACCUEIL, REPRIS TEL QUEL : `SonPuzzle.appliquer_volume` + `noter_volume`, sur
+#   le bus `JeuPuzzles`. L'accueil règle avec un `HSlider`, la fin avec un `VSlider` — DEUX commandes, UN seul
+#   réglage, et il survit à l'extinction (`user://reglages_puzzle.cfg`). Rien n'est réécrit du moteur de son.
+# ⚠ DALTONISME (CLAUDE.md) : le jaune n'est JAMAIS le seul signal. Trois autres portent la même information — la
+#   HAUTEUR de la part remplie, le PICTOGRAMME HAUT-PARLEUR posé au-dessus (lisible par un enfant non-lecteur),
+#   et le mot « Volume » sur sa plaque sombre, sous la jauge, comme sous tous les autres boutons de cet écran.
+const VOL_FIN_LARGEUR := 64.0                  # l'épaisseur de la jauge — une cible de DOIGT, pas un rail fin
+const VOL_FIN_HAUTEUR := 236.0                 # sa longueur quand l'écran est assez haut
+const VOL_FIN_HAUTEUR_MIN := 110.0             # …et le plancher sous lequel on ne la rabote plus
+const VOL_FIN_PICTO := 46.0                    # le côté du haut-parleur, posé AU-DESSUS de la jauge
+const VOL_FIN_ECART := 14.0                    # entre le mot « STOP » et le pictogramme
+const VOL_FIN_ECART_PICTO := 8.0               # entre le pictogramme et le haut de la jauge
+# La plaque posée par `_etiquette` : 26 de haut, 2 d'écart au-dessus. Le chiffre est ICI pour que la colonne se
+# calcule sans redécouvrir à la main ce que `_etiquette` dessine.
+const FIN_ETIQUETTE_H := 28.0
+const COL_VOL_RAIL := Color(0.16, 0.10, 0.05, 1.0)    # le creux — LES MÊMES DEUX TEINTES QUE L'ACCUEIL, recopiées
+const COL_VOL_JAUGE := Color(0.98, 0.88, 0.25, 1.0)   # le jaune REMPLI : c'est sa HAUTEUR qui informe
+
 # (B8) LA FLÈCHE DU « NIVEAU SUIVANT », EN COORDONNÉES DE 0 → 1 DANS SON RECTANGLE DE DESSIN — la géométrie de la
 # fratrie CoccOs, RECOPIÉE ICI POINT PAR POINT (aucune ancre vers un autre jeu, GDD §6). Hampe épaisse puis tête
 # triangulaire pleine hauteur : « courte et épaisse » est donc une PROPORTION, pas une taille en dur, et la forme
@@ -714,6 +747,12 @@ var _compte_rect := Rect2()            # où le compte est écrit — au-DESSUS 
 var _btn_maison: Button = null         # la maison du HUD de jeu (dans le panneau)
 var _fin_calque: CanvasLayer = null    # le calque des boutons de la victoire — AU-DESSUS du plein écran
 var _btn_stop: Button = null
+# (B24 · §32) LA JAUGE DE SON DE L'ÉCRAN DE RÉCOMPENSE, SON PICTOGRAMME, ET LA VALEUR QU'ELLE PORTE.
+# ⚠ `_volume_fin` N'EST PAS LA SOURCE DE VÉRITÉ : la source est `SonPuzzle` (le bus + `user://`). Cette variable
+#   n'est que la dernière valeur lue/posée, gardée pour l'infobulle et la mesure du harnais.
+var _vol_fin: VSlider = null
+var _vol_fin_picto: Control = null
+var _volume_fin := SonPuzzle.VOLUME_DEFAUT
 var _btn_rejouer: Button = null
 var _btn_maison_fin: Button = null
 var _btn_suivant: Button = null         # (B8) « niveau suivant » — il n'existe QUE s'il y a un tableau après
@@ -2670,6 +2709,130 @@ func _batir_stop() -> void:
 	_btn_stop.add_child(ic)
 	ic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_etiquette("STOP", r)
+	# (B24 · §32) LA JAUGE NAÎT AVEC LE STOP, dans la même fonction et au même instant : les deux ne servent qu'au
+	# chant, et ce qui naît ensemble se cache ensemble. Un second point de création aurait été un second endroit
+	# où oublier de la cacher.
+	_batir_volume_fin()
+
+
+# ============================================================================================================
+# (B24 · §32) LA JAUGE DE SON DE L'ÉCRAN DE RÉCOMPENSE — « une barre réglable potentiomètre de son jaune »
+# ============================================================================================================
+# ⚠ C'EST LE PATRON DE L'ACCUEIL (`accueil.gd:_batir_volume`), REPRIS — même `SonPuzzle`, mêmes deux teintes,
+#   même pastille de poignée peinte à la main, même paire d'états stylés (`grabber_area` ET sa variante
+#   survolée : styler le premier seul ferait disparaître le jaune dès que le doigt se pose dessus).
+#   Ce qui change, et seulement cela : l'ORIENTATION (`VSlider`, le choix de Fabrice) — donc les marges de
+#   contenu passent de haut/bas à GAUCHE/DROITE. Sans elles, Godot dessinerait un rail de la largeur de sa
+#   texture par défaut (quelques pixels) au milieu d'un nœud de 64 : une ficelle au lieu d'une barre.
+# ⚠ LA VALEUR DE DÉPART EST CELLE QUI EST **RÉELLEMENT POSÉE** (`SonPuzzle.lire_volume()`), pas 100 % : si
+#   Fabrice a baissé le son sur l'accueil, la jauge de la fin doit déjà le montrer. `set_value_no_signal` pour
+#   que l'affichage de départ ne RÉÉCRIVE pas le réglage qu'il vient de lire.
+func _batir_volume_fin() -> void:
+	if _fin_calque == null or _vol_fin != null:
+		return
+	_volume_fin = SonPuzzle.lire_volume()
+	# ① LE PICTOGRAMME, SUR SA PROPRE PLAQUE SOMBRE. Même raison que les libellés (`_etiquette`) : il se pose sur
+	#    une IMAGE de tableau, dont on ne connaît pas la teinte. Il apporte son fond, donc son contraste.
+	var rp := cadre_picto_volume()
+	var porteur := Control.new()
+	porteur.name = "PictoVolume"
+	porteur.position = rp.position
+	porteur.size = rp.size
+	porteur.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_calque.add_child(porteur)
+	var plaque := ColorRect.new()
+	plaque.color = Color(0.05, 0.06, 0.09, 0.72)
+	plaque.position = Vector2.ZERO
+	plaque.size = rp.size
+	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	porteur.add_child(plaque)
+	var ic := IconeDessinee.new()
+	ic.ov = self
+	ic.forme = "haut_parleur"
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	porteur.add_child(ic)
+	ic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_vol_fin_picto = porteur
+	# ② LA JAUGE
+	var r := cadre_volume_fin()
+	var s := VSlider.new()
+	s.name = "BarreVolumeFin"
+	s.position = r.position
+	s.size = r.size
+	s.min_value = 0.0
+	s.max_value = 100.0
+	s.step = 1.0
+	s.set_value_no_signal(round(_volume_fin * 100.0))
+	s.focus_mode = Control.FOCUS_NONE           # comme les boutons : le clavier ne se fait pas voler la main
+	s.tooltip_text = "Régler le son du chant"
+	var arrondi: int = int(VOL_FIN_LARGEUR * 0.5)
+	var rail := StyleBoxFlat.new()
+	rail.bg_color = COL_VOL_RAIL
+	rail.set_corner_radius_all(arrondi)
+	rail.set_border_width_all(3)
+	rail.border_color = COL_ETIQUETTE           # bord clair franc : la FORME de la barre se lit sans la teinte
+	rail.content_margin_left = VOL_FIN_LARGEUR * 0.5
+	rail.content_margin_right = VOL_FIN_LARGEUR * 0.5
+	s.add_theme_stylebox_override("slider", rail)
+	for etat in ["grabber_area", "grabber_area_highlight"]:
+		var jauge := StyleBoxFlat.new()
+		jauge.bg_color = COL_VOL_JAUGE
+		jauge.set_corner_radius_all(arrondi)
+		jauge.content_margin_left = VOL_FIN_LARGEUR * 0.5
+		jauge.content_margin_right = VOL_FIN_LARGEUR * 0.5
+		s.add_theme_stylebox_override(etat, jauge)
+	var poignee: ImageTexture = _pastille_volume_fin(VOL_FIN_LARGEUR)
+	for icone in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		s.add_theme_icon_override(icone, poignee)
+	s.value_changed.connect(_volume_fin_change)
+	_fin_calque.add_child(s)
+	_vol_fin = s
+	# ③ LE MOT, sur la même plaque sombre que « STOP », « Rejouer » et « Accueil » — un signal de plus, celui qui
+	#    ne demande de reconnaître ni forme ni teinte.
+	# ⚠⚠ SA PLAQUE FAIT LA LARGEUR DE LA **COLONNE**, PAS CELLE DE LA JAUGE, ET C'EST MESURÉ : `_etiquette` taille
+	#   sa plaque sur le rectangle qu'on lui donne, et « Volume » à 18 pt est plus large que les 64 px de la
+	#   jauge — les deux bouts du mot débordaient sur l'IMAGE. C'est exactement le défaut que l'encadré de
+	#   `_etiquette` raconte (du clair sur du clair, un mot qu'on devine), et c'est aussi la leçon du libellé
+	#   « Suivant » de B8, qui avait dû être raccourci faute de plaque assez large. Ici la plaque s'élargit au
+	#   lieu que le mot rétrécisse : « Volume » est le mot juste, c'est la plaque qui doit le porter.
+	_etiquette("Volume", Rect2(Vector2(cadre_stop().position.x, r.position.y),
+		Vector2(STOP_TAILLE.x, r.size.y)))
+	_dire("jauge de son posée à droite SOUS le STOP (remonté) — %d %% au départ, bus « %s » %.1f dB"
+		% [int(round(_volume_fin * 100.0)), SonPuzzle.BUS, SonPuzzle.volume_bus_db()])
+
+
+# LA PASTILLE DE LA POIGNÉE — un disque CLAIR bordé de rouge, peint au diamètre demandé. C'est la pastille de
+# l'accueil (`accueil.gd:_pastille_poignee`), RECOPIÉE : un PNG de plus serait un fichier à importer, à inscrire
+# aux DEUX manifestes d'export et à tenir en cohérence avec l'épaisseur du rail (leçon `godot-export-liste-
+# explicite`). Ici le diamètre EST l'épaisseur, par construction.
+func _pastille_volume_fin(diametre: float) -> ImageTexture:
+	var d: int = maxi(8, int(roundf(diametre)))
+	var img := Image.create(d, d, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rr: float = float(d) * 0.5
+	var c := Vector2(rr, rr)
+	for yy in d:
+		for xx in d:
+			var dist: float = (Vector2(float(xx) + 0.5, float(yy) + 0.5) - c).length()
+			if dist <= rr - 3.0:
+				img.set_pixel(xx, yy, COL_ETIQUETTE)
+			elif dist <= rr - 0.5:
+				img.set_pixel(xx, yy, COL_ROUGE)     # le bord franc, de la teinte du triangle juste au-dessus
+	return ImageTexture.create_from_image(img)
+
+
+# ⚠ LE RÉGLAGE EST POSÉ **ET** NOTÉ, exactement comme sur l'accueil : posé sur le bus (l'enfant l'entend dans la
+#   seconde, sur le chant qui joue), noté dans `user://reglages_puzzle.cfg` (on le retrouve au lancement suivant,
+#   et l'accueil le relit). Un réglage de confort, pas une humeur.
+# ⚠ ON NE TOUCHE PAS `_musique.volume_db` NI `_video.bus` : les deux lecteurs passent déjà par le bus du jeu
+#   (`SonPuzzle.router` pour l'un, `bus = SonPuzzle.BUS` pour l'autre). Régler le bus les règle tous les deux —
+#   c'est précisément ce pour quoi ce bus existe.
+func _volume_fin_change(valeur: float) -> void:
+	_volume_fin = clampf(valeur / 100.0, 0.0, 1.0)
+	SonPuzzle.appliquer_volume(_volume_fin)
+	SonPuzzle.noter_volume(_volume_fin)
+	_dire("volume du chant : %d %% · bus « %s » %.1f dB (muet %s)"
+		% [int(round(_volume_fin * 100.0)), SonPuzzle.BUS, SonPuzzle.volume_bus_db(), str(SonPuzzle.bus_muet())])
 
 
 # LES BOUTONS DE LA FIN — REJOUER, la MAISON, et (B8) NIVEAU SUIVANT quand il y a une suite. Ensemble (GDD §7.10
@@ -2688,6 +2851,17 @@ func _montrer_boutons_fin() -> void:
 		var et: Node = _fin_calque.get_node_or_null("EtiquetteSTOP")
 		if et != null:
 			(et as CanvasItem).visible = false
+	# (B24 · §32) LA JAUGE PART AVEC LE STOP — « la barre et le STOP disparaissent ensemble quand la musique est
+	# finie/stoppée ». Il n'y a plus de son à régler : une barre qui ne commande rien tromperait l'enfant.
+	# ⚠ TROIS NŒUDS, UN SEUL GESTE : la jauge, son pictogramme et son mot. Ils sont cachés ici, au même endroit
+	#   et par le même test que le STOP, pour qu'aucun des trois ne puisse survivre seul à l'écran.
+	if _vol_fin != null:
+		_vol_fin.visible = false
+	if _vol_fin_picto != null:
+		_vol_fin_picto.visible = false
+	var ev: Node = _fin_calque.get_node_or_null("EtiquetteVolume")
+	if ev != null:
+		(ev as CanvasItem).visible = false
 	var rr := cadre_rejouer()
 	_btn_rejouer = _bouton_icone(rr, "rejouer", "Rejouer le même tableau", _rejouer)
 	_btn_rejouer.name = "BoutonRejouer"
@@ -2820,8 +2994,62 @@ func _retour_accueil() -> void:
 #   tombe dans la bande noire du letterbox (il ne recouvre alors RIEN de l'image) ; sur un écran debout, où le
 #   dessin occupe presque toute la largeur, il se pose par-dessus le bord droit de l'image. C'est assumé : « à
 #   droite, visible » est la demande, et un bouton qu'on doit chercher ne sert à rien.
+# ⚠⚠ (B24 · §32) LE STOP EST **REMONTÉ** : il n'est plus au milieu exact de la hauteur, il est au HAUT d'une
+#   colonne qui le contient LUI, son mot, le pictogramme et la jauge — et c'est la COLONNE ENTIÈRE qui est
+#   centrée. Sur 1024 × 768 le bouton passe de y = 336 à y = 156. C'est la demande de Fabrice mot pour mot
+#   (« qu'on remonte notre bouton qui arrête la musique »), et c'est aussi la seule façon de loger 236 px de
+#   jauge SOUS lui sans sortir de l'écran.
+#   ⚠ IL RESTE « À DROITE » AU SENS DE B3 (bord droit du canvas) : le harnais B4 mesure que son centre est dans
+#     la moitié droite, et cette mesure tient toujours.
+#   ⚠ IL EST CENTRÉ SUR LA COLONNE, pas collé au bord : la jauge (64) est plus étroite que lui (112), la colonne
+#     fait donc la largeur du plus large des deux, et les deux se centrent dessus. Sans ça la jauge pendrait au
+#     bord droit, décalée sous le bouton.
+func largeur_colonne_fin() -> float:
+	return maxf(STOP_TAILLE.x, VOL_FIN_LARGEUR)
+
+
+# CE QUE LA COLONNE CONTIENT DE FIXE — tout sauf la jauge, dont la longueur est ce qui s'ajuste.
+func hauteur_fixe_colonne_fin() -> float:
+	return STOP_TAILLE.y + FIN_ETIQUETTE_H + VOL_FIN_ECART + VOL_FIN_PICTO \
+		+ VOL_FIN_ECART_PICTO + FIN_ETIQUETTE_H
+
+
+# LA LONGUEUR DE LA JAUGE — ce qui RESTE une fois le fixe posé, borné des deux côtés.
+# ⚠ C'EST LA JAUGE QUI PLIE, PAS LE BOUTON : sur un écran court (un téléphone couché), raboter le STOP le rendrait
+#   difficile à viser au doigt, alors qu'une jauge plus courte reste une jauge. Le plancher dit où l'on s'arrête
+#   de raboter — en dessous, la colonne déborde et c'est `maxf` dans `y_colonne_fin` qui la recolle à la marge.
+func hauteur_jauge_fin() -> float:
+	return clampf(_ecran.y - 2.0 * FIN_MARGE - hauteur_fixe_colonne_fin(),
+		VOL_FIN_HAUTEUR_MIN, VOL_FIN_HAUTEUR)
+
+
+func hauteur_colonne_fin() -> float:
+	return hauteur_fixe_colonne_fin() + hauteur_jauge_fin()
+
+
+func y_colonne_fin() -> float:
+	return maxf(FIN_MARGE, (_ecran.y - hauteur_colonne_fin()) * 0.5)
+
+
 func cadre_stop() -> Rect2:
-	return Rect2(Vector2(_ecran.x - FIN_MARGE - STOP_TAILLE.x, (_ecran.y - STOP_TAILLE.y) * 0.5), STOP_TAILLE)
+	var lc: float = largeur_colonne_fin()
+	var xc: float = _ecran.x - FIN_MARGE - lc
+	return Rect2(Vector2(xc + (lc - STOP_TAILLE.x) * 0.5, y_colonne_fin()), STOP_TAILLE)
+
+
+# LE PICTOGRAMME HAUT-PARLEUR — sous le mot « STOP », au-dessus de la jauge. C'est le signal qui ne demande ni
+# de lire, ni de distinguer le jaune (CLAUDE.md · daltonisme).
+func cadre_picto_volume() -> Rect2:
+	var rs := cadre_stop()
+	var y: float = rs.end.y + FIN_ETIQUETTE_H + VOL_FIN_ECART
+	return Rect2(Vector2(rs.get_center().x - VOL_FIN_PICTO * 0.5, y), Vector2(VOL_FIN_PICTO, VOL_FIN_PICTO))
+
+
+# LA JAUGE — rendue au jeu ET au harnais, comme tous les rectangles de ce fichier.
+func cadre_volume_fin() -> Rect2:
+	var rp := cadre_picto_volume()
+	return Rect2(Vector2(cadre_stop().get_center().x - VOL_FIN_LARGEUR * 0.5,
+		rp.end.y + VOL_FIN_ECART_PICTO), Vector2(VOL_FIN_LARGEUR, hauteur_jauge_fin()))
 
 
 # (B8) LES BOUTONS DE LA FIN — UN SEUL CALCUL POUR LES DEUX OU LES TROIS. La rangée est CENTRÉE quel qu'en soit le
@@ -2964,6 +3192,8 @@ class IconeDessinee extends Control:
 				_recadrer(z)
 			"suivant_plus":
 				_suivant_plus(z)
+			"haut_parleur":
+				_haut_parleur(z)
 			# (B23 · §31.3) ⚠ LA FORME « prendre_poser » A DISPARU : c'était le glyphe du bouton PRENDRE ⇄ POSER
 			#   (logo du jeu + flèche retournée). Plus aucun bouton ne la demande.
 
@@ -3037,6 +3267,28 @@ class IconeDessinee extends Control:
 	# (B12 · §21.3) LE BOUTON PRENDRE ⇄ POSER — **LE LOGO DU JEU + UNE FLÈCHE**, ET RIEN D'ÉCRIT.
 	# LE TRIANGLE DU STOP — plein et ROUGE (Fabrice), cerné d'un trait clair : le bord se lit même quand la teinte
 	# ne se lit pas. Il pointe vers le HAUT, comme celui du lecteur de la fratrie.
+	# (B24 · §32) LE HAUT-PARLEUR — le signal du volume pour un enfant QUI NE LIT PAS. Un corps carré, un pavillon
+	# en trapèze, et DEUX arcs de son qui s'éloignent : ce sont les arcs qui font le haut-parleur, sans eux un
+	# trapèze collé à un carré se lit aussi bien « porte-voix » ou « drapeau ».
+	# ⚠ IL EST DESSINÉ **CLAIR**, à l'inverse des autres glyphes de ce fichier, et ce n'est pas une fantaisie : les
+	#   autres se posent sur le fond CLAIR d'un bouton, celui-ci sur la plaque SOMBRE que lui apporte
+	#   `_batir_volume_fin`. Dans les deux cas c'est le même contraste de LUMINANCE (CLAUDE.md), obtenu par le
+	#   sens inverse.
+	func _haut_parleur(z: Rect2) -> void:
+		var clair: Color = ov.COL_ETIQUETTE
+		var c: float = minf(z.size.x, z.size.y)
+		var o: Vector2 = z.get_center() - Vector2(c, c) * 0.5
+		# le corps : un carré au tiers gauche, à mi-hauteur
+		draw_rect(Rect2(o + Vector2(c * 0.06, c * 0.34), Vector2(c * 0.20, c * 0.32)), clair, true)
+		# le pavillon : un trapèze qui s'ouvre vers la droite
+		draw_colored_polygon(PackedVector2Array([
+			o + Vector2(c * 0.26, c * 0.34), o + Vector2(c * 0.52, c * 0.10),
+			o + Vector2(c * 0.52, c * 0.90), o + Vector2(c * 0.26, c * 0.66)]), clair)
+		# les deux arcs du son
+		var cc: Vector2 = o + Vector2(c * 0.52, c * 0.50)
+		for f in [0.26, 0.40]:
+			draw_arc(cc, c * f, deg_to_rad(-52.0), deg_to_rad(52.0), 24, clair, maxf(c * 0.06, 2.0))
+
 	func _stop(z: Rect2) -> void:
 		var c: float = minf(z.size.x, z.size.y)
 		var o: Vector2 = z.get_center() - Vector2(c, c) * 0.5
@@ -3372,6 +3624,22 @@ func etat_pour_preuve() -> Dictionary:
 		"musique_position": _musique.get_playback_position() if _musique != null else 0.0,
 		"stop_visible": _btn_stop != null and _btn_stop.visible,
 		"stop": cadre_stop(),
+		# (B24 · §32) LA JAUGE DE SON DE LA FIN — mesurée comme tout le reste : ce qui est POSÉ (le rectangle, la
+		# valeur affichée, la visibilité des trois nœuds) ET ce que le bus PORTE vraiment. Les deux se confrontent :
+		# une jauge qui « pense » régler et un bus resté à son niveau sont deux choses différentes.
+		"volume_fin_existe": _vol_fin != null,
+		"volume_fin_visible": _vol_fin != null and _vol_fin.visible,
+		"volume_fin_vertical": _vol_fin is VSlider,
+		"volume_fin": cadre_volume_fin(),
+		"volume_fin_valeur": _vol_fin.value if _vol_fin != null else -1.0,
+		"volume_fin_picto_visible": _vol_fin_picto != null and _vol_fin_picto.visible,
+		"volume_fin_picto": cadre_picto_volume(),
+		"volume_fin_etiquette_visible": (_fin_calque != null
+			and _fin_calque.get_node_or_null("EtiquetteVolume") != null
+			and (_fin_calque.get_node_or_null("EtiquetteVolume") as CanvasItem).visible),
+		"volume_reglage": SonPuzzle.lire_volume(),
+		"volume_bus_db": SonPuzzle.volume_bus_db(),
+		"volume_bus_muet": SonPuzzle.bus_muet(),
 		# (B17 · §25) LA RÉCOMPENSE VIDÉO — mesurée comme la musique, avec en plus ce que seule une vidéo a :
 		# le cadre qu'elle occupe, sa taille NATIVE déclarée, et la taille de la texture que le décodeur rend
 		# vraiment. Les deux dernières se confrontent : une taille déclarée fausse déformerait l'image sans
