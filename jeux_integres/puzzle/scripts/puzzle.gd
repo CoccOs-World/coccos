@@ -487,6 +487,35 @@ const VOL_FIN_ECART := 14.0                    # entre le mot « STOP » et le p
 const VOL_FIN_ECART_PICTO := 8.0               # entre le pictogramme et le haut de la jauge
 # La plaque posée par `_etiquette` : 26 de haut, 2 d'écart au-dessus. Le chiffre est ICI pour que la colonne se
 # calcule sans redécouvrir à la main ce que `_etiquette` dessine.
+# ============================================================================================================
+# (PROTO KARAOKÉ · 02-10) LA BARRE DE PAROLES DU BAS, ET SON VOILE ROSE — **UNE SEULE CHANSON**
+#
+# LA DIRECTIVE, MOT POUR MOT (Fabrice, 02-10) : « une barre de paroles EN BAS de l'écran de récompense ; un
+# voile ROSE (opaque) qui se remplit SYLLABE PAR SYLLABE, au fil de la voix, pendant le chant ; INDÉPENDANTE de
+# la jauge de volume (jaune) et du STOP — ne pas les mêler. »
+#
+# ⚠⚠ C'EST UN PROTOTYPE SUR **UN SEUL TABLEAU**, ET CELA SE LIT DANS LE CODE : `PAROLES_PROTO` est un
+#   dictionnaire d'UNE entrée (le tableau 2, « La fusée », chanson « Boum dans le ciel »). Les huit autres
+#   tableaux ne déclarent aucun fichier de paroles et ne passent jamais par `_batir_paroles` — la table des
+#   tableaux (`tableaux_puzzle.gd`) n'est PAS touchée, justement pour qu'aucun autre tableau ne change.
+# ⚠ INDÉPENDANTE veut dire : son propre porteur, son propre fichier de minutage, sa propre horloge (la tête de
+#   lecture du chant). Elle ne lit ni `_volume_fin`, ni l'état du STOP, et ne modifie ni l'un ni l'autre.
+# ⚠ MAIS ELLE NE SURVIT PAS AU CHANT, et ce n'est pas un mélange — c'est une collision de PLACE : les boutons
+#   REJOUER / ACCUEIL / SUIVANT se posent exactement là (`cadre_bouton_fin` : y = h − 18 − 96 − 26), et une
+#   barre laissée derrière eux passerait SOUS les boutons. Elle se cache donc dans `_montrer_boutons_fin`,
+#   comme la jauge, pour une raison qui n'a rien à voir avec la jauge.
+# ⚠ LE ROSE EST OPAQUE (alpha 1) et le texte qu'il porte est ENCRE SOMBRE : le contraste tient en LUMINANCE des
+#   deux côtés du voile (clair sur sombre à gauche, sombre sur rose à droite) — CLAUDE.md, daltonisme. La teinte
+#   exacte, la taille et la quantité de texte sont les trois réglages que Fabrice ajustera après son test.
+const PAROLES_PROTO := {2: "res://jeux_integres/puzzle/paroles/Boum_dans_le_ciel.syllabes.json"}
+const PAROLES_HAUTEUR := 88.0                  # la hauteur de la plaque — une ligne de chant, lisible de loin
+const PAROLES_TAILLE := 38.0                   # la taille VISÉE ; elle se rabote si la ligne est trop longue
+const PAROLES_TAILLE_MIN := 18.0               # …et le plancher sous lequel on ne rabote plus
+const PAROLES_MARGE_TEXTE := 18.0              # l'air à gauche et à droite du texte, dans la plaque
+const COL_PAROLES_PLAQUE := Color(0.04, 0.05, 0.08, 0.84)   # la plaque sombre — comme sous tous les libellés
+const COL_PAROLES_TEXTE := Color(0.97, 0.98, 1.0, 1.0)      # ce qui n'est PAS encore chanté : clair sur sombre
+const COL_PAROLES_ROSE := Color(0.95, 0.32, 0.60, 1.0)      # le voile, OPAQUE
+const COL_PAROLES_ENCRE := Color(0.10, 0.03, 0.07, 1.0)     # ce qui EST chanté : sombre sur rose
 const FIN_ETIQUETTE_H := 28.0
 const COL_VOL_RAIL := Color(0.16, 0.10, 0.05, 1.0)    # le creux — LES MÊMES DEUX TEINTES QUE L'ACCUEIL, recopiées
 const COL_VOL_JAUGE := Color(0.98, 0.88, 0.25, 1.0)   # le jaune REMPLI : c'est sa HAUTEUR qui informe
@@ -752,6 +781,22 @@ var _btn_stop: Button = null
 #   n'est que la dernière valeur lue/posée, gardée pour l'infobulle et la mesure du harnais.
 var _vol_fin: VSlider = null
 var _vol_fin_picto: Control = null
+# (PROTO KARAOKÉ) LA BARRE DE PAROLES — tout son état tient ici, et rien n'en sort vers le STOP ni la jauge.
+# ⚠ `_paroles_w` EST UN TABLEAU DE LARGEURS EN PIXELS, pas de caractères : la largeur du voile se mesure avec la
+#   POLICE qui dessine, syllabe par syllabe, sinon un « m » et un « i » avanceraient pareil.
+var _paroles_porteur: Control = null
+var _paroles_base: Label = null
+var _paroles_voile: Control = null
+var _paroles_rose: ColorRect = null
+var _paroles_encre: Label = null
+var _paroles_lignes: Array = []                # le minutage lu dans `res://paroles/…syllabes.json`
+var _paroles_i := -1                           # la ligne actuellement posée
+var _paroles_w: PackedFloat32Array = PackedFloat32Array()   # largeur cumulée à chaque limite de syllabe
+var _paroles_largeur := 0.0                    # la largeur totale de la ligne posée
+var _paroles_x0 := 0.0                         # le bord GAUCHE du texte dans la plaque (texte centré)
+var _paroles_syllabe := -1                     # la syllabe en cours — rendue au harnais
+var _paroles_part := 0.0                       # 0 → 1 : la part remplie de la ligne
+var _paroles_fichier := ""
 var _volume_fin := SonPuzzle.VOLUME_DEFAUT
 var _btn_rejouer: Button = null
 var _btn_maison_fin: Button = null
@@ -2376,6 +2421,12 @@ func _duree_recompense() -> float:
 
 
 func _process(dt: float) -> void:
+	# (PROTO KARAOKÉ) LE VOILE SUIT LA VOIX — en TÊTE de `_process`, parce que l'écran de récompense est en
+	# `Etat.PLEIN_ECRAN` et que les deux branches ci-dessous rendent la main avant d'y arriver.
+	# ⚠ IL NE TOURNE QUE PENDANT LE CHANT (`_musique_etat == "joue"`) : une fois la chanson finie ou stoppée,
+	#   la tête de lecture ne bouge plus et la barre est cachée.
+	if _paroles_porteur != null and _musique_etat == "joue":
+		_suivre_paroles()
 	# (B2) LE COMPTE DES QUINZE SECONDES — il ne tourne QUE pendant le jeu : ni pendant la fête, ni sur l'image
 	# finale, et il repart à zéro dès que l'enfant pose une pièce (`_lacher`).
 	if _etat == Etat.JEU:
@@ -2617,6 +2668,10 @@ func _lancer_musique_tableau() -> void:
 	_musique_passages += 1
 	_musique_etat = "joue"
 	_batir_stop()
+	# (PROTO KARAOKÉ) LA BARRE DE PAROLES NAÎT AVEC LE CHANT — mais par SA propre porte : `_batir_stop` ne la
+	# connaît pas, et elle ne touche à rien de ce que `_batir_stop` a posé. Sur les huit autres tableaux,
+	# `_batir_paroles` lit `PAROLES_PROTO`, n'y trouve rien, et rend la main sans rien construire.
+	_batir_paroles()
 	_dire("MUSIQUE DU TABLEAU « %s » — %s, %.1f s, UNE seule fois (passage n° %d) · le STOP rouge est à droite"
 		% [TableauxPuzzle.nom(tableau), TableauxPuzzle.chemin_musique(tableau).get_file(),
 			flux.get_length(), _musique_passages])
@@ -2862,6 +2917,11 @@ func _montrer_boutons_fin() -> void:
 	var ev: Node = _fin_calque.get_node_or_null("EtiquetteVolume")
 	if ev != null:
 		(ev as CanvasItem).visible = false
+	# (PROTO KARAOKÉ) LA BARRE DE PAROLES SE RETIRE ELLE AUSSI — pas parce qu'elle serait liée au STOP ou à la
+	# jauge, mais parce que les boutons de la fin occupent EXACTEMENT sa place (cf. l'encadré de `PAROLES_PROTO`).
+	# Deux nœuds posés au même endroit, c'est un libellé illisible : le dernier arrivé la couvrirait à moitié.
+	if _paroles_porteur != null:
+		_paroles_porteur.visible = false
 	var rr := cadre_rejouer()
 	_btn_rejouer = _bouton_icone(rr, "rejouer", "Rejouer le même tableau", _rejouer)
 	_btn_rejouer.name = "BoutonRejouer"
@@ -3050,6 +3110,200 @@ func cadre_volume_fin() -> Rect2:
 	var rp := cadre_picto_volume()
 	return Rect2(Vector2(cadre_stop().get_center().x - VOL_FIN_LARGEUR * 0.5,
 		rp.end.y + VOL_FIN_ECART_PICTO), Vector2(VOL_FIN_LARGEUR, hauteur_jauge_fin()))
+
+
+# ============================================================================================================
+# (PROTO KARAOKÉ) LA BARRE DE PAROLES — GÉOMÉTRIE, CONSTRUCTION, ET LE VOILE QUI SUIT LA VOIX
+# ============================================================================================================
+# LE RECTANGLE DE LA PLAQUE : TOUT EN BAS, et il S'ARRÊTE AVANT LA COLONNE DE DROITE. Le STOP et la jauge
+# occupent `largeur_colonne_fin()` au bord droit sur presque toute la hauteur : une barre pleine largeur
+# passerait dessous ou dessus, et c'est précisément le « ne pas les mêler » du brief, pris au pied de la lettre.
+# ⚠ Rendu au jeu ET au harnais, comme tous les rectangles de ce fichier.
+func cadre_paroles() -> Rect2:
+	var l: float = _ecran.x - 2.0 * FIN_MARGE - largeur_colonne_fin() - FIN_ECART
+	return Rect2(Vector2(FIN_MARGE, _ecran.y - FIN_MARGE - PAROLES_HAUTEUR),
+		Vector2(maxf(l, 160.0), PAROLES_HAUTEUR))
+
+
+# LE MINUTAGE — lu au FileAccess, pas en `load()`. Un `.json` passe par l'importateur du moteur et devient une
+# ressource `JSON` ; le lire en texte brut donne le même contenu sans dépendre de l'état du dossier `.godot`,
+# et c'est aussi ce qui marchera dans un paquet exporté à condition que le fichier y entre (cf. le RES).
+# ⚠ LE FICHIER ABSENT N'EST PAS UNE PANNE SILENCIEUSE : on l'écrit au journal et la barre ne naît pas. Le chant,
+#   le STOP et la jauge continuent exactement comme avant — le prototype ne peut pas casser l'écran de fin.
+func _charger_paroles() -> void:
+	_paroles_lignes = []
+	_paroles_fichier = str(PAROLES_PROTO.get(tableau, ""))
+	if _paroles_fichier == "":
+		return
+	if not FileAccess.file_exists(_paroles_fichier):
+		push_warning("[puzzle] minutage de paroles introuvable : " + _paroles_fichier)
+		_dire("PAROLES : le minutage « %s » est introuvable — pas de barre, le reste de l'écran est intact"
+			% _paroles_fichier)
+		return
+	var f := FileAccess.open(_paroles_fichier, FileAccess.READ)
+	var d = JSON.parse_string(f.get_as_text())
+	f.close()
+	if not (d is Dictionary) or not (d as Dictionary).has("lignes"):
+		push_warning("[puzzle] minutage de paroles illisible : " + _paroles_fichier)
+		return
+	_paroles_lignes = (d as Dictionary)["lignes"] as Array
+
+
+func _batir_paroles() -> void:
+	if _fin_calque == null or _paroles_porteur != null:
+		return
+	_charger_paroles()
+	if _paroles_lignes.is_empty():
+		return
+	var r := cadre_paroles()
+	_paroles_porteur = Control.new()
+	_paroles_porteur.name = "BarreParoles"
+	_paroles_porteur.position = r.position
+	_paroles_porteur.size = r.size
+	_paroles_porteur.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_calque.add_child(_paroles_porteur)
+	var plaque := ColorRect.new()
+	plaque.name = "PlaqueParoles"
+	plaque.color = COL_PAROLES_PLAQUE
+	plaque.size = r.size
+	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles_porteur.add_child(plaque)
+	_paroles_base = _label_paroles("ParolesClair", COL_PAROLES_TEXTE, r.size)
+	_paroles_porteur.add_child(_paroles_base)
+	# LE VOILE : un porteur qui COUPE ce qui dépasse (`clip_contents`), et dont la seule largeur avance. Dedans,
+	# le rose PLEIN et le MÊME texte en encre sombre, posé au même pixel que le clair — c'est ce qui donne le
+	# « remplit le texte » de Fabrice plutôt qu'un rectangle qui glisse par-dessus des mots devenus illisibles.
+	_paroles_voile = Control.new()
+	_paroles_voile.name = "VoileRose"
+	_paroles_voile.clip_contents = true
+	_paroles_voile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles_porteur.add_child(_paroles_voile)
+	_paroles_rose = ColorRect.new()
+	_paroles_rose.name = "FondRose"
+	_paroles_rose.color = COL_PAROLES_ROSE
+	_paroles_rose.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles_voile.add_child(_paroles_rose)
+	_paroles_encre = _label_paroles("ParolesEncre", COL_PAROLES_ENCRE, r.size)
+	_paroles_voile.add_child(_paroles_encre)
+	_poser_ligne_paroles(0)
+	_dire("BARRE DE PAROLES (proto, tableau « %s ») — %s · %d lignes · plaque %s · voile ROSE %s"
+		% [TableauxPuzzle.nom(tableau), _paroles_fichier.get_file(), _paroles_lignes.size(), str(r),
+			str(COL_PAROLES_ROSE)])
+
+
+func _label_paroles(nom: String, teinte: Color, taille: Vector2) -> Label:
+	var l := Label.new()
+	l.name = nom
+	l.position = Vector2.ZERO
+	l.size = taille
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_color_override("font_color", teinte)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+# LA TAILLE QUI TIENT — on part de la taille voulue et on rabote tant que la ligne déborde de la plaque. Une
+# ligne coupée au milieu d'un mot serait pire qu'une ligne un peu plus petite, et le `autowrap` ferait sauter la
+# mesure de largeur sur laquelle le voile s'appuie.
+func _taille_paroles(texte: String, largeur: float) -> int:
+	var f: Font = ThemeDB.fallback_font
+	var t := int(PAROLES_TAILLE)
+	while t > int(PAROLES_TAILLE_MIN) and f.get_string_size(texte, HORIZONTAL_ALIGNMENT_LEFT, -1, t).x > largeur:
+		t -= 1
+	return t
+
+
+# POSER UNE LIGNE : le texte dans les deux Labels, la même police, et le tableau des largeurs CUMULÉES mesuré
+# syllabe par syllabe avec cette police-là.
+# ⚠⚠ LES MORCEAUX DE SYLLABE PORTENT LEURS ESPACES ET LEUR PONCTUATION (c'est le minuteur qui le garantit) :
+#   mis bout à bout ils redonnent la ligne à la lettre près. Mesurer les PRÉFIXES plutôt que les morceaux un à
+#   un évite l'erreur de crénage qui s'accumulerait sur dix additions.
+func _poser_ligne_paroles(i: int) -> void:
+	if i < 0 or i >= _paroles_lignes.size():
+		return
+	_paroles_i = i
+	var ligne: Dictionary = _paroles_lignes[i]
+	var texte := str(ligne["texte"])
+	var r := cadre_paroles()
+	var dispo: float = r.size.x - 2.0 * PAROLES_MARGE_TEXTE
+	var taille := _taille_paroles(texte, dispo)
+	var f: Font = ThemeDB.fallback_font
+	for l in [_paroles_base, _paroles_encre]:
+		l.add_theme_font_size_override("font_size", taille)
+		l.text = texte
+	_paroles_largeur = f.get_string_size(texte, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+	_paroles_x0 = (r.size.x - _paroles_largeur) * 0.5
+	var syl: Array = ligne["syllabes"] as Array
+	_paroles_w = PackedFloat32Array()
+	_paroles_w.append(0.0)
+	var prefixe := ""
+	for k in syl.size():
+		prefixe += str((syl[k] as Dictionary)["t"])
+		_paroles_w.append(f.get_string_size(prefixe, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x)
+	# La dernière largeur cumulée EST la largeur de la ligne : on les recolle pour que le voile plein couvre
+	# exactement le texte, au pixel près, même si le crénage du dernier signe diffère de 0,5 px.
+	_paroles_w[_paroles_w.size() - 1] = _paroles_largeur
+	_paroles_voile.position = Vector2(_paroles_x0, 0.0)
+	_paroles_voile.size = Vector2(0.0, r.size.y)
+	_paroles_rose.position = Vector2.ZERO
+	_paroles_rose.size = Vector2(_paroles_largeur, r.size.y)
+	_paroles_encre.position = Vector2(-_paroles_x0, 0.0)
+	_paroles_encre.size = r.size
+	_paroles_syllabe = -1
+	_paroles_part = 0.0
+
+
+# L'HORLOGE DU VOILE : LA TÊTE DE LECTURE DU CHANT LUI-MÊME. Pas un chronomètre parallèle — un compteur à côté
+# dériverait du son dès la première image perdue, et c'est exactement ce qui se voit dans un karaoké.
+# ⚠ On corrige du temps écoulé depuis le dernier mélange ET de la latence de sortie : c'est la recette du moteur
+#   pour savoir ce que l'oreille entend MAINTENANT, et non ce que le lecteur a déjà poussé dans la carte son.
+func _position_chant() -> float:
+	if _musique == null:
+		return 0.0
+	return maxf(0.0, _musique.get_playback_position()
+		+ AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency())
+
+
+func _suivre_paroles() -> void:
+	var t := _position_chant()
+	var i := _ligne_a(t)
+	if i != _paroles_i:
+		_poser_ligne_paroles(i)
+	_paroles_part = _part_remplie(t)
+	_paroles_voile.size.x = _paroles_largeur * _paroles_part
+
+
+# LA LIGNE AFFICHÉE : la dernière dont le chant a franchi le début. Entre deux lignes, la précédente reste —
+# pleine — plutôt que de disparaître : un bas d'écran qui clignote à chaque respiration fatigue plus qu'il n'aide.
+func _ligne_a(t: float) -> int:
+	var i := 0
+	for k in _paroles_lignes.size():
+		if t >= float((_paroles_lignes[k] as Dictionary)["debut"]):
+			i = k
+	return i
+
+
+# LA PART REMPLIE — SYLLABE PAR SYLLABE, et LISSE À L'INTÉRIEUR de chaque syllabe. Un escalier qui saute d'une
+# syllabe entière d'un coup donnerait un voile saccadé ; ce qui doit être syllabique, ce sont les BORNES, pas le
+# mouvement. Entre deux syllabes (une respiration), le voile tient sa place au lieu d'avancer dans le vide.
+func _part_remplie(t: float) -> float:
+	if _paroles_largeur <= 0.0 or _paroles_w.size() < 2:
+		return 0.0
+	var syl: Array = (_paroles_lignes[_paroles_i] as Dictionary)["syllabes"] as Array
+	for k in syl.size():
+		var s: Dictionary = syl[k]
+		var d := float(s["debut"])
+		var f := float(s["fin"])
+		if t < d:
+			_paroles_syllabe = k - 1
+			return _paroles_w[k] / _paroles_largeur
+		if t < f:
+			_paroles_syllabe = k
+			var u: float = 0.0 if f <= d else clampf((t - d) / (f - d), 0.0, 1.0)
+			return lerpf(_paroles_w[k], _paroles_w[k + 1], u) / _paroles_largeur
+	_paroles_syllabe = syl.size() - 1
+	return 1.0
 
 
 # (B8) LES BOUTONS DE LA FIN — UN SEUL CALCUL POUR LES DEUX OU LES TROIS. La rangée est CENTRÉE quel qu'en soit le
@@ -3527,6 +3781,26 @@ func etat_pour_preuve() -> Dictionary:
 		"taille_image": _taille,
 		"tol_aimant": _tol_aimant,
 		"rect_plein_ecran": rect_plein_ecran(),
+		# (PROTO KARAOKÉ) TOUT CE QU'IL FAUT POUR MESURER LA BARRE ET SON VOILE SANS RIEN DEVINER — le
+		# rectangle de la plaque, celui du texte, celui du voile ROSE (c'est lui qui avance), la ligne et la
+		# syllabe en cours, et le fichier de minutage réellement chargé.
+		"paroles_fichier": _paroles_fichier,
+		"paroles_lignes": _paroles_lignes.size(),
+		"paroles_existe": _paroles_porteur != null,
+		"paroles_visible": _paroles_porteur != null and _paroles_porteur.visible,
+		"paroles_rect": cadre_paroles(),
+		"paroles_texte": _paroles_base.text if _paroles_base != null else "",
+		"paroles_ligne": _paroles_i,
+		"paroles_syllabe": _paroles_syllabe,
+		"paroles_syllabes_ligne": (_paroles_w.size() - 1) if _paroles_w.size() > 0 else 0,
+		"paroles_part": _paroles_part,
+		"paroles_texte_rect": Rect2(cadre_paroles().position + Vector2(_paroles_x0, 0.0),
+			Vector2(_paroles_largeur, PAROLES_HAUTEUR)),
+		"paroles_voile_rect": Rect2(cadre_paroles().position + Vector2(_paroles_x0, 0.0),
+			Vector2(_paroles_voile.size.x if _paroles_voile != null else 0.0, PAROLES_HAUTEUR)),
+		"paroles_couleur_voile": COL_PAROLES_ROSE,
+		"paroles_couleur_texte": COL_PAROLES_TEXTE,
+		"paroles_couleur_encre": COL_PAROLES_ENCRE,
 		"panneau_x": _panneau.position.x,
 		# (B2)
 		"ecran": _ecran,

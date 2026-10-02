@@ -1,0 +1,342 @@
+{
+ "chanson": "Boum_dans_le_ciel",
+ "source_audio": "audio/Boum_dans_le_ciel.mp3",
+ "duree_s": 30.79,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.46,
+   "texte": "Oh, oh, oh, oh, oh",
+   "syllabes": [
+    {
+     "t": "Oh, ",
+     "debut": 0.0,
+     "fin": 1.14
+    },
+    {
+     "t": "oh, ",
+     "debut": 1.34,
+     "fin": 1.42
+    },
+    {
+     "t": "oh, ",
+     "debut": 1.42,
+     "fin": 2.32
+    },
+    {
+     "t": "oh, ",
+     "debut": 2.32,
+     "fin": 2.86
+    },
+    {
+     "t": "oh",
+     "debut": 2.86,
+     "fin": 3.46
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 3.46,
+   "fin": 6.96,
+   "texte": "Regardez cette fusée géante",
+   "syllabes": [
+    {
+     "t": "Re",
+     "debut": 3.46,
+     "fin": 3.96
+    },
+    {
+     "t": "gar",
+     "debut": 3.96,
+     "fin": 4.46
+    },
+    {
+     "t": "dez ",
+     "debut": 4.46,
+     "fin": 4.96
+    },
+    {
+     "t": "cette ",
+     "debut": 4.96,
+     "fin": 5.38
+    },
+    {
+     "t": "fu",
+     "debut": 5.38,
+     "fin": 5.64
+    },
+    {
+     "t": "sée ",
+     "debut": 5.64,
+     "fin": 5.9
+    },
+    {
+     "t": "géante",
+     "debut": 5.9,
+     "fin": 6.96
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 6.96,
+   "fin": 10.44,
+   "texte": "Trois fois nous, c'est impressionnant",
+   "syllabes": [
+    {
+     "t": "Trois ",
+     "debut": 6.96,
+     "fin": 7.68
+    },
+    {
+     "t": "fois ",
+     "debut": 7.68,
+     "fin": 7.92
+    },
+    {
+     "t": "nous, ",
+     "debut": 7.92,
+     "fin": 8.36
+    },
+    {
+     "t": "c'est ",
+     "debut": 8.76,
+     "fin": 9.2
+    },
+    {
+     "t": "im",
+     "debut": 9.2,
+     "fin": 9.51
+    },
+    {
+     "t": "pres",
+     "debut": 9.51,
+     "fin": 9.82
+    },
+    {
+     "t": "sion",
+     "debut": 9.82,
+     "fin": 10.13
+    },
+    {
+     "t": "nant",
+     "debut": 10.13,
+     "fin": 10.44
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 10.44,
+   "fin": 13.94,
+   "texte": "Boum, boum font les fusées",
+   "syllabes": [
+    {
+     "t": "Boum, ",
+     "debut": 10.44,
+     "fin": 11.3
+    },
+    {
+     "t": "boum ",
+     "debut": 11.38,
+     "fin": 11.62
+    },
+    {
+     "t": "font ",
+     "debut": 11.62,
+     "fin": 11.88
+    },
+    {
+     "t": "les ",
+     "debut": 11.88,
+     "fin": 12.2
+    },
+    {
+     "t": "fu",
+     "debut": 12.2,
+     "fin": 13.07
+    },
+    {
+     "t": "sées",
+     "debut": 13.07,
+     "fin": 13.94
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 13.94,
+   "fin": 17.0,
+   "texte": "Dans des éclats de grande beauté",
+   "syllabes": [
+    {
+     "t": "Dans ",
+     "debut": 13.94,
+     "fin": 14.54
+    },
+    {
+     "t": "des ",
+     "debut": 14.54,
+     "fin": 14.88
+    },
+    {
+     "t": "é",
+     "debut": 14.88,
+     "fin": 15.29
+    },
+    {
+     "t": "clats ",
+     "debut": 15.29,
+     "fin": 15.7
+    },
+    {
+     "t": "de ",
+     "debut": 15.7,
+     "fin": 16.18
+    },
+    {
+     "t": "grande ",
+     "debut": 16.18,
+     "fin": 16.5
+    },
+    {
+     "t": "beau",
+     "debut": 16.5,
+     "fin": 16.75
+    },
+    {
+     "t": "té",
+     "debut": 16.75,
+     "fin": 17.0
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 17.68,
+   "fin": 21.12,
+   "texte": "N'aie pas peur du bruit",
+   "syllabes": [
+    {
+     "t": "N'aie ",
+     "debut": 17.68,
+     "fin": 18.3
+    },
+    {
+     "t": "pas ",
+     "debut": 18.3,
+     "fin": 18.8
+    },
+    {
+     "t": "peur ",
+     "debut": 18.8,
+     "fin": 19.18
+    },
+    {
+     "t": "du ",
+     "debut": 19.18,
+     "fin": 19.48
+    },
+    {
+     "t": "bruit",
+     "debut": 19.48,
+     "fin": 21.12
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 21.12,
+   "fin": 24.58,
+   "texte": "Bouche tes oreilles et regarde comme c'est beau",
+   "syllabes": [
+    {
+     "t": "Bouche ",
+     "debut": 21.12,
+     "fin": 21.7
+    },
+    {
+     "t": "tes ",
+     "debut": 21.7,
+     "fin": 21.98
+    },
+    {
+     "t": "o",
+     "debut": 21.98,
+     "fin": 22.31
+    },
+    {
+     "t": "reilles ",
+     "debut": 22.31,
+     "fin": 22.64
+    },
+    {
+     "t": "et ",
+     "debut": 22.64,
+     "fin": 23.04
+    },
+    {
+     "t": "re",
+     "debut": 23.04,
+     "fin": 23.23
+    },
+    {
+     "t": "garde ",
+     "debut": 23.23,
+     "fin": 23.42
+    },
+    {
+     "t": "comme ",
+     "debut": 23.42,
+     "fin": 23.62
+    },
+    {
+     "t": "c'est ",
+     "debut": 23.62,
+     "fin": 23.98
+    },
+    {
+     "t": "beau",
+     "debut": 23.98,
+     "fin": 24.58
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 24.58,
+   "fin": 29.58,
+   "texte": "Regarde comme c'est beau !",
+   "syllabes": [
+    {
+     "t": "Re",
+     "debut": 24.58,
+     "fin": 25.22
+    },
+    {
+     "t": "garde ",
+     "debut": 25.22,
+     "fin": 25.86
+    },
+    {
+     "t": "comme ",
+     "debut": 25.86,
+     "fin": 26.3
+    },
+    {
+     "t": "c'est ",
+     "debut": 26.3,
+     "fin": 28.12
+    },
+    {
+     "t": "beau !",
+     "debut": 28.12,
+     "fin": 29.58
+    }
+   ]
+  }
+ ]
+}
