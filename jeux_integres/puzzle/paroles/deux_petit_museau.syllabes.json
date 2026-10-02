@@ -1,0 +1,392 @@
+{
+ "chanson": "deux_petit_museau",
+ "source_audio": "audio/deux petit museau.mp3",
+ "duree_s": 30.77,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.74,
+   "texte": "Sur le tapis de trèfles et d'or",
+   "syllabes": [
+    {
+     "t": "Sur ",
+     "debut": 0.0,
+     "fin": 0.48
+    },
+    {
+     "t": "le ",
+     "debut": 0.48,
+     "fin": 0.78
+    },
+    {
+     "t": "ta",
+     "debut": 0.78,
+     "fin": 1.21
+    },
+    {
+     "t": "pis ",
+     "debut": 1.21,
+     "fin": 1.64
+    },
+    {
+     "t": "de ",
+     "debut": 1.64,
+     "fin": 1.92
+    },
+    {
+     "t": "trèfles ",
+     "debut": 1.92,
+     "fin": 2.64
+    },
+    {
+     "t": "et ",
+     "debut": 2.64,
+     "fin": 3.06
+    },
+    {
+     "t": "d'or",
+     "debut": 3.06,
+     "fin": 3.74
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 3.74,
+   "fin": 7.44,
+   "texte": "Le soleil joue à cache cache encore",
+   "syllabes": [
+    {
+     "t": "Le ",
+     "debut": 3.74,
+     "fin": 4.22
+    },
+    {
+     "t": "so",
+     "debut": 4.22,
+     "fin": 4.49
+    },
+    {
+     "t": "leil ",
+     "debut": 4.49,
+     "fin": 4.76
+    },
+    {
+     "t": "joue ",
+     "debut": 4.76,
+     "fin": 5.24
+    },
+    {
+     "t": "à ",
+     "debut": 5.24,
+     "fin": 5.72
+    },
+    {
+     "t": "cache ",
+     "debut": 5.72,
+     "fin": 6.08
+    },
+    {
+     "t": "cache ",
+     "debut": 6.08,
+     "fin": 6.36
+    },
+    {
+     "t": "en",
+     "debut": 6.36,
+     "fin": 6.9
+    },
+    {
+     "t": "core",
+     "debut": 6.9,
+     "fin": 7.44
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 7.44,
+   "fin": 11.22,
+   "texte": "De petits mussots de cœur en fête",
+   "syllabes": [
+    {
+     "t": "De ",
+     "debut": 7.44,
+     "fin": 7.92
+    },
+    {
+     "t": "pe",
+     "debut": 7.92,
+     "fin": 8.07
+    },
+    {
+     "t": "tits ",
+     "debut": 8.07,
+     "fin": 8.22
+    },
+    {
+     "t": "mus",
+     "debut": 8.22,
+     "fin": 8.85
+    },
+    {
+     "t": "sots ",
+     "debut": 8.85,
+     "fin": 9.48
+    },
+    {
+     "t": "de ",
+     "debut": 9.48,
+     "fin": 9.88
+    },
+    {
+     "t": "cœur ",
+     "debut": 9.88,
+     "fin": 10.1
+    },
+    {
+     "t": "en ",
+     "debut": 10.1,
+     "fin": 10.48
+    },
+    {
+     "t": "fête",
+     "debut": 10.48,
+     "fin": 11.22
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 11.22,
+   "fin": 14.9,
+   "texte": "Se cherchent se frôl sans prise de tête",
+   "syllabes": [
+    {
+     "t": "Se ",
+     "debut": 11.22,
+     "fin": 11.72
+    },
+    {
+     "t": "cherchent ",
+     "debut": 11.72,
+     "fin": 12.02
+    },
+    {
+     "t": "se ",
+     "debut": 12.02,
+     "fin": 12.24
+    },
+    {
+     "t": "frôl ",
+     "debut": 12.24,
+     "fin": 12.92
+    },
+    {
+     "t": "sans ",
+     "debut": 12.92,
+     "fin": 13.4
+    },
+    {
+     "t": "prise ",
+     "debut": 13.4,
+     "fin": 13.82
+    },
+    {
+     "t": "de ",
+     "debut": 13.82,
+     "fin": 14.18
+    },
+    {
+     "t": "tête",
+     "debut": 14.18,
+     "fin": 14.9
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 14.9,
+   "fin": 18.78,
+   "texte": "Un bon un tour dans l'herbe haute",
+   "syllabes": [
+    {
+     "t": "Un ",
+     "debut": 14.9,
+     "fin": 15.56
+    },
+    {
+     "t": "bon ",
+     "debut": 15.56,
+     "fin": 15.76
+    },
+    {
+     "t": "un ",
+     "debut": 15.76,
+     "fin": 16.82
+    },
+    {
+     "t": "tour ",
+     "debut": 16.82,
+     "fin": 16.82
+    },
+    {
+     "t": "dans ",
+     "debut": 16.82,
+     "fin": 17.34
+    },
+    {
+     "t": "l'herbe ",
+     "debut": 17.34,
+     "fin": 17.9
+    },
+    {
+     "t": "haute",
+     "debut": 17.9,
+     "fin": 18.78
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 18.78,
+   "fin": 22.56,
+   "texte": "Sous la lumière qui nous accompagne",
+   "syllabes": [
+    {
+     "t": "Sous ",
+     "debut": 18.78,
+     "fin": 19.26
+    },
+    {
+     "t": "la ",
+     "debut": 19.26,
+     "fin": 19.62
+    },
+    {
+     "t": "lu",
+     "debut": 19.62,
+     "fin": 19.9
+    },
+    {
+     "t": "mière ",
+     "debut": 19.9,
+     "fin": 20.18
+    },
+    {
+     "t": "qui ",
+     "debut": 20.18,
+     "fin": 20.64
+    },
+    {
+     "t": "nous ",
+     "debut": 20.64,
+     "fin": 21.1
+    },
+    {
+     "t": "ac",
+     "debut": 21.1,
+     "fin": 21.587
+    },
+    {
+     "t": "com",
+     "debut": 21.587,
+     "fin": 22.073
+    },
+    {
+     "t": "pagne",
+     "debut": 22.073,
+     "fin": 22.56
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 22.56,
+   "fin": 26.34,
+   "texte": "blottit contre, le monde s'efface",
+   "syllabes": [
+    {
+     "t": "blot",
+     "debut": 22.56,
+     "fin": 22.99
+    },
+    {
+     "t": "tit ",
+     "debut": 22.99,
+     "fin": 23.42
+    },
+    {
+     "t": "contre, ",
+     "debut": 23.42,
+     "fin": 24.0
+    },
+    {
+     "t": "le ",
+     "debut": 24.0,
+     "fin": 24.46
+    },
+    {
+     "t": "monde ",
+     "debut": 24.46,
+     "fin": 24.98
+    },
+    {
+     "t": "s'ef",
+     "debut": 24.98,
+     "fin": 25.66
+    },
+    {
+     "t": "face",
+     "debut": 25.66,
+     "fin": 26.34
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 26.34,
+   "fin": 29.6,
+   "texte": "Juste un éclat, une douce trace",
+   "syllabes": [
+    {
+     "t": "Juste ",
+     "debut": 26.34,
+     "fin": 26.92
+    },
+    {
+     "t": "un ",
+     "debut": 26.92,
+     "fin": 27.06
+    },
+    {
+     "t": "é",
+     "debut": 27.06,
+     "fin": 27.47
+    },
+    {
+     "t": "clat, ",
+     "debut": 27.47,
+     "fin": 27.88
+    },
+    {
+     "t": "une ",
+     "debut": 28.12,
+     "fin": 28.42
+    },
+    {
+     "t": "douce ",
+     "debut": 28.42,
+     "fin": 29.08
+    },
+    {
+     "t": "trace",
+     "debut": 29.08,
+     "fin": 29.6
+    }
+   ]
+  }
+ ]
+}

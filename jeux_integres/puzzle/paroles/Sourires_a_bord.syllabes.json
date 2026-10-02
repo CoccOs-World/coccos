@@ -1,0 +1,367 @@
+{
+ "chanson": "Sourires_a_bord",
+ "source_audio": "audio/Sourires_à_bord.mp3",
+ "duree_s": 30.79,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.72,
+   "texte": "Dans la soucoupe, ça décolle",
+   "syllabes": [
+    {
+     "t": "Dans ",
+     "debut": 0.0,
+     "fin": 0.42
+    },
+    {
+     "t": "la ",
+     "debut": 0.42,
+     "fin": 0.84
+    },
+    {
+     "t": "sou",
+     "debut": 0.84,
+     "fin": 1.21
+    },
+    {
+     "t": "coupe, ",
+     "debut": 1.21,
+     "fin": 1.58
+    },
+    {
+     "t": "ça ",
+     "debut": 2.1,
+     "fin": 2.54
+    },
+    {
+     "t": "dé",
+     "debut": 2.54,
+     "fin": 3.13
+    },
+    {
+     "t": "colle",
+     "debut": 3.13,
+     "fin": 3.72
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 3.72,
+   "fin": 7.52,
+   "texte": "La musique à fond, on rigole",
+   "syllabes": [
+    {
+     "t": "La ",
+     "debut": 3.72,
+     "fin": 4.18
+    },
+    {
+     "t": "mu",
+     "debut": 4.18,
+     "fin": 4.333
+    },
+    {
+     "t": "si",
+     "debut": 4.333,
+     "fin": 4.487
+    },
+    {
+     "t": "que ",
+     "debut": 4.487,
+     "fin": 4.64
+    },
+    {
+     "t": "à ",
+     "debut": 4.64,
+     "fin": 5.0
+    },
+    {
+     "t": "fond, ",
+     "debut": 5.0,
+     "fin": 5.22
+    },
+    {
+     "t": "on ",
+     "debut": 5.84,
+     "fin": 6.32
+    },
+    {
+     "t": "ri",
+     "debut": 6.32,
+     "fin": 6.92
+    },
+    {
+     "t": "gole",
+     "debut": 6.92,
+     "fin": 7.52
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 7.52,
+   "fin": 11.2,
+   "texte": "Coccos et l'ami l'abeille",
+   "syllabes": [
+    {
+     "t": "Coc",
+     "debut": 7.52,
+     "fin": 7.99
+    },
+    {
+     "t": "cos ",
+     "debut": 7.99,
+     "fin": 8.46
+    },
+    {
+     "t": "et ",
+     "debut": 8.78,
+     "fin": 9.2
+    },
+    {
+     "t": "l'a",
+     "debut": 9.2,
+     "fin": 9.6
+    },
+    {
+     "t": "mi ",
+     "debut": 9.6,
+     "fin": 10.0
+    },
+    {
+     "t": "l'a",
+     "debut": 10.22,
+     "fin": 10.71
+    },
+    {
+     "t": "beille",
+     "debut": 10.71,
+     "fin": 11.2
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 11.2,
+   "fin": 15.12,
+   "texte": "S'envole pour de pures merveilles",
+   "syllabes": [
+    {
+     "t": "S'en",
+     "debut": 11.2,
+     "fin": 11.78
+    },
+    {
+     "t": "vole ",
+     "debut": 11.78,
+     "fin": 12.36
+    },
+    {
+     "t": "pour ",
+     "debut": 12.36,
+     "fin": 12.84
+    },
+    {
+     "t": "de ",
+     "debut": 12.84,
+     "fin": 13.46
+    },
+    {
+     "t": "pures ",
+     "debut": 13.46,
+     "fin": 13.82
+    },
+    {
+     "t": "mer",
+     "debut": 13.82,
+     "fin": 14.47
+    },
+    {
+     "t": "veilles",
+     "debut": 14.47,
+     "fin": 15.12
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 15.12,
+   "fin": 18.7,
+   "texte": "Ouh ouh, dans l'espace on danse",
+   "syllabes": [
+    {
+     "t": "Ouh ",
+     "debut": 15.12,
+     "fin": 15.98
+    },
+    {
+     "t": "ouh, ",
+     "debut": 15.98,
+     "fin": 16.48
+    },
+    {
+     "t": "dans ",
+     "debut": 16.72,
+     "fin": 16.84
+    },
+    {
+     "t": "l'es",
+     "debut": 16.84,
+     "fin": 17.18
+    },
+    {
+     "t": "pace ",
+     "debut": 17.18,
+     "fin": 17.52
+    },
+    {
+     "t": "on ",
+     "debut": 17.52,
+     "fin": 18.0
+    },
+    {
+     "t": "danse",
+     "debut": 18.0,
+     "fin": 18.7
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 18.7,
+   "fin": 22.24,
+   "texte": "Ouh ouh, c'est la grande cadence",
+   "syllabes": [
+    {
+     "t": "Ouh ",
+     "debut": 18.7,
+     "fin": 19.58
+    },
+    {
+     "t": "ouh, ",
+     "debut": 19.58,
+     "fin": 19.96
+    },
+    {
+     "t": "c'est ",
+     "debut": 20.32,
+     "fin": 20.68
+    },
+    {
+     "t": "la ",
+     "debut": 20.68,
+     "fin": 20.92
+    },
+    {
+     "t": "grande ",
+     "debut": 20.92,
+     "fin": 21.3
+    },
+    {
+     "t": "ca",
+     "debut": 21.3,
+     "fin": 21.77
+    },
+    {
+     "t": "dence",
+     "debut": 21.77,
+     "fin": 22.24
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 22.24,
+   "fin": 26.18,
+   "texte": "On transporte la joie en soi",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 22.24,
+     "fin": 23.18
+    },
+    {
+     "t": "trans",
+     "debut": 23.18,
+     "fin": 23.78
+    },
+    {
+     "t": "porte ",
+     "debut": 23.78,
+     "fin": 24.38
+    },
+    {
+     "t": "la ",
+     "debut": 24.38,
+     "fin": 24.56
+    },
+    {
+     "t": "joie ",
+     "debut": 24.56,
+     "fin": 25.12
+    },
+    {
+     "t": "en ",
+     "debut": 25.12,
+     "fin": 25.56
+    },
+    {
+     "t": "soi",
+     "debut": 25.56,
+     "fin": 26.18
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 26.18,
+   "fin": 29.84,
+   "texte": "Des sourires pour toi et pour moi",
+   "syllabes": [
+    {
+     "t": "Des ",
+     "debut": 26.18,
+     "fin": 26.94
+    },
+    {
+     "t": "sou",
+     "debut": 26.94,
+     "fin": 27.36
+    },
+    {
+     "t": "rires ",
+     "debut": 27.36,
+     "fin": 27.78
+    },
+    {
+     "t": "pour ",
+     "debut": 27.78,
+     "fin": 28.24
+    },
+    {
+     "t": "toi ",
+     "debut": 28.24,
+     "fin": 28.56
+    },
+    {
+     "t": "et ",
+     "debut": 28.56,
+     "fin": 28.92
+    },
+    {
+     "t": "pour ",
+     "debut": 28.92,
+     "fin": 29.3
+    },
+    {
+     "t": "moi",
+     "debut": 29.3,
+     "fin": 29.84
+    }
+   ]
+  }
+ ]
+}

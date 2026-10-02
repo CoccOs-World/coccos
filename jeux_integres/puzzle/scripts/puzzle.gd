@@ -494,10 +494,18 @@ const VOL_FIN_ECART_PICTO := 8.0               # entre le pictogramme et le haut
 # voile ROSE (opaque) qui se remplit SYLLABE PAR SYLLABE, au fil de la voix, pendant le chant ; INDÉPENDANTE de
 # la jauge de volume (jaune) et du STOP — ne pas les mêler. »
 #
-# ⚠⚠ C'EST UN PROTOTYPE SUR **UN SEUL TABLEAU**, ET CELA SE LIT DANS LE CODE : `PAROLES_PROTO` est un
-#   dictionnaire d'UNE entrée (le tableau 2, « La fusée », chanson « Boum dans le ciel »). Les huit autres
-#   tableaux ne déclarent aucun fichier de paroles et ne passent jamais par `_batir_paroles` — la table des
-#   tableaux (`tableaux_puzzle.gd`) n'est PAS touchée, justement pour qu'aucun autre tableau ne change.
+# ⚠⚠ (B27 · 02-10) CE N'EST PLUS UN PROTOTYPE : **TOUTES LES CHANSONS QUI ONT DES PAROLES** sont servies, et
+#   la table s'appelle donc `PAROLES` (ex-`PAROLES_PROTO`). CE QUI N'A PAS CHANGÉ : `tableaux_puzzle.gd` n'est
+#   toujours PAS touché — c'est lui, et lui seul, qui dit quel tableau porte quelle musique ou quelle vidéo.
+# ⚠⚠ ET C'EST POURQUOI LA CLÉ N'EST PAS LE NUMÉRO DE TABLEAU, MAIS LE **NOM DU FICHIER DE SON/VIDÉO**. Une
+#   table « tableau 2 → Boum » recopierait une correspondance qui existe déjà ailleurs : le jour où Fabrice
+#   déplace un tableau ou lui change de chanson, les deux tables divergeraient en silence et le voile
+#   chanterait les paroles d'une autre. Keyée sur le média, la question devient « quelles paroles pour CE
+#   fichier-là », et la réponse reste juste quel que soit l'ordre des tableaux. (Les quatre tableaux à 4 pièces
+#   n'ont pas encore de musique, §23 : champ vide → aucune entrée, aucune barre, rien ne change pour eux.)
+# ⚠ LES NOMS SONT RECOPIÉS À L'IDENTIQUE DEPUIS `tableaux_puzzle.gd`, ACCENTS ET ESPACES COMPRIS
+#   (« Le_pré_vert_d_Apollo », « deux petit museau », « Sourires_à_bord ») : les fichiers de minutage, eux,
+#   portent des noms sans accent — c'est justement ce que cette table met en face l'un de l'autre.
 # ⚠ INDÉPENDANTE veut dire : son propre porteur, son propre fichier de minutage, sa propre horloge (la tête de
 #   lecture du chant). Elle ne lit ni `_volume_fin`, ni l'état du STOP, et ne modifie ni l'un ni l'autre.
 # ⚠ MAIS ELLE NE SURVIT PAS AU CHANT, et ce n'est pas un mélange — c'est une collision de PLACE : les boutons
@@ -507,7 +515,21 @@ const VOL_FIN_ECART_PICTO := 8.0               # entre le pictogramme et le haut
 # ⚠ LE ROSE EST OPAQUE (alpha 1) et le texte qu'il porte est ENCRE SOMBRE : le contraste tient en LUMINANCE des
 #   deux côtés du voile (clair sur sombre à gauche, sombre sur rose à droite) — CLAUDE.md, daltonisme. La teinte
 #   exacte, la taille et la quantité de texte sont les trois réglages que Fabrice ajustera après son test.
-const PAROLES_PROTO := {2: "res://jeux_integres/puzzle/paroles/Boum_dans_le_ciel.syllabes.json"}
+const PAROLES := {
+	"Le_pré_vert_d_Apollo": "res://jeux_integres/puzzle/paroles/Le_pre_vert_d_Apollo.syllabes.json",
+	"deux petit museau": "res://jeux_integres/puzzle/paroles/deux_petit_museau.syllabes.json",
+	"Boum_dans_le_ciel": "res://jeux_integres/puzzle/paroles/Boum_dans_le_ciel.syllabes.json",
+	"Vroum_dans_la_nature": "res://jeux_integres/puzzle/paroles/Vroum_dans_la_nature.syllabes.json",
+	"Tof_Tof_le_Tracteur": "res://jeux_integres/puzzle/paroles/Tof_Tof_le_Tracteur.syllabes.json",
+	"En_route_avec_l_abeille": "res://jeux_integres/puzzle/paroles/En_route_avec_l_abeille.syllabes.json",
+	"La_balade_en_auto_rouge": "res://jeux_integres/puzzle/paroles/La_balade_en_auto_rouge.syllabes.json",
+	"L_envol_en_Helicococcos": "res://jeux_integres/puzzle/paroles/L_envol_en_Helicococcos.syllabes.json",
+	"Sourires_à_bord": "res://jeux_integres/puzzle/paroles/Sourires_a_bord.syllabes.json",
+	# ⚠ LA VIDÉO EST DANS LA MÊME TABLE, et ce n'est pas un raccourci : du point de vue des paroles, « La
+	#   petite feuille » est une chanson comme les autres — un média, un minutage. Seule son HORLOGE diffère
+	#   (cf. `_position_chant`), parce que ce n'est pas un `AudioStreamPlayer` qui la joue.
+	"chat_qui_chante_v5": "res://jeux_integres/puzzle/paroles/chat_qui_chante_v5.syllabes.json",
+}
 const PAROLES_HAUTEUR := 88.0                  # la hauteur de la plaque — une ligne de chant, lisible de loin
 const PAROLES_TAILLE := 38.0                   # la taille VISÉE ; elle se rabote si la ligne est trop longue
 const PAROLES_TAILLE_MIN := 18.0               # …et le plancher sous lequel on ne rabote plus
@@ -521,7 +543,7 @@ const PAROLES_MARGE_TEXTE := 18.0              # l'air à gauche et à droite du
 #   mouvement reste LISSE à l'intérieur de la syllabe — aucun escalier n'est réintroduit.
 # ⚠ ET ELLE NE PASSE JAMAIS SOUS ZÉRO (`_borne_avancee`) : les premières syllabes de la chanson, qui tombent
 #   avant l'avance, se calent à 0 au lieu de devenir négatives.
-const PAROLES_AVANCE := 0.35                   # ⇦ LE RÉGLAGE : plus grand = le voile court plus tôt sur la voix
+const PAROLES_AVANCE := 0.45                   # ⇦ LE RÉGLAGE : plus grand = le voile court plus tôt sur la voix
 const COL_PAROLES_PLAQUE := Color(0.04, 0.05, 0.08, 0.84)   # la plaque sombre — comme sous tous les libellés
 const COL_PAROLES_TEXTE := Color(0.97, 0.98, 1.0, 1.0)      # ce qui n'est PAS encore chanté : clair sur sombre
 const COL_PAROLES_ROSE := Color(0.95, 0.32, 0.60, 1.0)      # le voile, OPAQUE
@@ -2679,8 +2701,8 @@ func _lancer_musique_tableau() -> void:
 	_musique_etat = "joue"
 	_batir_stop()
 	# (PROTO KARAOKÉ) LA BARRE DE PAROLES NAÎT AVEC LE CHANT — mais par SA propre porte : `_batir_stop` ne la
-	# connaît pas, et elle ne touche à rien de ce que `_batir_stop` a posé. Sur les huit autres tableaux,
-	# `_batir_paroles` lit `PAROLES_PROTO`, n'y trouve rien, et rend la main sans rien construire.
+	# connaît pas, et elle ne touche à rien de ce que `_batir_stop` a posé. Sur un tableau dont le média n'a
+	# pas de paroles minutées, `chemin_paroles` rend "" et `_batir_paroles` rend la main sans rien construire.
 	_batir_paroles()
 	_dire("MUSIQUE DU TABLEAU « %s » — %s, %.1f s, UNE seule fois (passage n° %d) · le STOP rouge est à droite"
 		% [TableauxPuzzle.nom(tableau), TableauxPuzzle.chemin_musique(tableau).get_file(),
@@ -2696,6 +2718,10 @@ func _lancer_video_tableau() -> void:
 	_video_passages += 1
 	_musique_etat = "joue"
 	_batir_stop()
+	# (B27) LA BARRE DE PAROLES NAÎT AUSSI AVEC LA VIDÉO — même porte que pour la musique, et au même moment
+	# (juste après le STOP). C'est la seule ligne qu'il a fallu ajouter ici : tout le reste du karaoké ne
+	# connaît que `_position_chant()`, qui sait déjà lequel des deux lecteurs interroger.
+	_batir_paroles()
 	_dire("VIDÉO DU TABLEAU « %s » — %s, %s, UNE seule fois (passage n° %d) · le chant est DANS la vidéo · "
 		% [TableauxPuzzle.nom(tableau), TableauxPuzzle.chemin_video(tableau).get_file(),
 			"bus " + _video.bus, _video_passages]
@@ -2928,7 +2954,7 @@ func _montrer_boutons_fin() -> void:
 	if ev != null:
 		(ev as CanvasItem).visible = false
 	# (PROTO KARAOKÉ) LA BARRE DE PAROLES SE RETIRE ELLE AUSSI — pas parce qu'elle serait liée au STOP ou à la
-	# jauge, mais parce que les boutons de la fin occupent EXACTEMENT sa place (cf. l'encadré de `PAROLES_PROTO`).
+	# jauge, mais parce que les boutons de la fin occupent EXACTEMENT sa place (cf. l'encadré de `PAROLES`).
 	# Deux nœuds posés au même endroit, c'est un libellé illisible : le dernier arrivé la couvrirait à moitié.
 	if _paroles_porteur != null:
 		_paroles_porteur.visible = false
@@ -3140,9 +3166,23 @@ func cadre_paroles() -> Rect2:
 # et c'est aussi ce qui marchera dans un paquet exporté à condition que le fichier y entre (cf. le RES).
 # ⚠ LE FICHIER ABSENT N'EST PAS UNE PANNE SILENCIEUSE : on l'écrit au journal et la barre ne naît pas. Le chant,
 #   le STOP et la jauge continuent exactement comme avant — le prototype ne peut pas casser l'écran de fin.
+# QUEL MINUTAGE POUR CE TABLEAU — la question est posée à `tableaux_puzzle.gd`, PAS à une seconde table de
+# numéros. On lui demande son média (la vidéo d'abord, car elle REMPLACE la musique — cf. `_lancer_musique_
+# tableau`), on en prend le nom de fichier sans extension, et on le cherche dans `PAROLES`. Un tableau sans
+# média, ou dont la chanson n'a pas de paroles minutées (le jingle « recompense_coccos »), rend "" — et la
+# barre ne naît pas. ⚠ Rendu au harnais tel quel : c'est LUI qui doit pouvoir dire la table en entier.
+func chemin_paroles(t: int) -> String:
+	var media := TableauxPuzzle.chemin_video(t)
+	if media == "":
+		media = TableauxPuzzle.chemin_musique(t)
+	if media == "":
+		return ""
+	return str(PAROLES.get(media.get_file().get_basename(), ""))
+
+
 func _charger_paroles() -> void:
 	_paroles_lignes = []
-	_paroles_fichier = str(PAROLES_PROTO.get(tableau, ""))
+	_paroles_fichier = chemin_paroles(tableau)
 	if _paroles_fichier == "":
 		return
 	if not FileAccess.file_exists(_paroles_fichier):
@@ -3196,9 +3236,9 @@ func _batir_paroles() -> void:
 	_paroles_encre = _label_paroles("ParolesEncre", COL_PAROLES_ENCRE, r.size)
 	_paroles_voile.add_child(_paroles_encre)
 	_poser_ligne_paroles(0)
-	_dire("BARRE DE PAROLES (proto, tableau « %s ») — %s · %d lignes · plaque %s · voile ROSE %s"
-		% [TableauxPuzzle.nom(tableau), _paroles_fichier.get_file(), _paroles_lignes.size(), str(r),
-			str(COL_PAROLES_ROSE)])
+	_dire("BARRE DE PAROLES (tableau « %s », horloge %s) — %s · %d lignes · plaque %s · voile ROSE %s"
+		% [TableauxPuzzle.nom(tableau), horloge_paroles(), _paroles_fichier.get_file(),
+			_paroles_lignes.size(), str(r), str(COL_PAROLES_ROSE)])
 
 
 func _label_paroles(nom: String, teinte: Color, taille: Vector2) -> Label:
@@ -3275,7 +3315,18 @@ func _poser_ligne_paroles(i: int) -> void:
 #   la latence — et la latence ne pèse ici que quelques centièmes (le harnais l'écrit au journal), là où le
 #   retard vu par Fabrice se compte en dixièmes. CE N'ÉTAIT DONC PAS LA CAUSE : la cause est le minutage, et
 #   c'est `PAROLES_AVANCE` qui la compense.
+#
+# ⚠⚠ (B27) DEUX LECTEURS, DEUX HORLOGES — ET LA CORRECTION DE LATENCE NE S'APPLIQUE QU'À L'UN DES DEUX.
+#   Sur « La petite feuille », le chant n'est pas un `AudioStreamPlayer` mais une VIDÉO : son horloge est
+#   `stream_position`, mesurée (02-10, sonde jetable sur `chat_qui_chante_v5.ogv`) comme avançant en temps
+#   réel — 0,251 s après 20 images, 1,932 s après 120 — et répondant au `seek` (40,138 s demandé à 40,0).
+#   ⚠ ON NE LUI AJOUTE PAS la recette `+ get_time_since_last_mix() − get_output_latency()` : ces deux valeurs
+#     décrivent le MÉLANGEUR AUDIO, et `stream_position` n'en vient pas — c'est le décodeur vidéo qui l'écrit
+#     image par image. Les plaquer dessus serait une correction inventée, de l'ordre du centième, appliquée à
+#     une horloge qui n'a pas ce décalage-là. Le seul réglage reste `PAROLES_AVANCE`, le même pour les dix.
 func _position_chant() -> float:
+	if _video != null:
+		return maxf(0.0, _video.stream_position)
 	if _musique == null:
 		return 0.0
 	return maxf(0.0, _musique.get_playback_position()
@@ -3284,6 +3335,13 @@ func _position_chant() -> float:
 
 # LA BORNE, AVANCÉE — le seul endroit où `PAROLES_AVANCE` agit. Toutes les bornes du minutage passent par ici,
 # et aucune ne descend sous zéro : une syllabe qui tomberait avant l'avance se cale au tout début du chant.
+# LEQUEL DES DEUX LECTEURS DONNE L'HEURE — un seul mot, rendu au journal ET au harnais.
+func horloge_paroles() -> String:
+	if _video != null:
+		return "video"
+	return "musique" if _musique != null else "aucune"
+
+
 func _borne_avancee(x: float) -> float:
 	return maxf(0.0, x - PAROLES_AVANCE)
 
@@ -3824,6 +3882,10 @@ func etat_pour_preuve() -> Dictionary:
 		# L'HORLOGE ELLE-MÊME, RENDUE MESURABLE : l'avance réglée, la latence que le moteur annonce, et la
 		# position « ce que l'oreille entend » — pour qu'un harnais lise les trois au lieu de les supposer.
 		"paroles_avance": PAROLES_AVANCE,
+		# (B27) QUI DONNE L'HEURE AU VOILE — « video » sur « La petite feuille », « musique » ailleurs. Le
+		# harnais le LIT plutôt que de le déduire du numéro de tableau.
+		"paroles_horloge_source": horloge_paroles(),
+		"paroles_table": PAROLES.size(),
 		"paroles_latence_sortie": AudioServer.get_output_latency(),
 		"paroles_horloge": _position_chant(),
 		"paroles_couleur_voile": COL_PAROLES_ROSE,

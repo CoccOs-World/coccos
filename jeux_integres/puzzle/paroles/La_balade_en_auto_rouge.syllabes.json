@@ -1,0 +1,1667 @@
+{
+ "chanson": "La_balade_en_auto_rouge",
+ "source_audio": "audio/La_balade_en_auto_rouge.mp3",
+ "duree_s": 151.37,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 30.62,
+   "fin": 35.0,
+   "texte": "Broum, broum, c'est parti vers une vie de folie",
+   "syllabes": [
+    {
+     "t": "Broum, ",
+     "debut": 30.62,
+     "fin": 31.28
+    },
+    {
+     "t": "broum, ",
+     "debut": 31.28,
+     "fin": 31.6
+    },
+    {
+     "t": "c'est ",
+     "debut": 31.8,
+     "fin": 32.08
+    },
+    {
+     "t": "par",
+     "debut": 32.08,
+     "fin": 32.27
+    },
+    {
+     "t": "ti ",
+     "debut": 32.27,
+     "fin": 32.46
+    },
+    {
+     "t": "vers ",
+     "debut": 32.46,
+     "fin": 32.82
+    },
+    {
+     "t": "une ",
+     "debut": 32.82,
+     "fin": 33.24
+    },
+    {
+     "t": "vie ",
+     "debut": 33.24,
+     "fin": 33.72
+    },
+    {
+     "t": "de ",
+     "debut": 33.72,
+     "fin": 34.18
+    },
+    {
+     "t": "fo",
+     "debut": 34.18,
+     "fin": 34.59
+    },
+    {
+     "t": "lie",
+     "debut": 34.59,
+     "fin": 35.0
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 38.22,
+   "fin": 40.62,
+   "texte": "Les valises sont sur le toit",
+   "syllabes": [
+    {
+     "t": "Les ",
+     "debut": 38.22,
+     "fin": 38.88
+    },
+    {
+     "t": "va",
+     "debut": 38.88,
+     "fin": 39.09
+    },
+    {
+     "t": "lises ",
+     "debut": 39.09,
+     "fin": 39.3
+    },
+    {
+     "t": "sont ",
+     "debut": 39.3,
+     "fin": 39.6
+    },
+    {
+     "t": "sur ",
+     "debut": 39.6,
+     "fin": 39.88
+    },
+    {
+     "t": "le ",
+     "debut": 39.88,
+     "fin": 40.06
+    },
+    {
+     "t": "toit",
+     "debut": 40.06,
+     "fin": 40.62
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 40.62,
+   "fin": 42.44,
+   "texte": "Un panier pour notre unique",
+   "syllabes": [
+    {
+     "t": "Un ",
+     "debut": 40.62,
+     "fin": 40.94
+    },
+    {
+     "t": "pa",
+     "debut": 40.94,
+     "fin": 41.09
+    },
+    {
+     "t": "nier ",
+     "debut": 41.09,
+     "fin": 41.24
+    },
+    {
+     "t": "pour ",
+     "debut": 41.24,
+     "fin": 41.48
+    },
+    {
+     "t": "notre ",
+     "debut": 41.48,
+     "fin": 41.86
+    },
+    {
+     "t": "u",
+     "debut": 41.86,
+     "fin": 42.053
+    },
+    {
+     "t": "ni",
+     "debut": 42.053,
+     "fin": 42.247
+    },
+    {
+     "t": "que",
+     "debut": 42.247,
+     "fin": 42.44
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 42.44,
+   "fin": 46.0,
+   "texte": "La guitare est là près de moi pour une musique fantastique",
+   "syllabes": [
+    {
+     "t": "La ",
+     "debut": 42.44,
+     "fin": 42.96
+    },
+    {
+     "t": "gui",
+     "debut": 42.96,
+     "fin": 43.16
+    },
+    {
+     "t": "tare ",
+     "debut": 43.16,
+     "fin": 43.36
+    },
+    {
+     "t": "est ",
+     "debut": 43.36,
+     "fin": 43.6
+    },
+    {
+     "t": "là ",
+     "debut": 43.6,
+     "fin": 43.82
+    },
+    {
+     "t": "près ",
+     "debut": 43.82,
+     "fin": 43.96
+    },
+    {
+     "t": "de ",
+     "debut": 43.96,
+     "fin": 44.18
+    },
+    {
+     "t": "moi ",
+     "debut": 44.18,
+     "fin": 44.34
+    },
+    {
+     "t": "pour ",
+     "debut": 44.34,
+     "fin": 44.6
+    },
+    {
+     "t": "une ",
+     "debut": 44.6,
+     "fin": 44.84
+    },
+    {
+     "t": "mu",
+     "debut": 44.84,
+     "fin": 44.987
+    },
+    {
+     "t": "si",
+     "debut": 44.987,
+     "fin": 45.133
+    },
+    {
+     "t": "que ",
+     "debut": 45.133,
+     "fin": 45.28
+    },
+    {
+     "t": "fan",
+     "debut": 45.28,
+     "fin": 45.46
+    },
+    {
+     "t": "tas",
+     "debut": 45.46,
+     "fin": 45.64
+    },
+    {
+     "t": "ti",
+     "debut": 45.64,
+     "fin": 45.82
+    },
+    {
+     "t": "que",
+     "debut": 45.82,
+     "fin": 46.0
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 46.52,
+   "fin": 48.94,
+   "texte": "On dépasse les collines vertes",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 46.52,
+     "fin": 47.16
+    },
+    {
+     "t": "dé",
+     "debut": 47.16,
+     "fin": 47.39
+    },
+    {
+     "t": "passe ",
+     "debut": 47.39,
+     "fin": 47.62
+    },
+    {
+     "t": "les ",
+     "debut": 47.62,
+     "fin": 47.86
+    },
+    {
+     "t": "col",
+     "debut": 47.86,
+     "fin": 48.01
+    },
+    {
+     "t": "lines ",
+     "debut": 48.01,
+     "fin": 48.16
+    },
+    {
+     "t": "vertes",
+     "debut": 48.16,
+     "fin": 48.94
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 48.94,
+   "fin": 50.0,
+   "texte": "Et les grands chants de coquelicot",
+   "syllabes": [
+    {
+     "t": "Et ",
+     "debut": 48.94,
+     "fin": 49.08
+    },
+    {
+     "t": "les ",
+     "debut": 49.08,
+     "fin": 49.24
+    },
+    {
+     "t": "grands ",
+     "debut": 49.24,
+     "fin": 49.4
+    },
+    {
+     "t": "chants ",
+     "debut": 49.4,
+     "fin": 49.64
+    },
+    {
+     "t": "de ",
+     "debut": 49.64,
+     "fin": 49.88
+    },
+    {
+     "t": "co",
+     "debut": 49.88,
+     "fin": 49.963
+    },
+    {
+     "t": "que",
+     "debut": 49.963,
+     "fin": 50.0
+    },
+    {
+     "t": "li",
+     "debut": 50.0,
+     "fin": 50.0
+    },
+    {
+     "t": "cot",
+     "debut": 50.0,
+     "fin": 50.0
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 50.72,
+   "fin": 52.88,
+   "texte": "C'est l'aventure et la découverte",
+   "syllabes": [
+    {
+     "t": "C'est ",
+     "debut": 50.72,
+     "fin": 51.18
+    },
+    {
+     "t": "l'a",
+     "debut": 51.18,
+     "fin": 51.367
+    },
+    {
+     "t": "ven",
+     "debut": 51.367,
+     "fin": 51.553
+    },
+    {
+     "t": "ture ",
+     "debut": 51.553,
+     "fin": 51.74
+    },
+    {
+     "t": "et ",
+     "debut": 51.74,
+     "fin": 51.88
+    },
+    {
+     "t": "la ",
+     "debut": 51.88,
+     "fin": 52.22
+    },
+    {
+     "t": "dé",
+     "debut": 52.22,
+     "fin": 52.44
+    },
+    {
+     "t": "cou",
+     "debut": 52.44,
+     "fin": 52.66
+    },
+    {
+     "t": "verte",
+     "debut": 52.66,
+     "fin": 52.88
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 52.88,
+   "fin": 55.38,
+   "texte": "Oh que ce voyage est beau",
+   "syllabes": [
+    {
+     "t": "Oh ",
+     "debut": 52.88,
+     "fin": 53.22
+    },
+    {
+     "t": "que ",
+     "debut": 53.22,
+     "fin": 53.52
+    },
+    {
+     "t": "ce ",
+     "debut": 53.52,
+     "fin": 53.9
+    },
+    {
+     "t": "voyage ",
+     "debut": 53.9,
+     "fin": 54.58
+    },
+    {
+     "t": "est ",
+     "debut": 54.58,
+     "fin": 55.14
+    },
+    {
+     "t": "beau",
+     "debut": 55.14,
+     "fin": 55.38
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "debut": 55.38,
+   "fin": 59.36,
+   "texte": "Broum, broum, c'est parti en route avec mes amis",
+   "syllabes": [
+    {
+     "t": "Broum, ",
+     "debut": 55.38,
+     "fin": 56.16
+    },
+    {
+     "t": "broum, ",
+     "debut": 56.16,
+     "fin": 56.44
+    },
+    {
+     "t": "c'est ",
+     "debut": 56.56,
+     "fin": 56.9
+    },
+    {
+     "t": "par",
+     "debut": 56.9,
+     "fin": 57.13
+    },
+    {
+     "t": "ti ",
+     "debut": 57.13,
+     "fin": 57.36
+    },
+    {
+     "t": "en ",
+     "debut": 57.36,
+     "fin": 57.7
+    },
+    {
+     "t": "route ",
+     "debut": 57.7,
+     "fin": 58.02
+    },
+    {
+     "t": "a",
+     "debut": 58.02,
+     "fin": 58.25
+    },
+    {
+     "t": "vec ",
+     "debut": 58.25,
+     "fin": 58.48
+    },
+    {
+     "t": "mes ",
+     "debut": 58.48,
+     "fin": 59.0
+    },
+    {
+     "t": "a",
+     "debut": 59.0,
+     "fin": 59.18
+    },
+    {
+     "t": "mis",
+     "debut": 59.18,
+     "fin": 59.36
+    }
+   ]
+  },
+  {
+   "index": 10,
+   "debut": 59.36,
+   "fin": 63.94,
+   "texte": "Brombrom c'est parti vers une vie de folie",
+   "syllabes": [
+    {
+     "t": "Brom",
+     "debut": 59.36,
+     "fin": 59.96
+    },
+    {
+     "t": "brom ",
+     "debut": 59.96,
+     "fin": 60.56
+    },
+    {
+     "t": "c'est ",
+     "debut": 60.56,
+     "fin": 60.96
+    },
+    {
+     "t": "par",
+     "debut": 60.96,
+     "fin": 61.2
+    },
+    {
+     "t": "ti ",
+     "debut": 61.2,
+     "fin": 61.44
+    },
+    {
+     "t": "vers ",
+     "debut": 61.44,
+     "fin": 61.84
+    },
+    {
+     "t": "une ",
+     "debut": 61.84,
+     "fin": 62.24
+    },
+    {
+     "t": "vie ",
+     "debut": 62.24,
+     "fin": 62.7
+    },
+    {
+     "t": "de ",
+     "debut": 62.7,
+     "fin": 63.14
+    },
+    {
+     "t": "fo",
+     "debut": 63.14,
+     "fin": 63.54
+    },
+    {
+     "t": "lie",
+     "debut": 63.54,
+     "fin": 63.94
+    }
+   ]
+  },
+  {
+   "index": 11,
+   "debut": 91.82,
+   "fin": 96.24000000000001,
+   "texte": "On tourne le volant à gauche ou à droite Tant qu'on est ensemble, on ne craint rien du tout",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 91.82,
+     "fin": 92.34
+    },
+    {
+     "t": "tourne ",
+     "debut": 92.34,
+     "fin": 92.54
+    },
+    {
+     "t": "le ",
+     "debut": 92.54,
+     "fin": 92.74
+    },
+    {
+     "t": "vo",
+     "debut": 92.74,
+     "fin": 92.92
+    },
+    {
+     "t": "lant ",
+     "debut": 92.92,
+     "fin": 93.1
+    },
+    {
+     "t": "à ",
+     "debut": 93.1,
+     "fin": 93.38
+    },
+    {
+     "t": "gauche ",
+     "debut": 93.38,
+     "fin": 93.56
+    },
+    {
+     "t": "ou ",
+     "debut": 93.56,
+     "fin": 93.74
+    },
+    {
+     "t": "à ",
+     "debut": 93.74,
+     "fin": 93.94
+    },
+    {
+     "t": "droite ",
+     "debut": 93.94,
+     "fin": 94.16
+    },
+    {
+     "t": "Tant ",
+     "debut": 94.16,
+     "fin": 94.42
+    },
+    {
+     "t": "qu",
+     "debut": 94.42,
+     "fin": 94.52
+    },
+    {
+     "t": "'on ",
+     "debut": 94.52,
+     "fin": 94.62
+    },
+    {
+     "t": "est ",
+     "debut": 94.62,
+     "fin": 94.78
+    },
+    {
+     "t": "en",
+     "debut": 94.78,
+     "fin": 94.97
+    },
+    {
+     "t": "semble, ",
+     "debut": 94.97,
+     "fin": 95.16
+    },
+    {
+     "t": "on ",
+     "debut": 95.18,
+     "fin": 95.38
+    },
+    {
+     "t": "ne ",
+     "debut": 95.38,
+     "fin": 95.48
+    },
+    {
+     "t": "craint ",
+     "debut": 95.48,
+     "fin": 95.6
+    },
+    {
+     "t": "rien ",
+     "debut": 95.6,
+     "fin": 95.82
+    },
+    {
+     "t": "du ",
+     "debut": 95.82,
+     "fin": 96.02
+    },
+    {
+     "t": "tout",
+     "debut": 96.02,
+     "fin": 96.24
+    }
+   ]
+  },
+  {
+   "index": 12,
+   "debut": 96.24000000000001,
+   "fin": 100.97999999999999,
+   "texte": "Notre amitié si forte et si droite On va aller ensemble jusqu'au bout du monde",
+   "syllabes": [
+    {
+     "t": "Notre ",
+     "debut": 96.24,
+     "fin": 96.54
+    },
+    {
+     "t": "a",
+     "debut": 96.54,
+     "fin": 96.7
+    },
+    {
+     "t": "mi",
+     "debut": 96.7,
+     "fin": 96.86
+    },
+    {
+     "t": "tié ",
+     "debut": 96.86,
+     "fin": 97.02
+    },
+    {
+     "t": "si ",
+     "debut": 97.02,
+     "fin": 97.46
+    },
+    {
+     "t": "forte ",
+     "debut": 97.46,
+     "fin": 97.7
+    },
+    {
+     "t": "et ",
+     "debut": 97.7,
+     "fin": 97.86
+    },
+    {
+     "t": "si ",
+     "debut": 97.86,
+     "fin": 98.08
+    },
+    {
+     "t": "droite ",
+     "debut": 98.08,
+     "fin": 98.28
+    },
+    {
+     "t": "On ",
+     "debut": 98.28,
+     "fin": 98.5
+    },
+    {
+     "t": "va ",
+     "debut": 98.5,
+     "fin": 98.74
+    },
+    {
+     "t": "al",
+     "debut": 98.74,
+     "fin": 98.8
+    },
+    {
+     "t": "ler ",
+     "debut": 98.8,
+     "fin": 98.86
+    },
+    {
+     "t": "en",
+     "debut": 98.86,
+     "fin": 99.09
+    },
+    {
+     "t": "semble ",
+     "debut": 99.09,
+     "fin": 99.32
+    },
+    {
+     "t": "jus",
+     "debut": 99.32,
+     "fin": 99.58
+    },
+    {
+     "t": "qu",
+     "debut": 99.58,
+     "fin": 99.84
+    },
+    {
+     "t": "'au ",
+     "debut": 99.84,
+     "fin": 100.1
+    },
+    {
+     "t": "bout ",
+     "debut": 100.1,
+     "fin": 100.26
+    },
+    {
+     "t": "du ",
+     "debut": 100.26,
+     "fin": 100.58
+    },
+    {
+     "t": "monde",
+     "debut": 100.58,
+     "fin": 100.98
+    }
+   ]
+  },
+  {
+   "index": 13,
+   "debut": 100.97999999999999,
+   "fin": 104.94,
+   "texte": "Broum, broum, c'est parti, en route avec mes amis",
+   "syllabes": [
+    {
+     "t": "Broum, ",
+     "debut": 100.98,
+     "fin": 101.6
+    },
+    {
+     "t": "broum, ",
+     "debut": 101.6,
+     "fin": 101.98
+    },
+    {
+     "t": "c'est ",
+     "debut": 101.98,
+     "fin": 102.46
+    },
+    {
+     "t": "par",
+     "debut": 102.46,
+     "fin": 102.65
+    },
+    {
+     "t": "ti, ",
+     "debut": 102.65,
+     "fin": 102.84
+    },
+    {
+     "t": "en ",
+     "debut": 103.1,
+     "fin": 103.18
+    },
+    {
+     "t": "route ",
+     "debut": 103.18,
+     "fin": 103.5
+    },
+    {
+     "t": "a",
+     "debut": 103.5,
+     "fin": 103.76
+    },
+    {
+     "t": "vec ",
+     "debut": 103.76,
+     "fin": 104.02
+    },
+    {
+     "t": "mes ",
+     "debut": 104.02,
+     "fin": 104.52
+    },
+    {
+     "t": "a",
+     "debut": 104.52,
+     "fin": 104.73
+    },
+    {
+     "t": "mis",
+     "debut": 104.73,
+     "fin": 104.94
+    }
+   ]
+  },
+  {
+   "index": 14,
+   "debut": 104.94,
+   "fin": 110.36,
+   "texte": "Broum, broum, c'est parti vers une vie de folie",
+   "syllabes": [
+    {
+     "t": "Broum, ",
+     "debut": 104.94,
+     "fin": 105.86
+    },
+    {
+     "t": "broum, ",
+     "debut": 105.86,
+     "fin": 106.02
+    },
+    {
+     "t": "c'est ",
+     "debut": 106.14,
+     "fin": 106.58
+    },
+    {
+     "t": "par",
+     "debut": 106.58,
+     "fin": 106.78
+    },
+    {
+     "t": "ti ",
+     "debut": 106.78,
+     "fin": 106.98
+    },
+    {
+     "t": "vers ",
+     "debut": 106.98,
+     "fin": 107.36
+    },
+    {
+     "t": "une ",
+     "debut": 107.36,
+     "fin": 107.84
+    },
+    {
+     "t": "vie ",
+     "debut": 107.84,
+     "fin": 108.2
+    },
+    {
+     "t": "de ",
+     "debut": 108.2,
+     "fin": 108.62
+    },
+    {
+     "t": "fo",
+     "debut": 108.62,
+     "fin": 109.49
+    },
+    {
+     "t": "lie",
+     "debut": 109.49,
+     "fin": 110.36
+    }
+   ]
+  },
+  {
+   "index": 15,
+   "debut": 116.28,
+   "fin": 120.62,
+   "texte": "Voilà le village qui s'approche au loin, Le voyage se termine, mais pas l'aventure,",
+   "syllabes": [
+    {
+     "t": "Voi",
+     "debut": 116.28,
+     "fin": 116.52
+    },
+    {
+     "t": "là ",
+     "debut": 116.52,
+     "fin": 116.76
+    },
+    {
+     "t": "le ",
+     "debut": 116.76,
+     "fin": 117.0
+    },
+    {
+     "t": "vil",
+     "debut": 117.0,
+     "fin": 117.14
+    },
+    {
+     "t": "lage ",
+     "debut": 117.14,
+     "fin": 117.28
+    },
+    {
+     "t": "qui ",
+     "debut": 117.28,
+     "fin": 117.5
+    },
+    {
+     "t": "s'ap",
+     "debut": 117.5,
+     "fin": 117.72
+    },
+    {
+     "t": "proche ",
+     "debut": 117.72,
+     "fin": 117.94
+    },
+    {
+     "t": "au ",
+     "debut": 117.94,
+     "fin": 118.1
+    },
+    {
+     "t": "loin, ",
+     "debut": 118.1,
+     "fin": 118.3
+    },
+    {
+     "t": "Le ",
+     "debut": 118.56,
+     "fin": 118.72
+    },
+    {
+     "t": "voyage ",
+     "debut": 118.72,
+     "fin": 118.92
+    },
+    {
+     "t": "se ",
+     "debut": 118.92,
+     "fin": 119.1
+    },
+    {
+     "t": "ter",
+     "debut": 119.1,
+     "fin": 119.25
+    },
+    {
+     "t": "mine, ",
+     "debut": 119.25,
+     "fin": 119.4
+    },
+    {
+     "t": "mais ",
+     "debut": 119.4,
+     "fin": 119.62
+    },
+    {
+     "t": "pas ",
+     "debut": 119.62,
+     "fin": 119.82
+    },
+    {
+     "t": "l'a",
+     "debut": 119.82,
+     "fin": 120.087
+    },
+    {
+     "t": "ven",
+     "debut": 120.087,
+     "fin": 120.353
+    },
+    {
+     "t": "ture,",
+     "debut": 120.353,
+     "fin": 120.62
+    }
+   ]
+  },
+  {
+   "index": 16,
+   "debut": 120.86,
+   "fin": 124.76,
+   "texte": "On se rappellera de ce joli coin, Fait notre belle balade en voiture,",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 120.86,
+     "fin": 120.96
+    },
+    {
+     "t": "se ",
+     "debut": 120.96,
+     "fin": 121.18
+    },
+    {
+     "t": "rap",
+     "debut": 121.18,
+     "fin": 121.265
+    },
+    {
+     "t": "pel",
+     "debut": 121.265,
+     "fin": 121.35
+    },
+    {
+     "t": "le",
+     "debut": 121.35,
+     "fin": 121.435
+    },
+    {
+     "t": "ra ",
+     "debut": 121.435,
+     "fin": 121.52
+    },
+    {
+     "t": "de ",
+     "debut": 121.52,
+     "fin": 121.72
+    },
+    {
+     "t": "ce ",
+     "debut": 121.72,
+     "fin": 121.9
+    },
+    {
+     "t": "jo",
+     "debut": 121.9,
+     "fin": 122.05
+    },
+    {
+     "t": "li ",
+     "debut": 122.05,
+     "fin": 122.2
+    },
+    {
+     "t": "coin, ",
+     "debut": 122.2,
+     "fin": 122.54
+    },
+    {
+     "t": "Fait ",
+     "debut": 122.98,
+     "fin": 123.04
+    },
+    {
+     "t": "notre ",
+     "debut": 123.04,
+     "fin": 123.3
+    },
+    {
+     "t": "belle ",
+     "debut": 123.3,
+     "fin": 123.6
+    },
+    {
+     "t": "ba",
+     "debut": 123.6,
+     "fin": 123.81
+    },
+    {
+     "t": "lade ",
+     "debut": 123.81,
+     "fin": 124.02
+    },
+    {
+     "t": "en ",
+     "debut": 124.02,
+     "fin": 124.22
+    },
+    {
+     "t": "voi",
+     "debut": 124.22,
+     "fin": 124.49
+    },
+    {
+     "t": "ture,",
+     "debut": 124.49,
+     "fin": 124.76
+    }
+   ]
+  },
+  {
+   "index": 17,
+   "debut": 125.06,
+   "fin": 128.8,
+   "texte": "Coccos et l'abeille ensemble toujours, Pour de nouvelles histoires à raconter.",
+   "syllabes": [
+    {
+     "t": "Coc",
+     "debut": 125.06,
+     "fin": 125.18
+    },
+    {
+     "t": "cos ",
+     "debut": 125.18,
+     "fin": 125.3
+    },
+    {
+     "t": "et ",
+     "debut": 125.3,
+     "fin": 125.38
+    },
+    {
+     "t": "l'a",
+     "debut": 125.38,
+     "fin": 125.46
+    },
+    {
+     "t": "beille ",
+     "debut": 125.46,
+     "fin": 125.54
+    },
+    {
+     "t": "en",
+     "debut": 125.76,
+     "fin": 125.96
+    },
+    {
+     "t": "semble ",
+     "debut": 125.96,
+     "fin": 126.16
+    },
+    {
+     "t": "tou",
+     "debut": 126.16,
+     "fin": 126.4
+    },
+    {
+     "t": "jours, ",
+     "debut": 126.4,
+     "fin": 126.64
+    },
+    {
+     "t": "Pour ",
+     "debut": 126.86,
+     "fin": 126.94
+    },
+    {
+     "t": "de ",
+     "debut": 126.94,
+     "fin": 127.14
+    },
+    {
+     "t": "nou",
+     "debut": 127.14,
+     "fin": 127.28
+    },
+    {
+     "t": "velles ",
+     "debut": 127.28,
+     "fin": 127.42
+    },
+    {
+     "t": "his",
+     "debut": 127.42,
+     "fin": 127.71
+    },
+    {
+     "t": "toires ",
+     "debut": 127.71,
+     "fin": 128.0
+    },
+    {
+     "t": "à ",
+     "debut": 128.0,
+     "fin": 128.26
+    },
+    {
+     "t": "ra",
+     "debut": 128.26,
+     "fin": 128.44
+    },
+    {
+     "t": "con",
+     "debut": 128.44,
+     "fin": 128.62
+    },
+    {
+     "t": "ter.",
+     "debut": 128.62,
+     "fin": 128.8
+    }
+   ]
+  },
+  {
+   "index": 18,
+   "debut": 129.1,
+   "fin": 134.26,
+   "texte": "Sous le soleil et le ciel de velours, On n'a pas fini de rigoler !",
+   "syllabes": [
+    {
+     "t": "Sous ",
+     "debut": 129.1,
+     "fin": 129.28
+    },
+    {
+     "t": "le ",
+     "debut": 129.28,
+     "fin": 129.42
+    },
+    {
+     "t": "so",
+     "debut": 129.42,
+     "fin": 129.62
+    },
+    {
+     "t": "leil ",
+     "debut": 129.62,
+     "fin": 129.82
+    },
+    {
+     "t": "et ",
+     "debut": 129.82,
+     "fin": 129.88
+    },
+    {
+     "t": "le ",
+     "debut": 129.88,
+     "fin": 130.12
+    },
+    {
+     "t": "ciel ",
+     "debut": 130.12,
+     "fin": 130.24
+    },
+    {
+     "t": "de ",
+     "debut": 130.24,
+     "fin": 130.38
+    },
+    {
+     "t": "ve",
+     "debut": 130.38,
+     "fin": 130.58
+    },
+    {
+     "t": "lours, ",
+     "debut": 130.58,
+     "fin": 130.78
+    },
+    {
+     "t": "On ",
+     "debut": 130.82,
+     "fin": 130.98
+    },
+    {
+     "t": "n'a ",
+     "debut": 130.98,
+     "fin": 131.22
+    },
+    {
+     "t": "pas ",
+     "debut": 131.22,
+     "fin": 131.48
+    },
+    {
+     "t": "fi",
+     "debut": 131.48,
+     "fin": 131.65
+    },
+    {
+     "t": "ni ",
+     "debut": 131.65,
+     "fin": 131.82
+    },
+    {
+     "t": "de ",
+     "debut": 131.82,
+     "fin": 132.2
+    },
+    {
+     "t": "ri",
+     "debut": 132.2,
+     "fin": 132.887
+    },
+    {
+     "t": "go",
+     "debut": 132.887,
+     "fin": 133.573
+    },
+    {
+     "t": "ler !",
+     "debut": 133.573,
+     "fin": 134.26
+    }
+   ]
+  },
+  {
+   "index": 19,
+   "debut": 134.26,
+   "fin": 138.04,
+   "texte": "Broum broum c'est parti, On route avec mes amis,",
+   "syllabes": [
+    {
+     "t": "Broum ",
+     "debut": 134.26,
+     "fin": 134.78
+    },
+    {
+     "t": "broum ",
+     "debut": 134.78,
+     "fin": 135.06
+    },
+    {
+     "t": "c'est ",
+     "debut": 135.06,
+     "fin": 135.52
+    },
+    {
+     "t": "par",
+     "debut": 135.52,
+     "fin": 135.73
+    },
+    {
+     "t": "ti, ",
+     "debut": 135.73,
+     "fin": 135.94
+    },
+    {
+     "t": "On ",
+     "debut": 136.02,
+     "fin": 136.28
+    },
+    {
+     "t": "route ",
+     "debut": 136.28,
+     "fin": 136.6
+    },
+    {
+     "t": "a",
+     "debut": 136.6,
+     "fin": 136.85
+    },
+    {
+     "t": "vec ",
+     "debut": 136.85,
+     "fin": 137.1
+    },
+    {
+     "t": "mes ",
+     "debut": 137.1,
+     "fin": 137.68
+    },
+    {
+     "t": "a",
+     "debut": 137.68,
+     "fin": 137.86
+    },
+    {
+     "t": "mis,",
+     "debut": 137.86,
+     "fin": 138.04
+    }
+   ]
+  },
+  {
+   "index": 20,
+   "debut": 138.04,
+   "fin": 142.04,
+   "texte": "Brou, brou, c'est fini, merci à tous les amis",
+   "syllabes": [
+    {
+     "t": "Brou, ",
+     "debut": 138.04,
+     "fin": 138.82
+    },
+    {
+     "t": "brou, ",
+     "debut": 138.92,
+     "fin": 139.16
+    },
+    {
+     "t": "c'est ",
+     "debut": 139.22,
+     "fin": 139.66
+    },
+    {
+     "t": "fi",
+     "debut": 139.66,
+     "fin": 139.83
+    },
+    {
+     "t": "ni, ",
+     "debut": 139.83,
+     "fin": 140.0
+    },
+    {
+     "t": "mer",
+     "debut": 140.32,
+     "fin": 140.46
+    },
+    {
+     "t": "ci ",
+     "debut": 140.46,
+     "fin": 140.6
+    },
+    {
+     "t": "à ",
+     "debut": 140.6,
+     "fin": 141.02
+    },
+    {
+     "t": "tous ",
+     "debut": 141.02,
+     "fin": 141.42
+    },
+    {
+     "t": "les ",
+     "debut": 141.42,
+     "fin": 141.84
+    },
+    {
+     "t": "a",
+     "debut": 141.84,
+     "fin": 141.94
+    },
+    {
+     "t": "mis",
+     "debut": 141.94,
+     "fin": 142.04
+    }
+   ]
+  },
+  {
+   "index": 21,
+   "debut": 142.04,
+   "fin": 143.57999999999998,
+   "texte": "Bonsoir, bonsoir, bonsoir, bonsoir, merci à tous, bonsoir",
+   "syllabes": [
+    {
+     "t": "Bon",
+     "debut": 142.04,
+     "fin": 142.17
+    },
+    {
+     "t": "soir, ",
+     "debut": 142.17,
+     "fin": 142.3
+    },
+    {
+     "t": "bon",
+     "debut": 142.4,
+     "fin": 142.49
+    },
+    {
+     "t": "soir, ",
+     "debut": 142.49,
+     "fin": 142.58
+    },
+    {
+     "t": "bon",
+     "debut": 142.58,
+     "fin": 142.71
+    },
+    {
+     "t": "soir, ",
+     "debut": 142.71,
+     "fin": 142.84
+    },
+    {
+     "t": "bon",
+     "debut": 142.84,
+     "fin": 142.91
+    },
+    {
+     "t": "soir, ",
+     "debut": 142.91,
+     "fin": 142.98
+    },
+    {
+     "t": "mer",
+     "debut": 143.08,
+     "fin": 143.13
+    },
+    {
+     "t": "ci ",
+     "debut": 143.13,
+     "fin": 143.18
+    },
+    {
+     "t": "à ",
+     "debut": 143.18,
+     "fin": 143.42
+    },
+    {
+     "t": "tous, ",
+     "debut": 143.42,
+     "fin": 143.5
+    },
+    {
+     "t": "bon",
+     "debut": 143.5,
+     "fin": 143.5
+    },
+    {
+     "t": "soir",
+     "debut": 143.5,
+     "fin": 143.5
+    }
+   ]
+  },
+  {
+   "index": 22,
+   "debut": 143.57999999999998,
+   "fin": 145.9,
+   "texte": "Le soleil à bientôt, fin de nouveau jeu",
+   "syllabes": [
+    {
+     "t": "Le ",
+     "debut": 143.58,
+     "fin": 143.76
+    },
+    {
+     "t": "so",
+     "debut": 143.76,
+     "fin": 144.0
+    },
+    {
+     "t": "leil ",
+     "debut": 144.0,
+     "fin": 144.24
+    },
+    {
+     "t": "à ",
+     "debut": 144.24,
+     "fin": 144.38
+    },
+    {
+     "t": "bien",
+     "debut": 144.38,
+     "fin": 144.55
+    },
+    {
+     "t": "tôt, ",
+     "debut": 144.55,
+     "fin": 144.72
+    },
+    {
+     "t": "fin ",
+     "debut": 144.9,
+     "fin": 144.94
+    },
+    {
+     "t": "de ",
+     "debut": 144.94,
+     "fin": 145.12
+    },
+    {
+     "t": "nou",
+     "debut": 145.12,
+     "fin": 145.25
+    },
+    {
+     "t": "veau ",
+     "debut": 145.25,
+     "fin": 145.38
+    },
+    {
+     "t": "jeu",
+     "debut": 145.38,
+     "fin": 145.9
+    }
+   ]
+  },
+  {
+   "index": 23,
+   "debut": 145.9,
+   "fin": 148.1,
+   "texte": "C'est tous vraiment très heureux",
+   "syllabes": [
+    {
+     "t": "C'est ",
+     "debut": 145.9,
+     "fin": 146.4
+    },
+    {
+     "t": "tous ",
+     "debut": 146.4,
+     "fin": 146.56
+    },
+    {
+     "t": "vraiment ",
+     "debut": 146.56,
+     "fin": 147.0
+    },
+    {
+     "t": "très ",
+     "debut": 147.0,
+     "fin": 147.38
+    },
+    {
+     "t": "heu",
+     "debut": 147.38,
+     "fin": 147.74
+    },
+    {
+     "t": "reux",
+     "debut": 147.74,
+     "fin": 148.1
+    }
+   ]
+  }
+ ]
+}

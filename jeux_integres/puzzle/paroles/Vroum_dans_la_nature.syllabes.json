@@ -1,0 +1,480 @@
+{
+ "chanson": "Vroum_dans_la_nature",
+ "source_audio": "audio/Vroum_dans_la_nature.mp3",
+ "duree_s": 30.79,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.74,
+   "texte": "En route sur la moto, c'est super rigolo",
+   "syllabes": [
+    {
+     "t": "En ",
+     "debut": 0.0,
+     "fin": 0.48
+    },
+    {
+     "t": "route ",
+     "debut": 0.48,
+     "fin": 0.8
+    },
+    {
+     "t": "sur ",
+     "debut": 0.8,
+     "fin": 1.18
+    },
+    {
+     "t": "la ",
+     "debut": 1.18,
+     "fin": 1.44
+    },
+    {
+     "t": "mo",
+     "debut": 1.44,
+     "fin": 1.59
+    },
+    {
+     "t": "to, ",
+     "debut": 1.59,
+     "fin": 1.74
+    },
+    {
+     "t": "c'est ",
+     "debut": 1.88,
+     "fin": 2.12
+    },
+    {
+     "t": "su",
+     "debut": 2.12,
+     "fin": 2.39
+    },
+    {
+     "t": "per ",
+     "debut": 2.39,
+     "fin": 2.66
+    },
+    {
+     "t": "ri",
+     "debut": 2.66,
+     "fin": 3.02
+    },
+    {
+     "t": "go",
+     "debut": 3.02,
+     "fin": 3.38
+    },
+    {
+     "t": "lo",
+     "debut": 3.38,
+     "fin": 3.74
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 3.74,
+   "fin": 7.48,
+   "texte": "Avec mon ami l'abeille, on part à l'aventure",
+   "syllabes": [
+    {
+     "t": "A",
+     "debut": 3.74,
+     "fin": 4.05
+    },
+    {
+     "t": "vec ",
+     "debut": 4.05,
+     "fin": 4.36
+    },
+    {
+     "t": "mon ",
+     "debut": 4.36,
+     "fin": 4.72
+    },
+    {
+     "t": "a",
+     "debut": 4.72,
+     "fin": 4.88
+    },
+    {
+     "t": "mi ",
+     "debut": 4.88,
+     "fin": 5.04
+    },
+    {
+     "t": "l'a",
+     "debut": 5.04,
+     "fin": 5.31
+    },
+    {
+     "t": "beille, ",
+     "debut": 5.31,
+     "fin": 5.58
+    },
+    {
+     "t": "on ",
+     "debut": 5.66,
+     "fin": 5.8
+    },
+    {
+     "t": "part ",
+     "debut": 5.8,
+     "fin": 6.12
+    },
+    {
+     "t": "à ",
+     "debut": 6.12,
+     "fin": 6.38
+    },
+    {
+     "t": "l'a",
+     "debut": 6.38,
+     "fin": 6.747
+    },
+    {
+     "t": "ven",
+     "debut": 6.747,
+     "fin": 7.113
+    },
+    {
+     "t": "ture",
+     "debut": 7.113,
+     "fin": 7.48
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 7.48,
+   "fin": 10.94,
+   "texte": "Vroom vroom, le moteur chante dans la nature",
+   "syllabes": [
+    {
+     "t": "Vroom ",
+     "debut": 7.48,
+     "fin": 8.0
+    },
+    {
+     "t": "vroom, ",
+     "debut": 8.0,
+     "fin": 8.38
+    },
+    {
+     "t": "le ",
+     "debut": 8.48,
+     "fin": 8.66
+    },
+    {
+     "t": "mo",
+     "debut": 8.66,
+     "fin": 8.85
+    },
+    {
+     "t": "teur ",
+     "debut": 8.85,
+     "fin": 9.04
+    },
+    {
+     "t": "chante ",
+     "debut": 9.04,
+     "fin": 9.46
+    },
+    {
+     "t": "dans ",
+     "debut": 9.46,
+     "fin": 10.0
+    },
+    {
+     "t": "la ",
+     "debut": 10.0,
+     "fin": 10.32
+    },
+    {
+     "t": "na",
+     "debut": 10.32,
+     "fin": 10.63
+    },
+    {
+     "t": "ture",
+     "debut": 10.63,
+     "fin": 10.94
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 10.94,
+   "fin": 14.72,
+   "texte": "Le vent dans nos antennes, on n'a pas peur",
+   "syllabes": [
+    {
+     "t": "Le ",
+     "debut": 10.94,
+     "fin": 11.68
+    },
+    {
+     "t": "vent ",
+     "debut": 11.68,
+     "fin": 11.88
+    },
+    {
+     "t": "dans ",
+     "debut": 11.88,
+     "fin": 12.16
+    },
+    {
+     "t": "nos ",
+     "debut": 12.16,
+     "fin": 12.42
+    },
+    {
+     "t": "an",
+     "debut": 12.42,
+     "fin": 12.71
+    },
+    {
+     "t": "tennes, ",
+     "debut": 12.71,
+     "fin": 13.0
+    },
+    {
+     "t": "on ",
+     "debut": 13.08,
+     "fin": 13.34
+    },
+    {
+     "t": "n'a ",
+     "debut": 13.34,
+     "fin": 13.76
+    },
+    {
+     "t": "pas ",
+     "debut": 13.76,
+     "fin": 14.04
+    },
+    {
+     "t": "peur",
+     "debut": 14.04,
+     "fin": 14.72
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 14.72,
+   "fin": 18.64,
+   "texte": "La musique à fond, les ballons mettent de la joie",
+   "syllabes": [
+    {
+     "t": "La ",
+     "debut": 14.72,
+     "fin": 15.42
+    },
+    {
+     "t": "mu",
+     "debut": 15.42,
+     "fin": 15.58
+    },
+    {
+     "t": "si",
+     "debut": 15.58,
+     "fin": 15.74
+    },
+    {
+     "t": "que ",
+     "debut": 15.74,
+     "fin": 15.9
+    },
+    {
+     "t": "à ",
+     "debut": 15.9,
+     "fin": 16.2
+    },
+    {
+     "t": "fond, ",
+     "debut": 16.2,
+     "fin": 16.32
+    },
+    {
+     "t": "les ",
+     "debut": 16.38,
+     "fin": 16.6
+    },
+    {
+     "t": "bal",
+     "debut": 16.6,
+     "fin": 16.81
+    },
+    {
+     "t": "lons ",
+     "debut": 16.81,
+     "fin": 17.02
+    },
+    {
+     "t": "mettent ",
+     "debut": 17.02,
+     "fin": 17.46
+    },
+    {
+     "t": "de ",
+     "debut": 17.46,
+     "fin": 17.7
+    },
+    {
+     "t": "la ",
+     "debut": 17.7,
+     "fin": 18.02
+    },
+    {
+     "t": "joie",
+     "debut": 18.02,
+     "fin": 18.64
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 18.64,
+   "fin": 22.4,
+   "texte": "C'est le plus beau des voyages, tu vois",
+   "syllabes": [
+    {
+     "t": "C'est ",
+     "debut": 18.64,
+     "fin": 19.18
+    },
+    {
+     "t": "le ",
+     "debut": 19.18,
+     "fin": 19.48
+    },
+    {
+     "t": "plus ",
+     "debut": 19.48,
+     "fin": 19.7
+    },
+    {
+     "t": "beau ",
+     "debut": 19.7,
+     "fin": 19.86
+    },
+    {
+     "t": "des ",
+     "debut": 19.86,
+     "fin": 20.14
+    },
+    {
+     "t": "voyages, ",
+     "debut": 20.14,
+     "fin": 21.1
+    },
+    {
+     "t": "tu ",
+     "debut": 21.12,
+     "fin": 21.72
+    },
+    {
+     "t": "vois",
+     "debut": 21.72,
+     "fin": 22.4
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 22.4,
+   "fin": 25.86,
+   "texte": "Coccos et l'ami l'abeille, en moto",
+   "syllabes": [
+    {
+     "t": "Coc",
+     "debut": 22.4,
+     "fin": 22.71
+    },
+    {
+     "t": "cos ",
+     "debut": 22.71,
+     "fin": 23.02
+    },
+    {
+     "t": "et ",
+     "debut": 23.24,
+     "fin": 23.46
+    },
+    {
+     "t": "l'a",
+     "debut": 23.46,
+     "fin": 23.63
+    },
+    {
+     "t": "mi ",
+     "debut": 23.63,
+     "fin": 23.8
+    },
+    {
+     "t": "l'a",
+     "debut": 23.8,
+     "fin": 24.15
+    },
+    {
+     "t": "beille, ",
+     "debut": 24.15,
+     "fin": 24.5
+    },
+    {
+     "t": "en ",
+     "debut": 24.68,
+     "fin": 25.06
+    },
+    {
+     "t": "mo",
+     "debut": 25.06,
+     "fin": 25.46
+    },
+    {
+     "t": "to",
+     "debut": 25.46,
+     "fin": 25.86
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 27.52,
+   "fin": 28.72,
+   "texte": "En moto",
+   "syllabes": [
+    {
+     "t": "En ",
+     "debut": 27.52,
+     "fin": 28.12
+    },
+    {
+     "t": "mo",
+     "debut": 28.12,
+     "fin": 28.42
+    },
+    {
+     "t": "to",
+     "debut": 28.42,
+     "fin": 28.72
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "debut": 28.72,
+   "fin": 29.66,
+   "texte": "Ouais!",
+   "syllabes": [
+    {
+     "t": "Ouais!",
+     "debut": 28.72,
+     "fin": 29.66
+    }
+   ]
+  }
+ ]
+}

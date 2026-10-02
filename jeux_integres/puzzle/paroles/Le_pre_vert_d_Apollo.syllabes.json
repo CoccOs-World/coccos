@@ -1,0 +1,432 @@
+{
+ "chanson": "Le_pre_vert_d_Apollo",
+ "source_audio": "audio/Le_pré_vert_d_Apollo.mp3",
+ "duree_s": 30.38,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.86,
+   "texte": "Dans le prévert, sous le soleil,",
+   "syllabes": [
+    {
+     "t": "Dans ",
+     "debut": 0.0,
+     "fin": 0.48
+    },
+    {
+     "t": "le ",
+     "debut": 0.48,
+     "fin": 1.02
+    },
+    {
+     "t": "pré",
+     "debut": 1.02,
+     "fin": 1.51
+    },
+    {
+     "t": "vert, ",
+     "debut": 1.51,
+     "fin": 2.0
+    },
+    {
+     "t": "sous ",
+     "debut": 2.08,
+     "fin": 2.34
+    },
+    {
+     "t": "le ",
+     "debut": 2.34,
+     "fin": 2.92
+    },
+    {
+     "t": "so",
+     "debut": 2.92,
+     "fin": 3.39
+    },
+    {
+     "t": "leil,",
+     "debut": 3.39,
+     "fin": 3.86
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 4.04,
+   "fin": 7.38,
+   "texte": "Coccos, la coccinelle, l'ami l'abeille",
+   "syllabes": [
+    {
+     "t": "Coc",
+     "debut": 4.04,
+     "fin": 4.32
+    },
+    {
+     "t": "cos, ",
+     "debut": 4.32,
+     "fin": 4.6
+    },
+    {
+     "t": "la ",
+     "debut": 4.76,
+     "fin": 4.88
+    },
+    {
+     "t": "coc",
+     "debut": 4.88,
+     "fin": 5.18
+    },
+    {
+     "t": "ci",
+     "debut": 5.18,
+     "fin": 5.48
+    },
+    {
+     "t": "nelle, ",
+     "debut": 5.48,
+     "fin": 5.78
+    },
+    {
+     "t": "l'a",
+     "debut": 5.92,
+     "fin": 6.03
+    },
+    {
+     "t": "mi ",
+     "debut": 6.03,
+     "fin": 6.14
+    },
+    {
+     "t": "l'a",
+     "debut": 6.66,
+     "fin": 7.02
+    },
+    {
+     "t": "beille",
+     "debut": 7.02,
+     "fin": 7.38
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 7.38,
+   "fin": 10.92,
+   "texte": "Et le grand cheval, notre cher Apollo",
+   "syllabes": [
+    {
+     "t": "Et ",
+     "debut": 7.38,
+     "fin": 7.84
+    },
+    {
+     "t": "le ",
+     "debut": 7.84,
+     "fin": 8.24
+    },
+    {
+     "t": "grand ",
+     "debut": 8.24,
+     "fin": 8.52
+    },
+    {
+     "t": "che",
+     "debut": 8.52,
+     "fin": 8.85
+    },
+    {
+     "t": "val, ",
+     "debut": 8.85,
+     "fin": 9.18
+    },
+    {
+     "t": "notre ",
+     "debut": 9.38,
+     "fin": 9.64
+    },
+    {
+     "t": "cher ",
+     "debut": 9.64,
+     "fin": 10.08
+    },
+    {
+     "t": "A",
+     "debut": 10.08,
+     "fin": 10.36
+    },
+    {
+     "t": "pol",
+     "debut": 10.36,
+     "fin": 10.64
+    },
+    {
+     "t": "lo",
+     "debut": 10.64,
+     "fin": 10.92
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 10.92,
+   "fin": 14.84,
+   "texte": "Partage des jeux et des rigolos",
+   "syllabes": [
+    {
+     "t": "Par",
+     "debut": 10.92,
+     "fin": 11.54
+    },
+    {
+     "t": "tage ",
+     "debut": 11.54,
+     "fin": 12.16
+    },
+    {
+     "t": "des ",
+     "debut": 12.16,
+     "fin": 12.5
+    },
+    {
+     "t": "jeux ",
+     "debut": 12.5,
+     "fin": 12.88
+    },
+    {
+     "t": "et ",
+     "debut": 12.88,
+     "fin": 13.18
+    },
+    {
+     "t": "des ",
+     "debut": 13.18,
+     "fin": 13.52
+    },
+    {
+     "t": "ri",
+     "debut": 13.52,
+     "fin": 13.96
+    },
+    {
+     "t": "go",
+     "debut": 13.96,
+     "fin": 14.4
+    },
+    {
+     "t": "los",
+     "debut": 14.4,
+     "fin": 14.84
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 14.84,
+   "fin": 18.5,
+   "texte": "Ensemble, ils forment une belle chanson",
+   "syllabes": [
+    {
+     "t": "En",
+     "debut": 14.84,
+     "fin": 15.3
+    },
+    {
+     "t": "semble, ",
+     "debut": 15.3,
+     "fin": 15.76
+    },
+    {
+     "t": "ils ",
+     "debut": 15.76,
+     "fin": 16.16
+    },
+    {
+     "t": "forment ",
+     "debut": 16.16,
+     "fin": 16.84
+    },
+    {
+     "t": "une ",
+     "debut": 16.84,
+     "fin": 17.1
+    },
+    {
+     "t": "belle ",
+     "debut": 17.1,
+     "fin": 17.48
+    },
+    {
+     "t": "chan",
+     "debut": 17.48,
+     "fin": 17.99
+    },
+    {
+     "t": "son",
+     "debut": 17.99,
+     "fin": 18.5
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 18.5,
+   "fin": 21.8,
+   "texte": "L'amitié en harmonie, c'est leur passion",
+   "syllabes": [
+    {
+     "t": "L'a",
+     "debut": 18.5,
+     "fin": 18.867
+    },
+    {
+     "t": "mi",
+     "debut": 18.867,
+     "fin": 19.233
+    },
+    {
+     "t": "tié ",
+     "debut": 19.233,
+     "fin": 19.6
+    },
+    {
+     "t": "en ",
+     "debut": 19.6,
+     "fin": 20.02
+    },
+    {
+     "t": "har",
+     "debut": 20.02,
+     "fin": 20.193
+    },
+    {
+     "t": "mo",
+     "debut": 20.193,
+     "fin": 20.367
+    },
+    {
+     "t": "nie, ",
+     "debut": 20.367,
+     "fin": 20.54
+    },
+    {
+     "t": "c'est ",
+     "debut": 20.64,
+     "fin": 20.86
+    },
+    {
+     "t": "leur ",
+     "debut": 20.86,
+     "fin": 21.2
+    },
+    {
+     "t": "pas",
+     "debut": 21.2,
+     "fin": 21.5
+    },
+    {
+     "t": "sion",
+     "debut": 21.5,
+     "fin": 21.8
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 21.8,
+   "fin": 25.92,
+   "texte": "L'amitié en harmonie, c'est leur passion",
+   "syllabes": [
+    {
+     "t": "L'a",
+     "debut": 21.8,
+     "fin": 22.293
+    },
+    {
+     "t": "mi",
+     "debut": 22.293,
+     "fin": 22.787
+    },
+    {
+     "t": "tié ",
+     "debut": 22.787,
+     "fin": 23.28
+    },
+    {
+     "t": "en ",
+     "debut": 23.28,
+     "fin": 23.72
+    },
+    {
+     "t": "har",
+     "debut": 23.72,
+     "fin": 23.893
+    },
+    {
+     "t": "mo",
+     "debut": 23.893,
+     "fin": 24.067
+    },
+    {
+     "t": "nie, ",
+     "debut": 24.067,
+     "fin": 24.24
+    },
+    {
+     "t": "c'est ",
+     "debut": 24.28,
+     "fin": 24.52
+    },
+    {
+     "t": "leur ",
+     "debut": 24.52,
+     "fin": 24.94
+    },
+    {
+     "t": "pas",
+     "debut": 24.94,
+     "fin": 25.43
+    },
+    {
+     "t": "sion",
+     "debut": 25.43,
+     "fin": 25.92
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 25.92,
+   "fin": 29.26,
+   "texte": "Oui, c'est leur passion",
+   "syllabes": [
+    {
+     "t": "Oui, ",
+     "debut": 25.92,
+     "fin": 26.7
+    },
+    {
+     "t": "c'est ",
+     "debut": 26.84,
+     "fin": 27.36
+    },
+    {
+     "t": "leur ",
+     "debut": 27.36,
+     "fin": 27.78
+    },
+    {
+     "t": "pas",
+     "debut": 27.78,
+     "fin": 28.52
+    },
+    {
+     "t": "sion",
+     "debut": 28.52,
+     "fin": 29.26
+    }
+   ]
+  }
+ ]
+}

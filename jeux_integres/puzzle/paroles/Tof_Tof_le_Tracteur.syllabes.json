@@ -1,0 +1,383 @@
+{
+ "chanson": "Tof_Tof_le_Tracteur",
+ "source_audio": "audio/Tof_Tof_le_Tracteur.mp3",
+ "duree_s": 30.79,
+ "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "lignes": [
+  {
+   "index": 1,
+   "debut": 0.0,
+   "fin": 3.2,
+   "texte": "Le tracteur est arrivé",
+   "syllabes": [
+    {
+     "t": "Le ",
+     "debut": 0.0,
+     "fin": 0.48
+    },
+    {
+     "t": "trac",
+     "debut": 0.48,
+     "fin": 1.03
+    },
+    {
+     "t": "teur ",
+     "debut": 1.03,
+     "fin": 1.58
+    },
+    {
+     "t": "est ",
+     "debut": 1.58,
+     "fin": 2.22
+    },
+    {
+     "t": "ar",
+     "debut": 2.22,
+     "fin": 2.547
+    },
+    {
+     "t": "ri",
+     "debut": 2.547,
+     "fin": 2.873
+    },
+    {
+     "t": "vé",
+     "debut": 2.873,
+     "fin": 3.2
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "debut": 3.72,
+   "fin": 6.54,
+   "texte": "Dans le champ de fleurs on est",
+   "syllabes": [
+    {
+     "t": "Dans ",
+     "debut": 3.72,
+     "fin": 4.1
+    },
+    {
+     "t": "le ",
+     "debut": 4.1,
+     "fin": 4.34
+    },
+    {
+     "t": "champ ",
+     "debut": 4.34,
+     "fin": 4.54
+    },
+    {
+     "t": "de ",
+     "debut": 4.54,
+     "fin": 4.94
+    },
+    {
+     "t": "fleurs ",
+     "debut": 4.94,
+     "fin": 5.38
+    },
+    {
+     "t": "on ",
+     "debut": 5.38,
+     "fin": 5.84
+    },
+    {
+     "t": "est",
+     "debut": 5.84,
+     "fin": 6.54
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 6.54,
+   "fin": 7.66,
+   "texte": "Coco !",
+   "syllabes": [
+    {
+     "t": "Co",
+     "debut": 6.54,
+     "fin": 7.1
+    },
+    {
+     "t": "co !",
+     "debut": 7.1,
+     "fin": 7.66
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "debut": 7.66,
+   "fin": 10.64,
+   "texte": "Déchargeons tout le pollen",
+   "syllabes": [
+    {
+     "t": "Dé",
+     "debut": 7.66,
+     "fin": 8.1
+    },
+    {
+     "t": "char",
+     "debut": 8.1,
+     "fin": 8.54
+    },
+    {
+     "t": "geons ",
+     "debut": 8.54,
+     "fin": 8.98
+    },
+    {
+     "t": "tout ",
+     "debut": 8.98,
+     "fin": 9.46
+    },
+    {
+     "t": "le ",
+     "debut": 9.46,
+     "fin": 9.98
+    },
+    {
+     "t": "pollen",
+     "debut": 9.98,
+     "fin": 10.64
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "debut": 11.16,
+   "fin": 13.32,
+   "texte": "Pour toutes les copines",
+   "syllabes": [
+    {
+     "t": "Pour ",
+     "debut": 11.16,
+     "fin": 11.6
+    },
+    {
+     "t": "toutes ",
+     "debut": 11.6,
+     "fin": 12.2
+    },
+    {
+     "t": "les ",
+     "debut": 12.2,
+     "fin": 12.68
+    },
+    {
+     "t": "co",
+     "debut": 12.68,
+     "fin": 13.0
+    },
+    {
+     "t": "pines",
+     "debut": 13.0,
+     "fin": 13.32
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "debut": 13.32,
+   "fin": 15.2,
+   "texte": "l'ami l'abeille.",
+   "syllabes": [
+    {
+     "t": "l'a",
+     "debut": 13.32,
+     "fin": 13.49
+    },
+    {
+     "t": "mi ",
+     "debut": 13.49,
+     "fin": 13.66
+    },
+    {
+     "t": "l'a",
+     "debut": 13.66,
+     "fin": 14.43
+    },
+    {
+     "t": "beille.",
+     "debut": 14.43,
+     "fin": 15.2
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "debut": 15.2,
+   "fin": 18.48,
+   "texte": "Tof, tof, tof fait le tracteur",
+   "syllabes": [
+    {
+     "t": "Tof, ",
+     "debut": 15.2,
+     "fin": 15.4
+    },
+    {
+     "t": "tof, ",
+     "debut": 15.56,
+     "fin": 15.9
+    },
+    {
+     "t": "tof ",
+     "debut": 15.92,
+     "fin": 16.32
+    },
+    {
+     "t": "fait ",
+     "debut": 16.32,
+     "fin": 16.72
+    },
+    {
+     "t": "le ",
+     "debut": 16.72,
+     "fin": 17.32
+    },
+    {
+     "t": "trac",
+     "debut": 17.32,
+     "fin": 17.9
+    },
+    {
+     "t": "teur",
+     "debut": 17.9,
+     "fin": 18.48
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "debut": 18.48,
+   "fin": 22.14,
+   "texte": "Hop, hop, hop quelle bonne humeur",
+   "syllabes": [
+    {
+     "t": "Hop, ",
+     "debut": 18.48,
+     "fin": 19.04
+    },
+    {
+     "t": "hop, ",
+     "debut": 19.26,
+     "fin": 19.56
+    },
+    {
+     "t": "hop ",
+     "debut": 19.74,
+     "fin": 19.98
+    },
+    {
+     "t": "quelle ",
+     "debut": 19.98,
+     "fin": 20.5
+    },
+    {
+     "t": "bonne ",
+     "debut": 20.5,
+     "fin": 21.06
+    },
+    {
+     "t": "hu",
+     "debut": 21.06,
+     "fin": 21.6
+    },
+    {
+     "t": "meur",
+     "debut": 21.6,
+     "fin": 22.14
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "debut": 22.14,
+   "fin": 25.94,
+   "texte": "Ensemble on a bien travaillé",
+   "syllabes": [
+    {
+     "t": "En",
+     "debut": 22.14,
+     "fin": 22.61
+    },
+    {
+     "t": "semble ",
+     "debut": 22.61,
+     "fin": 23.08
+    },
+    {
+     "t": "on ",
+     "debut": 23.08,
+     "fin": 23.3
+    },
+    {
+     "t": "a ",
+     "debut": 23.3,
+     "fin": 23.7
+    },
+    {
+     "t": "bien ",
+     "debut": 23.7,
+     "fin": 24.24
+    },
+    {
+     "t": "tra",
+     "debut": 24.24,
+     "fin": 24.807
+    },
+    {
+     "t": "vail",
+     "debut": 24.807,
+     "fin": 25.373
+    },
+    {
+     "t": "lé",
+     "debut": 25.373,
+     "fin": 25.94
+    }
+   ]
+  },
+  {
+   "index": 10,
+   "debut": 25.94,
+   "fin": 28.62,
+   "texte": "Youpi ! C'est l'heure de jouer",
+   "syllabes": [
+    {
+     "t": "You",
+     "debut": 25.94,
+     "fin": 26.35
+    },
+    {
+     "t": "pi ! ",
+     "debut": 26.35,
+     "fin": 26.76
+    },
+    {
+     "t": "C'est ",
+     "debut": 26.76,
+     "fin": 26.98
+    },
+    {
+     "t": "l'heure ",
+     "debut": 26.98,
+     "fin": 27.4
+    },
+    {
+     "t": "de ",
+     "debut": 27.4,
+     "fin": 27.8
+    },
+    {
+     "t": "jouer",
+     "debut": 27.8,
+     "fin": 28.62
+    }
+   ]
+  }
+ ]
+}
