@@ -512,6 +512,16 @@ const PAROLES_HAUTEUR := 88.0                  # la hauteur de la plaque — une
 const PAROLES_TAILLE := 38.0                   # la taille VISÉE ; elle se rabote si la ligne est trop longue
 const PAROLES_TAILLE_MIN := 18.0               # …et le plancher sous lequel on ne rabote plus
 const PAROLES_MARGE_TEXTE := 18.0              # l'air à gauche et à droite du texte, dans la plaque
+# ⚠⚠ (02-10, 2e test de Fabrice) L'AVANCE DU VOILE, EN SECONDES — « quand le soulignement atteint le début
+#   d'un mot, il a déjà été prononcé entièrement par la chanteuse ». Le retard ne vient PAS de l'horloge (elle
+#   est la recette du moteur, cf. `_position_chant`) mais du MINUTAGE lui-même : whisper pose la borne d'un mot
+#   au moment où il l'a RECONNU, donc un peu APRÈS l'attaque de la voix. On ne retouche pas le fichier de
+#   minutage — on fait courir le voile EN AVANCE de cette durée, et c'est un seul chiffre à régler à l'œil.
+# ⚠ CE QU'ELLE DÉPLACE : les BORNES (début de ligne, début et fin de chaque syllabe), pas la vitesse. Le
+#   mouvement reste LISSE à l'intérieur de la syllabe — aucun escalier n'est réintroduit.
+# ⚠ ET ELLE NE PASSE JAMAIS SOUS ZÉRO (`_borne_avancee`) : les premières syllabes de la chanson, qui tombent
+#   avant l'avance, se calent à 0 au lieu de devenir négatives.
+const PAROLES_AVANCE := 0.35                   # ⇦ LE RÉGLAGE : plus grand = le voile court plus tôt sur la voix
 const COL_PAROLES_PLAQUE := Color(0.04, 0.05, 0.08, 0.84)   # la plaque sombre — comme sous tous les libellés
 const COL_PAROLES_TEXTE := Color(0.97, 0.98, 1.0, 1.0)      # ce qui n'est PAS encore chanté : clair sur sombre
 const COL_PAROLES_ROSE := Color(0.95, 0.32, 0.60, 1.0)      # le voile, OPAQUE
@@ -3258,11 +3268,24 @@ func _poser_ligne_paroles(i: int) -> void:
 # dériverait du son dès la première image perdue, et c'est exactement ce qui se voit dans un karaoké.
 # ⚠ On corrige du temps écoulé depuis le dernier mélange ET de la latence de sortie : c'est la recette du moteur
 #   pour savoir ce que l'oreille entend MAINTENANT, et non ce que le lecteur a déjà poussé dans la carte son.
+# ⚠⚠ LE SIGNE A ÉTÉ RE-CONTRÔLÉ (02-10), ET IL EST BON — c'est mot pour mot la recette de la documentation du
+#   moteur (« Sync the gameplay with audio and animation ») : `+ get_time_since_last_mix()` parce que des images
+#   se sont écoulées depuis le dernier mélange, `- get_output_latency()` parce que ce que l'oreille entend
+#   maintenant a été mélangé il y a une latence. Inverser le second signe ferait AVANCER le voile de deux fois
+#   la latence — et la latence ne pèse ici que quelques centièmes (le harnais l'écrit au journal), là où le
+#   retard vu par Fabrice se compte en dixièmes. CE N'ÉTAIT DONC PAS LA CAUSE : la cause est le minutage, et
+#   c'est `PAROLES_AVANCE` qui la compense.
 func _position_chant() -> float:
 	if _musique == null:
 		return 0.0
 	return maxf(0.0, _musique.get_playback_position()
 		+ AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency())
+
+
+# LA BORNE, AVANCÉE — le seul endroit où `PAROLES_AVANCE` agit. Toutes les bornes du minutage passent par ici,
+# et aucune ne descend sous zéro : une syllabe qui tomberait avant l'avance se cale au tout début du chant.
+func _borne_avancee(x: float) -> float:
+	return maxf(0.0, x - PAROLES_AVANCE)
 
 
 func _suivre_paroles() -> void:
@@ -3279,7 +3302,7 @@ func _suivre_paroles() -> void:
 func _ligne_a(t: float) -> int:
 	var i := 0
 	for k in _paroles_lignes.size():
-		if t >= float((_paroles_lignes[k] as Dictionary)["debut"]):
+		if t >= _borne_avancee(float((_paroles_lignes[k] as Dictionary)["debut"])):
 			i = k
 	return i
 
@@ -3293,8 +3316,8 @@ func _part_remplie(t: float) -> float:
 	var syl: Array = (_paroles_lignes[_paroles_i] as Dictionary)["syllabes"] as Array
 	for k in syl.size():
 		var s: Dictionary = syl[k]
-		var d := float(s["debut"])
-		var f := float(s["fin"])
+		var d := _borne_avancee(float(s["debut"]))
+		var f := _borne_avancee(float(s["fin"]))
 		if t < d:
 			_paroles_syllabe = k - 1
 			return _paroles_w[k] / _paroles_largeur
@@ -3798,6 +3821,11 @@ func etat_pour_preuve() -> Dictionary:
 			Vector2(_paroles_largeur, PAROLES_HAUTEUR)),
 		"paroles_voile_rect": Rect2(cadre_paroles().position + Vector2(_paroles_x0, 0.0),
 			Vector2(_paroles_voile.size.x if _paroles_voile != null else 0.0, PAROLES_HAUTEUR)),
+		# L'HORLOGE ELLE-MÊME, RENDUE MESURABLE : l'avance réglée, la latence que le moteur annonce, et la
+		# position « ce que l'oreille entend » — pour qu'un harnais lise les trois au lieu de les supposer.
+		"paroles_avance": PAROLES_AVANCE,
+		"paroles_latence_sortie": AudioServer.get_output_latency(),
+		"paroles_horloge": _position_chant(),
 		"paroles_couleur_voile": COL_PAROLES_ROSE,
 		"paroles_couleur_texte": COL_PAROLES_TEXTE,
 		"paroles_couleur_encre": COL_PAROLES_ENCRE,
