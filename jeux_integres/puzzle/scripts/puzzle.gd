@@ -530,10 +530,26 @@ const PAROLES := {
 	#   (cf. `_position_chant`), parce que ce n'est pas un `AudioStreamPlayer` qui la joue.
 	"chat_qui_chante_v5": "res://jeux_integres/puzzle/paroles/chat_qui_chante_v5.syllabes.json",
 }
-const PAROLES_HAUTEUR := 88.0                  # la hauteur de la plaque — une ligne de chant, lisible de loin
-const PAROLES_TAILLE := 38.0                   # la taille VISÉE ; elle se rabote si la ligne est trop longue
-const PAROLES_TAILLE_MIN := 18.0               # …et le plancher sous lequel on ne rabote plus
+# ⚠⚠ (B28 · 02-10) LA MISE EN PAGE EST **LA MÊME POUR LES DIX CHANSONS**, ET ELLE NE SE RABOTE PLUS.
+#   Ce que Fabrice a vu, et qui est corrigé ici mot pour mot : « le texte karaoké n'est pas toujours de la même
+#   taille… même dans la même vidéo elle change de taille » (la police se rabotait LIGNE PAR LIGNE) · « sur du
+#   16:9 ça peut passer mais ça dégueule de chaque côté… pas centré » (la plaque s'arrêtait avant la colonne du
+#   STOP : le texte était centré sur une plaque elle-même décalée à gauche) · « en 4:3 ça ne passerait pas du
+#   tout » (au plancher de 18 pt une ligne trop longue débordait quand même) · « une phrase longue pouvait être
+#   affichée en étage » · « presque comme si sur chaque musique on avait fait un truc différent ».
+# LA RÈGLE, DÉSORMAIS : taille **FIXE**, largeur de référence = **la cible la plus étroite (4:3, 1024)**, et une
+#   phrase qui n'y tient pas **passe à la ligne**, en étage, au lieu de rapetisser.
+# ⚠ POURQUOI 34 ET PAS 38 (la taille visée d'avant) — c'est MESURÉ, pas choisi à l'œil. Les 139 lignes des dix
+#   chansons ont été découpées à 30, 32, 34, 36 et 38 pt sur la largeur de référence : à toutes ces tailles le
+#   pire cas fait DEUX étages, jamais trois. Ce qui tranche, c'est la hauteur : un bloc de deux étages fait
+#   127,4 px à 34 pt (sommet à y = 622,6) contre 140,6 px à 38 pt (sommet à y = 609,4) — et la colonne du STOP
+#   et de la jauge descend jusqu'à y = 612 sur le canvas de référence. À 38 le bloc mordait la jauge ; à 34 il
+#   lui laisse 10,6 px. C'est la plus grande taille qui tienne la consigne « sans chevaucher » du brief.
+const PAROLES_TAILLE := 34.0                   # LA taille, FIXE, pour les dix chansons — elle ne se rabote JAMAIS
+const PAROLES_LARGEUR_REF := 1024.0            # la cible la plus ÉTROITE (4:3) : l'étalon de la largeur du bloc
 const PAROLES_MARGE_TEXTE := 18.0              # l'air à gauche et à droite du texte, dans la plaque
+const PAROLES_PAD_V := 12.0                    # l'air au-dessus et au-dessous de la pile d'étages
+const PAROLES_INTERLIGNE := 1.10               # d'un étage au suivant, en hauteurs de police
 # ⚠⚠ (02-10, 2e test de Fabrice) L'AVANCE DU VOILE, EN SECONDES — « quand le soulignement atteint le début
 #   d'un mot, il a déjà été prononcé entièrement par la chanteuse ». Le retard ne vient PAS de l'horloge (elle
 #   est la recette du moteur, cf. `_position_chant`) mais du MINUTAGE lui-même : whisper pose la borne d'un mot
@@ -543,7 +559,30 @@ const PAROLES_MARGE_TEXTE := 18.0              # l'air à gauche et à droite du
 #   mouvement reste LISSE à l'intérieur de la syllabe — aucun escalier n'est réintroduit.
 # ⚠ ET ELLE NE PASSE JAMAIS SOUS ZÉRO (`_borne_avancee`) : les premières syllabes de la chanson, qui tombent
 #   avant l'avance, se calent à 0 au lieu de devenir négatives.
-const PAROLES_AVANCE := 0.45                   # ⇦ LE RÉGLAGE : plus grand = le voile court plus tôt sur la voix
+const PAROLES_AVANCE_DEFAUT := 0.45            # ⇦ LE RÉGLAGE DES SEPT CHANSONS WHISPER (ne pas changer sans les écouter)
+# ⚠⚠ (02-10, 3e retour de Fabrice) L'AVANCE EST DÉSORMAIS **PAR CHANSON**, ET C'EST UNE CONSÉQUENCE DIRECTE DU
+#   MINUTAGE. L'avance ne corrige pas l'horloge : elle corrige un DÉFAUT DU MINUTAGE (whisper pose la borne d'un
+#   mot là où il l'a RECONNU, donc après l'attaque de la voix). Les trois chansons dont Fabrice a fourni
+#   l'original sous-titré n'ont plus une seule borne de whisper — leur minutage vient de SA piste de
+#   sous-titres, posée à la main sur la voix. Leur appliquer les 0,45 s de correction whisper serait corriger
+#   un défaut qu'elles n'ont pas, et faire courir le voile une demi-seconde EN AVANCE sur le chant.
+# ⚠ CHAQUE CHANSON SE RÈGLE DONC SUR SA PROPRE LIGNE, ICI, ET NULLE PART AILLEURS. La clé est le NOM DU FICHIER
+#   DE MINUTAGE (sans `.syllabes.json`) — celui que Fabrice voit dans `paroles/`. Une chanson absente de la
+#   table garde `PAROLES_AVANCE_DEFAUT` : les sept chansons whisper n'ont donc aucune ligne à écrire, et leur
+#   réglage validé ne bouge pas d'un millième.
+# ⚠ L'UNITÉ EST LA SECONDE, et le signe est le même pour toutes : plus grand = le voile court plus TÔT.
+const PAROLES_AVANCE_PAR_CHANSON := {
+	# LES TROIS CHANSONS AU MINUTAGE RÉEL — avance 0, et c'est désormais une conséquence encore plus nette.
+	# ⚠ (B30, 03-10) LEUR MINUTAGE NE VIENT PLUS DE LA PISTE `mov_text` DES MP4. Cette piste-là était une grille
+	#   d'affichage à PAS CONSTANT (2,0875 s puis 2,100 s, invariablement) : elle ne savait rien de la voix, et
+	#   le voile prenait de l'avance jusqu'à finir avant le chant. Les trois `.syllabes.json` sont maintenant
+	#   produits par ALIGNEMENT FORCÉ sur l'onde réelle (`outils/aligner_force_karaoke.py`) : chaque syllabe est
+	#   bornée par SES propres lettres, trouvées dans le signal. D'où l'avance 0 — il n'y a plus de défaut à
+	#   compenser. Mesure de la dérive résiduelle : `outils/preuve_align_force.py`.
+	"La_balade_en_auto_rouge": 0.0,     # ⇦ tableau 10 · « La voiture »
+	"En_route_avec_l_abeille": 0.0,     # ⇦ tableau  9 · « Le camion »
+	"L_envol_en_Helicococcos": 0.0,     # ⇦ tableau 11 · « L'hélicoccos »
+}
 const COL_PAROLES_PLAQUE := Color(0.04, 0.05, 0.08, 0.84)   # la plaque sombre — comme sous tous les libellés
 const COL_PAROLES_TEXTE := Color(0.97, 0.98, 1.0, 1.0)      # ce qui n'est PAS encore chanté : clair sur sombre
 const COL_PAROLES_ROSE := Color(0.95, 0.32, 0.60, 1.0)      # le voile, OPAQUE
@@ -780,6 +819,29 @@ var _prise_lisere: Line2D = null
 var tableau := TableauxPuzzle.DEFAUT
 var melange := 0                       # 0 = la partie d'origine (le désordre de B1) ; +1 à chaque « Rejouer »
 
+# ============================================================================================================
+# (B28 · PARTIE A) LE RACCOURCI DEV — ALLER DROIT AU CHANT, SANS REFAIRE LE PUZZLE
+# ============================================================================================================
+# LA DEMANDE, MOT POUR MOT (Fabrice, 02-10) : « ça me gonfle de devoir faire les puzzles à chaque fois ».
+# COMMENT ON L'OUVRE : un ARGUMENT DE LANCEMENT, et rien d'autre —
+#     godot --path "<le jeu des puzzles>" scenes/puzzle.tscn -- karaoke=3
+#   → le 3ᵉ tableau (le numéro AFFICHÉ au journal, celui que Fabrice lit : 1 = le premier), son écran de fin,
+#     son image ou sa vidéo en plein écran, et son chant qui part — sans une seule pièce à poser.
+# ⚠ DEV SEULEMENT, ET C'EST STRUCTUREL : aucun geste, aucune touche, aucun bouton n'y mène. Pour l'atteindre il
+#   faut une ligne de commande — ce que l'enfant n'a pas, et ce qu'un paquet installé n'offre pas.
+# ⚠⚠ LA PROGRESSION DE FABRICE N'EST PAS TOUCHÉE : `_sauter_au_karaoke` n'appelle PAS
+#   `ProgressionPuzzle.noter_victoire`. Un raccourci de test qui déverrouillerait des tableaux lui mentirait sur
+#   ce que l'enfant a vraiment gagné. C'est la seule différence de FOND avec `_gagne`, et elle est volontaire.
+# ⚠ POUR ENCHAÎNER VITE : le bouton SUIVANT de l'écran de fin reste là et RELANCE LE RACCOURCI sur le tableau
+#   d'après (`_niveau_suivant` recopie ce champ). Un lancement, puis un clic par chanson.
+# ⚠ POURQUOI UN CHAMP ET PAS UNE SIMPLE LECTURE DE LA LIGNE DE COMMANDE À CHAQUE `_ready` : `_rejouer` et
+#   `_niveau_suivant` montent une scène NEUVE et lui posent son tableau. Si `_ready` relisait l'argument, il
+#   écraserait ce tableau-là par celui du lancement, et « Suivant » ramènerait toujours la même chanson. La
+#   ligne de commande n'est donc lue que lorsque le champ est resté à son défaut.
+# ⚠ < 0 = ÉTEINT, et c'est le défaut : le jeu livré ne connaît que le chemin normal.
+const DEV_KARAOKE := "karaoke="
+var karaoke_dev := -1
+
 # (B6) LA GRILLE FORCÉE — le contrôle de scalabilité du GDD §10 bis, et RIEN D'AUTRE.
 # ⚠ POURQUOI CES DEUX VARIABLES EXISTENT DANS LE JEU ET NON DANS LE HARNAIS : « on finira par mettre des
 #   tableaux avec bien plus de pièces ; 100 pièces ne tiendraient pas sous le modèle si elles ne pouvaient pas se
@@ -813,21 +875,24 @@ var _btn_stop: Button = null
 #   n'est que la dernière valeur lue/posée, gardée pour l'infobulle et la mesure du harnais.
 var _vol_fin: VSlider = null
 var _vol_fin_picto: Control = null
-# (PROTO KARAOKÉ) LA BARRE DE PAROLES — tout son état tient ici, et rien n'en sort vers le STOP ni la jauge.
-# ⚠ `_paroles_w` EST UN TABLEAU DE LARGEURS EN PIXELS, pas de caractères : la largeur du voile se mesure avec la
-#   POLICE qui dessine, syllabe par syllabe, sinon un « m » et un « i » avanceraient pareil.
+# (PROTO KARAOKÉ · B28) LA BARRE DE PAROLES — tout son état tient ici, et rien n'en sort vers le STOP ni la jauge.
+# ⚠ `_paroles_etages` EST LA MISE EN PAGE DE LA LIGNE COURANTE, UN DICTIONNAIRE PAR ÉTAGE : son texte, les deux
+#   bornes de syllabes qu'il porte (`syl0` inclus → `syl1` exclu), ses largeurs CUMULÉES en PIXELS (pas en
+#   caractères : sinon un « m » et un « i » avanceraient pareil), sa largeur totale, et sa place dans la plaque.
+# ⚠ `_paroles_noeuds` EN EST LE MIROIR DANS L'ARBRE : un étage = {base claire, voile qui coupe, fond rose, encre}.
+#   Autant de nœuds que d'étages, jamais un de plus — c'est ce qui fait qu'une ligne d'un seul étage n'en laisse
+#   pas un second, vide et rose, traîner sous elle.
 var _paroles_porteur: Control = null
-var _paroles_base: Label = null
-var _paroles_voile: Control = null
-var _paroles_rose: ColorRect = null
-var _paroles_encre: Label = null
+var _paroles_plaque: ColorRect = null
+var _paroles_etages: Array = []                # la mise en page de la ligne posée, un Dictionary par étage
+var _paroles_noeuds: Array = []                # son miroir dans l'arbre, un Dictionary de nœuds par étage
 var _paroles_lignes: Array = []                # le minutage lu dans `res://paroles/…syllabes.json`
+var _paroles_avance := PAROLES_AVANCE_DEFAUT   # l'avance de LA chanson en cours — posée par `_charger_paroles`
 var _paroles_i := -1                           # la ligne actuellement posée
-var _paroles_w: PackedFloat32Array = PackedFloat32Array()   # largeur cumulée à chaque limite de syllabe
-var _paroles_largeur := 0.0                    # la largeur totale de la ligne posée
-var _paroles_x0 := 0.0                         # le bord GAUCHE du texte dans la plaque (texte centré)
+var _paroles_texte := ""                       # …et son texte ENTIER, tel que le minutage l'écrit (rendu au harnais)
 var _paroles_syllabe := -1                     # la syllabe en cours — rendue au harnais
-var _paroles_part := 0.0                       # 0 → 1 : la part remplie de la ligne
+var _paroles_etage := 0                        # l'étage que le voile remplit en ce moment (0 = celui du haut)
+var _paroles_part := 0.0                       # 0 → 1 : la part remplie de la LIGNE, tous étages confondus
 var _paroles_fichier := ""
 var _volume_fin := SonPuzzle.VOLUME_DEFAUT
 var _btn_rejouer: Button = null
@@ -870,7 +935,15 @@ func _ready() -> void:
 	#   qui lit `_curseur` dès `_batir_curseur_doigt()`, et pour sa TAILLE (§31.2 : la Main est deux fois plus
 	#   petite). `_poser_curseur()` relit la même ligne ensuite : c'est idempotent, et ça garde son journal.
 	_curseur = CurseursPuzzle.lire_choix()
+	# (B28 · PARTIE A) LE RACCOURCI DEV EST LU **ICI**, avant que quoi que ce soit se bâtisse : il CHOISIT le
+	# tableau, et l'image, la grille et la chanson en descendent toutes. Cf. l'encadré de `karaoke_dev`.
+	if karaoke_dev < 0:
+		karaoke_dev = _karaoke_ligne_de_commande()
+	if karaoke_dev >= 0:
+		tableau = karaoke_dev
 	tableau = TableauxPuzzle.numero_valide(tableau)
+	if karaoke_dev >= 0:
+		karaoke_dev = tableau                      # recalé sur le tableau réellement retenu, jamais sur le vœu
 	_image = TableauxPuzzle.image(tableau)
 	if _image == null:
 		push_error("[puzzle] image introuvable : " + TableauxPuzzle.chemin_image(tableau))
@@ -931,6 +1004,11 @@ func _ready() -> void:
 	# créé par `_lancer_musique_tableau`, et pas une seconde plus tôt.
 	_dire("silence pendant le puzzle : aucun lecteur de musique — la musique du tableau est « %s », elle ne passera qu'à la victoire"
 		% TableauxPuzzle.chemin_musique(tableau).get_file())
+	# (B28 · PARTIE A) …SAUF EN RACCOURCI DEV : là on ne joue pas, on va droit au chant. `call_deferred` pour
+	# passer APRÈS `_charger_recompense` (déféré juste au-dessus) — sinon on entrerait dans l'écran de fin avec
+	# une fête pas encore en mémoire, et le filet « pas de planches » brouillerait la mesure.
+	if karaoke_dev >= 0:
+		call_deferred("_sauter_au_karaoke")
 
 
 # ------------------------------------------------------------------------------------------------------------
@@ -1194,6 +1272,11 @@ func _redimensionne() -> void:
 	for i in _pos.size():
 		_pos[i] = _plateau.position + (_pos[i] - ancien_coin) * f
 	_refaire_geometrie()
+	# (B28) LA BARRE DE PAROLES SUIT LE CANVAS — sa largeur de référence, son centrage et sa hauteur en étages se
+	# déduisent tous de `_ecran`. La reposer est UN appel ; ne pas la reposer, c'est un bloc resté centré sur
+	# l'ancien écran — et le passage 4:3 ↔ 16:9 du harnais tombe exactement là-dessus.
+	if _paroles_porteur != null and _paroles_i >= 0:
+		_poser_ligne_paroles(_paroles_i)
 	_dire("canvas redimensionné → %s · échelle %.4f (× %.3f) · zone %s" % [str(_ecran), _echelle, f, str(_zone.size)])
 
 
@@ -2370,6 +2453,71 @@ func _gagne() -> void:
 	_lancer_recompense()
 
 
+# ============================================================================================================
+# (B28 · PARTIE A) LE RACCOURCI DEV — LA LECTURE DE L'ARGUMENT, PUIS LE SAUT
+# ============================================================================================================
+# L'ARGUMENT : `get_cmdline_user_args()` ne rend QUE ce qui suit `--`, comme pour `--forcer-tactile` plus haut.
+# Rien de ce que le moteur consomme lui-même ne peut donc se confondre avec notre mot-clé.
+# ⚠ LE NUMÉRO EST CELUI QUE LE JOURNAL AFFICHE (1 = le premier tableau), et PAS l'index de table : c'est ce que
+#   Fabrice lit à l'écran, et un raccourci de test qui demanderait de compter à partir de zéro se tromperait de
+#   chanson une fois sur deux. `karaoke=0`, un mot qui n'est pas un nombre, ou rien du tout : le raccourci reste
+#   éteint — et on le DIT au journal plutôt que de partir silencieusement sur le tableau 1.
+func _karaoke_ligne_de_commande() -> int:
+	for a in OS.get_cmdline_user_args():
+		var s := str(a)
+		if not s.begins_with(DEV_KARAOKE):
+			continue
+		var n := s.substr(DEV_KARAOKE.length()).strip_edges()
+		if n.is_valid_int() and int(n) >= 1:
+			return int(n) - 1
+		push_warning("[puzzle] raccourci DEV « %s » ignoré : un numéro de tableau à partir de 1 est attendu" % s)
+	return -1
+
+
+# LE SAUT LUI-MÊME — le chemin de `_gagne`, AMPUTÉ DE CE QU'IL NE FAUT PAS FAIRE EN TEST.
+# ⚠ CE QU'IL REPREND DE `_gagne`, ET POURQUOI : l'état RECOMPENSE, la suggestion et le liseré rangés, la maison
+#   et le recadrage du panneau retirés, le modèle plein refermé — tout ce qui, sinon, surnagerait par-dessus
+#   l'écran de fin. Et `_suivant_offert`, sans quoi l'écran de fin n'aurait que deux boutons : on ne pourrait
+#   plus enchaîner, c'est-à-dire qu'on manquerait la moitié de la demande.
+# ⚠⚠ CE QU'IL NE REPREND PAS, ET POURQUOI :
+#     · `ProgressionPuzzle.noter_victoire` — cf. l'encadré de `karaoke_dev` : on ne débloque RIEN en testant.
+#     · la fête « coccos joyeuse » (`_lancer_recompense`) — dix secondes avant chaque chanson, c'est exactement
+#       la corvée que ce raccourci supprime. On entre directement par `_plein_ecran()`, qui est la porte que la
+#       fête emprunte elle-même à sa fin (`_process`), et qui lance la musique — donc la barre de paroles — sur
+#       la fin de son fondu. Aucun chemin n'est inventé : on prend le même, un cran plus loin.
+# ⚠ LE PUZZLE ÉPARPILLÉ EST CACHÉ, PAS RÉSOLU : `_plein_ecran` pose des bandes NOIRES opaques par-dessus tout,
+#   mais son fondu dure 0,8 s — sans ce geste on verrait les pièces en vrac pendant ce temps-là. Les résoudre
+#   pour de faux aurait demandé de toucher aux groupes et aux emboîtements, c'est-à-dire au jeu lui-même.
+# ⚠ `_suivant_offert` SE DEMANDE À LA FAMILLE, PAS À LA PROGRESSION ENREGISTRÉE : en DEV on veut enchaîner les
+#   dix chansons même sur une machine où rien n'est encore débloqué.
+func _sauter_au_karaoke() -> void:
+	_etat = Etat.RECOMPENSE
+	_cacher_suggestion()
+	_cacher_lisere_prise()
+	_maj_curseur_doigt()
+	_fermer_modele_plein()
+	if _btn_maison != null:
+		_btn_maison.visible = false
+	if _btn_recadrer != null:
+		_btn_recadrer.visible = false
+	if _jeu != null:
+		_jeu.visible = false
+	if _ihm != null:
+		_ihm.visible = false
+	_progression_ouverte = false
+	_suivant_offert = TableauxPuzzle.suivant_dans_famille(tableau) >= 0
+	var media: String = TableauxPuzzle.chemin_video(tableau)
+	if media == "":
+		media = TableauxPuzzle.chemin_musique(tableau)
+	_dire("⚠ RACCOURCI DEV « %s%d » — on saute LE PUZZLE **ET** LA FÊTE : écran de fin du tableau %d « %s », "
+		% [DEV_KARAOKE, tableau + 1, tableau + 1, TableauxPuzzle.nom(tableau)]
+		+ "chant « %s » (horloge %s). LA PROGRESSION N'EST PAS ÉCRITE. SUIVANT : %s."
+		% [media.get_file(), "video" if TableauxPuzzle.a_video(tableau) else "musique",
+			"enchaîne sur le chant du tableau suivant de la famille" if _suivant_offert
+			else "absent (dernier tableau de la famille)"])
+	_plein_ecran()
+
+
 func _charger_recompense() -> void:
 	var t0 := Time.get_ticks_msec()
 	var d := DirAccess.open(DOSSIER_REC)
@@ -3006,6 +3154,8 @@ func _rejouer() -> void:
 	jeu.melange = melange + 1                      # …et un désordre NEUF (cf. l'encadré de `melange`)
 	jeu.forcer_tactile = forcer_tactile            # (B10) le doigt forcé VOYAGE : sinon la scène neuve redeviendrait
 	                                               #       souris, et la preuve mesurerait un autre jeu que le sien
+	jeu.karaoke_dev = karaoke_dev                  # (B28) …et le raccourci DEV aussi : « Rejouer » en test ne
+	                                               #       doit pas remettre le puzzle sur le dos de Fabrice
 	var parent := get_parent()
 	parent.add_child(jeu)
 	if parent == get_tree().root:
@@ -3052,6 +3202,8 @@ func _niveau_suivant() -> void:
 	jeu.tableau = suivant                          # LE SUIVANT **DE LA FAMILLE** : cf. le filet ci-dessus
 	jeu.melange = 0                                # un tableau neuf, son premier désordre
 	jeu.forcer_tactile = forcer_tactile            # (B10) cf. `_rejouer` : le doigt forcé suit la chaîne des tableaux
+	jeu.karaoke_dev = suivant if karaoke_dev >= 0 else -1   # (B28) C'EST CE BOUTON QUI FAIT « ENCHAÎNER VITE » :
+	                                               #       en DEV, SUIVANT ouvre le chant d'après, pas son puzzle
 	var parent := get_parent()
 	parent.add_child(jeu)
 	if parent == get_tree().root:
@@ -3151,14 +3303,54 @@ func cadre_volume_fin() -> Rect2:
 # ============================================================================================================
 # (PROTO KARAOKÉ) LA BARRE DE PAROLES — GÉOMÉTRIE, CONSTRUCTION, ET LE VOILE QUI SUIT LA VOIX
 # ============================================================================================================
-# LE RECTANGLE DE LA PLAQUE : TOUT EN BAS, et il S'ARRÊTE AVANT LA COLONNE DE DROITE. Le STOP et la jauge
-# occupent `largeur_colonne_fin()` au bord droit sur presque toute la hauteur : une barre pleine largeur
-# passerait dessous ou dessus, et c'est précisément le « ne pas les mêler » du brief, pris au pied de la lettre.
+# LA LARGEUR DU BLOC — **LA MÊME SUR LES QUATRE CIBLES**, et calée sur la plus ÉTROITE.
+# ⚠⚠ C'EST LE CŒUR DE LA REFONTE B28. Avant, la plaque prenait « tout sauf la colonne du STOP » : elle était
+#   donc plus large sur un 16:9 que sur un 4:3, ET décalée à gauche sur les deux — d'où le « pas centré » et le
+#   « plus de texte à gauche qu'à droite ». Maintenant elle fait `min(canvas ; 1024) − 2 × marge` : 988 px sur le
+#   4:3 de référence, et ENCORE 988 px sur un 16:9, simplement centrés dans un canvas plus large. Une phrase
+#   mise en page sur l'un l'est à l'identique sur l'autre — aucun réglage par chanson, aucun par cible.
+func largeur_plaque_paroles() -> float:
+	return minf(_ecran.x, PAROLES_LARGEUR_REF) - 2.0 * FIN_MARGE
+
+
+# CE QUI RESTE AU TEXTE une fois l'air retiré des deux côtés — la largeur à laquelle le découpage en étages
+# répond, et la seule qu'il interroge.
+func largeur_texte_paroles() -> float:
+	return largeur_plaque_paroles() - 2.0 * PAROLES_MARGE_TEXTE
+
+
+# LA HAUTEUR D'UN ÉTAGE — demandée À LA POLICE, pas recopiée. La taille étant fixe, ce nombre l'est aussi :
+# 47 px à 34 pt, × 1,10 d'interligne = 51,7. Deux étages n'en font jamais 2,5.
+func hauteur_etage_paroles() -> float:
+	return ThemeDB.fallback_font.get_height(int(PAROLES_TAILLE)) * PAROLES_INTERLIGNE
+
+
+# COMBIEN D'ÉTAGES PORTE LA LIGNE POSÉE — au moins un, même avant qu'une ligne soit posée : la plaque a une
+# hauteur dès sa naissance, sinon `cadre_paroles()` rendrait un rectangle plat au harnais.
+func nb_etages_paroles() -> int:
+	return maxi(1, _paroles_etages.size())
+
+
+# LA HAUTEUR DU BLOC — « adaptée au nombre de lignes » (brief). Une ligne d'un étage fait 75,7 px, une ligne de
+# deux en fait 127,4 : le bloc GRANDIT VERS LE HAUT. Son BAS, lui, ne bouge jamais.
+func hauteur_paroles() -> float:
+	return 2.0 * PAROLES_PAD_V + float(nb_etages_paroles()) * hauteur_etage_paroles()
+
+
+# LE RECTANGLE DE LA PLAQUE : TOUT EN BAS, **CENTRÉ**, et calé sur la largeur de référence.
+# ⚠⚠ POURQUOI IL NE CHEVAUCHE NI LE STOP NI LA JAUGE, ALORS QU'IL PASSE MAINTENANT SOUS LEUR COLONNE : cette
+#   colonne est CENTRÉE VERTICALEMENT (`y_colonne_fin`) et s'arrête à y = 612 sur le canvas de référence. Le
+#   bloc le plus haut que les dix chansons produisent fait DEUX étages, soit 127,4 px : son sommet tombe à
+#   622,6. Il reste 10,6 px sous la jauge. Ce n'est pas une coïncidence, c'est ce qui a fixé `PAROLES_TAILLE`.
+#   ⚠ ET LA HAUTEUR DU CANVAS NE DESCEND JAMAIS SOUS 768 : le jeu est PAYSAGE et `stretch/aspect = expand`
+#     garde la petite dimension de la base (1024 × 768) — un 16:9 élargit le canvas, il ne l'écrase pas.
+#   ⚠ Sur un 16:9 la question ne se pose même pas : la plaque fait toujours 988 px centrés (x = 188 → 1176)
+#     tandis que la colonne commence à x = 1235. Le harnais remesure les deux cas plutôt que de croire ceci.
 # ⚠ Rendu au jeu ET au harnais, comme tous les rectangles de ce fichier.
 func cadre_paroles() -> Rect2:
-	var l: float = _ecran.x - 2.0 * FIN_MARGE - largeur_colonne_fin() - FIN_ECART
-	return Rect2(Vector2(FIN_MARGE, _ecran.y - FIN_MARGE - PAROLES_HAUTEUR),
-		Vector2(maxf(l, 160.0), PAROLES_HAUTEUR))
+	var l := largeur_plaque_paroles()
+	var h := hauteur_paroles()
+	return Rect2(Vector2((_ecran.x - l) * 0.5, _ecran.y - FIN_MARGE - h), Vector2(l, h))
 
 
 # LE MINUTAGE — lu au FileAccess, pas en `load()`. Un `.json` passe par l'importateur du moteur et devient une
@@ -3182,6 +3374,7 @@ func chemin_paroles(t: int) -> String:
 
 func _charger_paroles() -> void:
 	_paroles_lignes = []
+	_paroles_avance = PAROLES_AVANCE_DEFAUT    # remis au repli AVANT toute sortie : aucune avance d'une autre chanson ne traîne
 	_paroles_fichier = chemin_paroles(tableau)
 	if _paroles_fichier == "":
 		return
@@ -3197,6 +3390,12 @@ func _charger_paroles() -> void:
 		push_warning("[puzzle] minutage de paroles illisible : " + _paroles_fichier)
 		return
 	_paroles_lignes = (d as Dictionary)["lignes"] as Array
+	# L'AVANCE DE CETTE CHANSON-LÀ — lue ICI, une fois, au moment où l'on sait quelle chanson on sert.
+	# ⚠ La clé est le nom du fichier de minutage sans ses deux suffixes (« …syllabes.json ») : deux
+	#   `get_basename()` enchaînés, pas un. Un seul laisserait « La_balade_en_auto_rouge.syllabes », qui ne
+	#   figure dans aucune table — et la chanson retomberait en silence sur l'avance par défaut.
+	var cle := _paroles_fichier.get_file().get_basename().get_basename()
+	_paroles_avance = float(PAROLES_AVANCE_PAR_CHANSON.get(cle, PAROLES_AVANCE_DEFAUT))
 
 
 func _batir_paroles() -> void:
@@ -3205,103 +3404,230 @@ func _batir_paroles() -> void:
 	_charger_paroles()
 	if _paroles_lignes.is_empty():
 		return
-	var r := cadre_paroles()
 	_paroles_porteur = Control.new()
 	_paroles_porteur.name = "BarreParoles"
-	_paroles_porteur.position = r.position
-	_paroles_porteur.size = r.size
 	_paroles_porteur.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fin_calque.add_child(_paroles_porteur)
-	var plaque := ColorRect.new()
-	plaque.name = "PlaqueParoles"
-	plaque.color = COL_PAROLES_PLAQUE
-	plaque.size = r.size
-	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_paroles_porteur.add_child(plaque)
-	_paroles_base = _label_paroles("ParolesClair", COL_PAROLES_TEXTE, r.size)
-	_paroles_porteur.add_child(_paroles_base)
-	# LE VOILE : un porteur qui COUPE ce qui dépasse (`clip_contents`), et dont la seule largeur avance. Dedans,
-	# le rose PLEIN et le MÊME texte en encre sombre, posé au même pixel que le clair — c'est ce qui donne le
-	# « remplit le texte » de Fabrice plutôt qu'un rectangle qui glisse par-dessus des mots devenus illisibles.
-	_paroles_voile = Control.new()
-	_paroles_voile.name = "VoileRose"
-	_paroles_voile.clip_contents = true
-	_paroles_voile.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_paroles_porteur.add_child(_paroles_voile)
-	_paroles_rose = ColorRect.new()
-	_paroles_rose.name = "FondRose"
-	_paroles_rose.color = COL_PAROLES_ROSE
-	_paroles_rose.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_paroles_voile.add_child(_paroles_rose)
-	_paroles_encre = _label_paroles("ParolesEncre", COL_PAROLES_ENCRE, r.size)
-	_paroles_voile.add_child(_paroles_encre)
+	_paroles_plaque = ColorRect.new()
+	_paroles_plaque.name = "PlaqueParoles"
+	_paroles_plaque.color = COL_PAROLES_PLAQUE
+	_paroles_plaque.position = Vector2.ZERO
+	_paroles_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles_porteur.add_child(_paroles_plaque)
+	# ⚠ LA PLACE DU BLOC EST POSÉE PAR `_poser_ligne_paroles`, PAS ICI : elle dépend du nombre d'étages de la
+	#   ligne, qu'on ne connaît qu'une fois la ligne découpée. Un `position`/`size` écrit ici serait écrasé à
+	#   l'instant suivant — et aurait fait croire, en relisant, que la plaque a une taille fixe. Elle n'en a plus.
 	_poser_ligne_paroles(0)
-	_dire("BARRE DE PAROLES (tableau « %s », horloge %s) — %s · %d lignes · plaque %s · voile ROSE %s"
+	_dire("BARRE DE PAROLES (tableau « %s », horloge %s) — %s · %d lignes · police FIXE %d pt (plus aucun rabot) · "
 		% [TableauxPuzzle.nom(tableau), horloge_paroles(), _paroles_fichier.get_file(),
-			_paroles_lignes.size(), str(r), str(COL_PAROLES_ROSE)])
+			_paroles_lignes.size(), int(PAROLES_TAILLE)]
+		+ "plaque %s CENTRÉE (référence %.0f, texte %.0f, étage %.1f px) · voile ROSE %s · 1re ligne en %d étage(s)"
+		% [str(cadre_paroles()), largeur_plaque_paroles(), largeur_texte_paroles(), hauteur_etage_paroles(),
+			str(COL_PAROLES_ROSE), nb_etages_paroles()])
 
 
-func _label_paroles(nom: String, teinte: Color, taille: Vector2) -> Label:
+# UN LABEL D'ÉTAGE — LA TAILLE EST POSÉE ICI, UNE FOIS, ET PLUS PERSONNE N'Y TOUCHE (c'est toute la demande).
+# ⚠ ALIGNEMENT À GAUCHE, ET CE N'EST PAS UN RENONCEMENT AU CENTRAGE : chaque étage est un Label dont la largeur
+#   EST EXACTEMENT celle de son texte mesuré, posé à `x0 = (plaque − largeur) / 2`. Le centrage est donc fait par
+#   la GÉOMÉTRIE, au pixel mesuré, et non par l'alignement interne d'un Label plus large que son texte. C'est
+#   aussi ce qui permet au voile, qui part du même `x0`, de couvrir le texte et rien d'autre.
+func _label_paroles(nom: String, teinte: Color) -> Label:
 	var l := Label.new()
 	l.name = nom
-	l.position = Vector2.ZERO
-	l.size = taille
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", int(PAROLES_TAILLE))
 	l.add_theme_color_override("font_color", teinte)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
 
-# LA TAILLE QUI TIENT — on part de la taille voulue et on rabote tant que la ligne déborde de la plaque. Une
-# ligne coupée au milieu d'un mot serait pire qu'une ligne un peu plus petite, et le `autowrap` ferait sauter la
-# mesure de largeur sur laquelle le voile s'appuie.
-func _taille_paroles(texte: String, largeur: float) -> int:
+# LES MOTS D'UNE LIGNE, EN PAQUETS DE SYLLABES — le seul endroit où l'on a le droit de couper.
+# ⚠⚠ ON NE COUPE JAMAIS AU MILIEU D'UN MOT, et on ne coupe pas non plus « quelque part dans le texte » : on coupe
+#   entre deux SYLLABES, là où la syllabe précédente se termine par une espace. C'est ce qui garantit que les
+#   bornes du minutage restent alignées sur les étages — sans quoi le voile remplirait un étage avec le minutage
+#   d'un autre, et l'enfant verrait le rose courir sur des mots qui ne sont pas chantés.
+# ⚠ LES MORCEAUX DE SYLLABE PORTENT LEURS ESPACES ET LEUR PONCTUATION (c'est le minuteur qui le garantit) : « fin
+#   de mot » se lit donc sur le morceau lui-même, et non sur une liste de mots recalculée à côté qui pourrait
+#   diverger. Mis bout à bout, les morceaux redonnent la ligne à la lettre près.
+func _mots_paroles(syl: Array) -> Array:
+	var mots: Array = []
+	var courant: Array = []
+	for k in syl.size():
+		courant.append(k)
+		var t := str((syl[k] as Dictionary)["t"])
+		if t != t.strip_edges(false, true):
+			mots.append(courant)
+			courant = []
+	if not courant.is_empty():
+		mots.append(courant)
+	return mots
+
+
+# LE DÉCOUPAGE EN ÉTAGES — mot à mot, tant que ça tient dans `largeur_texte_paroles()`, avec LA police fixe.
+# ⚠ MESURÉ AVEC LA POLICE QUI DESSINE (`ThemeDB.fallback_font`, celle des Labels ci-dessus) : une largeur
+#   estimée en caractères se tromperait de plusieurs dizaines de pixels sur une ligne de quatre-vingt-dix signes.
+# ⚠ L'ESPACE DE FIN D'ÉTAGE EST ROGNÉE AVANT DE MESURER : sinon la dernière espace compterait dans la largeur de
+#   l'étage, et l'étage paraîtrait décentré d'une demi-espace vers la gauche.
+# ⚠ UN MOT PLUS LARGE QUE LA PLAQUE PREND SON ÉTAGE À LUI et déborde, plutôt que de disparaître : aucune des 139
+#   lignes des dix chansons n'est dans ce cas (mesuré), mais une chanson ajoutée un jour doit rester lisible.
+func _decouper_etages(syl: Array) -> Array:
 	var f: Font = ThemeDB.fallback_font
-	var t := int(PAROLES_TAILLE)
-	while t > int(PAROLES_TAILLE_MIN) and f.get_string_size(texte, HORIZONTAL_ALIGNMENT_LEFT, -1, t).x > largeur:
-		t -= 1
-	return t
+	var taille := int(PAROLES_TAILLE)
+	var dispo := largeur_texte_paroles()
+	var etages: Array = []
+	var courant := {"texte": "", "syl0": 0, "syl1": 0}
+	for m in _mots_paroles(syl):
+		var mot := ""
+		for k in m:
+			mot += str((syl[k] as Dictionary)["t"])
+		var essai: String = str(courant["texte"]) + mot
+		var w: float = f.get_string_size(essai.strip_edges(false, true),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+		if str(courant["texte"]) != "" and w > dispo:
+			etages.append(courant)
+			courant = {"texte": mot, "syl0": int(m[0]), "syl1": int(m[m.size() - 1]) + 1}
+		else:
+			courant["texte"] = essai
+			courant["syl1"] = int(m[m.size() - 1]) + 1
+	etages.append(courant)
+	# LES CUMULS, ÉTAGE PAR ÉTAGE : la largeur du préfixe à CHAQUE limite de syllabe de CET étage-là. Mesurer les
+	# préfixes plutôt que les morceaux un à un évite l'erreur de crénage qui s'accumulerait sur dix additions.
+	var h := hauteur_etage_paroles()
+	var lp := largeur_plaque_paroles()
+	for n in etages.size():
+		var e: Dictionary = etages[n]
+		var t0: String = str(e["texte"]).strip_edges(false, true)
+		e["texte"] = t0
+		e["largeur"] = f.get_string_size(t0, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+		var w := PackedFloat32Array()
+		w.append(0.0)
+		var prefixe := ""
+		for k in range(int(e["syl0"]), int(e["syl1"])):
+			prefixe += str((syl[k] as Dictionary)["t"])
+			w.append(f.get_string_size(prefixe.strip_edges(false, true),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x)
+		# La dernière largeur cumulée EST la largeur de l'étage : on les recolle pour que le voile plein couvre
+		# exactement le texte, au pixel près, même si le crénage du dernier signe diffère de 0,5 px.
+		w[w.size() - 1] = float(e["largeur"])
+		e["w"] = w
+		# ⚠ LE CENTRAGE EST ICI, ET IL EST **PAR ÉTAGE** : chaque étage a SON `x0`. Une phrase en deux étages
+		#   donne donc deux lignes centrées l'une sous l'autre, et non un bloc justifié à gauche.
+		e["x0"] = (lp - float(e["largeur"])) * 0.5
+		e["y"] = PAROLES_PAD_V + float(n) * h
+	return etages
 
 
-# POSER UNE LIGNE : le texte dans les deux Labels, la même police, et le tableau des largeurs CUMULÉES mesuré
-# syllabe par syllabe avec cette police-là.
-# ⚠⚠ LES MORCEAUX DE SYLLABE PORTENT LEURS ESPACES ET LEUR PONCTUATION (c'est le minuteur qui le garantit) :
-#   mis bout à bout ils redonnent la ligne à la lettre près. Mesurer les PRÉFIXES plutôt que les morceaux un à
-#   un évite l'erreur de crénage qui s'accumulerait sur dix additions.
+# AUTANT DE NŒUDS QUE D'ÉTAGES — on en ajoute, on en retire, on ne les refait pas tous à chaque ligne.
+# ⚠ LE NŒUD RETIRÉ EST LIBÉRÉ, pas seulement caché : un étage rose laissé derrière une ligne courte est
+#   exactement le genre de reste qui ne se voit qu'une chanson sur dix.
+func _batir_etages() -> void:
+	while _paroles_noeuds.size() > _paroles_etages.size():
+		var vieux: Dictionary = _paroles_noeuds.pop_back()
+		(vieux["base"] as Node).queue_free()
+		(vieux["voile"] as Node).queue_free()
+	while _paroles_noeuds.size() < _paroles_etages.size():
+		var n := _paroles_noeuds.size()
+		var base := _label_paroles("ParolesClair%d" % n, COL_PAROLES_TEXTE)
+		_paroles_porteur.add_child(base)
+		# LE VOILE : un porteur qui COUPE ce qui dépasse (`clip_contents`), et dont la seule largeur avance.
+		# Dedans, le rose PLEIN et le MÊME texte en encre sombre, posé au même pixel que le clair — c'est ce qui
+		# donne le « remplit le texte » de Fabrice plutôt qu'un rectangle glissant sur des mots devenus illisibles.
+		var voile := Control.new()
+		voile.name = "VoileRose%d" % n
+		voile.clip_contents = true
+		voile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_paroles_porteur.add_child(voile)
+		var rose := ColorRect.new()
+		rose.name = "FondRose"
+		rose.color = COL_PAROLES_ROSE
+		rose.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		voile.add_child(rose)
+		var encre := _label_paroles("ParolesEncre%d" % n, COL_PAROLES_ENCRE)
+		voile.add_child(encre)
+		_paroles_noeuds.append({"base": base, "voile": voile, "rose": rose, "encre": encre})
+
+
+# POSER UNE LIGNE : la découper en étages, replacer le bloc (sa hauteur vient peut-être de changer), remplir les
+# nœuds, et remettre le voile à zéro.
 func _poser_ligne_paroles(i: int) -> void:
-	if i < 0 or i >= _paroles_lignes.size():
+	if i < 0 or i >= _paroles_lignes.size() or _paroles_porteur == null:
 		return
 	_paroles_i = i
 	var ligne: Dictionary = _paroles_lignes[i]
-	var texte := str(ligne["texte"])
+	_paroles_texte = str(ligne["texte"])
+	_paroles_etages = _decouper_etages(ligne["syllabes"] as Array)
+	_batir_etages()
+	# ⚠ LE BLOC SE REPLACE À CHAQUE LIGNE, et c'est obligatoire : passer d'une ligne d'un étage à une ligne de
+	#   deux change sa hauteur, donc son sommet. Son BAS, lui, ne bouge jamais — c'est ce qui fait qu'il « reste
+	#   en bas » au lieu de danser sous les yeux de l'enfant.
 	var r := cadre_paroles()
-	var dispo: float = r.size.x - 2.0 * PAROLES_MARGE_TEXTE
-	var taille := _taille_paroles(texte, dispo)
-	var f: Font = ThemeDB.fallback_font
-	for l in [_paroles_base, _paroles_encre]:
-		l.add_theme_font_size_override("font_size", taille)
-		l.text = texte
-	_paroles_largeur = f.get_string_size(texte, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
-	_paroles_x0 = (r.size.x - _paroles_largeur) * 0.5
-	var syl: Array = ligne["syllabes"] as Array
-	_paroles_w = PackedFloat32Array()
-	_paroles_w.append(0.0)
-	var prefixe := ""
-	for k in syl.size():
-		prefixe += str((syl[k] as Dictionary)["t"])
-		_paroles_w.append(f.get_string_size(prefixe, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x)
-	# La dernière largeur cumulée EST la largeur de la ligne : on les recolle pour que le voile plein couvre
-	# exactement le texte, au pixel près, même si le crénage du dernier signe diffère de 0,5 px.
-	_paroles_w[_paroles_w.size() - 1] = _paroles_largeur
-	_paroles_voile.position = Vector2(_paroles_x0, 0.0)
-	_paroles_voile.size = Vector2(0.0, r.size.y)
-	_paroles_rose.position = Vector2.ZERO
-	_paroles_rose.size = Vector2(_paroles_largeur, r.size.y)
-	_paroles_encre.position = Vector2(-_paroles_x0, 0.0)
-	_paroles_encre.size = r.size
+	_paroles_porteur.position = r.position
+	_paroles_porteur.size = r.size
+	_paroles_plaque.size = r.size
+	var h := hauteur_etage_paroles()
+	for n in _paroles_etages.size():
+		var e: Dictionary = _paroles_etages[n]
+		var nd: Dictionary = _paroles_noeuds[n]
+		var x0 := float(e["x0"])
+		var y := float(e["y"])
+		var lg := float(e["largeur"])
+		var base: Label = nd["base"]
+		var voile: Control = nd["voile"]
+		var rose: ColorRect = nd["rose"]
+		var encre: Label = nd["encre"]
+		base.text = str(e["texte"])
+		encre.text = base.text
+		base.position = Vector2(x0, y)
+		base.size = Vector2(lg, h)
+		voile.position = Vector2(x0, y)
+		voile.size = Vector2(0.0, h)
+		rose.position = Vector2.ZERO
+		rose.size = Vector2(lg, h)
+		encre.position = Vector2.ZERO
+		encre.size = Vector2(lg, h)
 	_paroles_syllabe = -1
+	_paroles_etage = 0
 	_paroles_part = 0.0
+
+
+# ----------------------------------------------------------------------------- ce que le harnais vient lire
+# COMBIEN DE SYLLABES PORTE LA LIGNE POSÉE — demandé au minutage, jamais déduit d'un tableau de largeurs.
+func _nb_syllabes_ligne() -> int:
+	if _paroles_i < 0 or _paroles_i >= _paroles_lignes.size():
+		return 0
+	return ((_paroles_lignes[_paroles_i] as Dictionary)["syllabes"] as Array).size()
+
+
+# LE RECTANGLE D'UN ÉTAGE, EN COORDONNÉES DE CANVAS — celui du TEXTE, ou celui de son VOILE (la part chantée).
+func _rect_etage(n: int, voile: bool) -> Rect2:
+	if n < 0 or n >= _paroles_etages.size():
+		return Rect2()
+	var e: Dictionary = _paroles_etages[n]
+	var p := cadre_paroles().position + Vector2(float(e["x0"]), float(e["y"]))
+	var l := float(e["largeur"])
+	if voile:
+		l = (_paroles_noeuds[n]["voile"] as Control).size.x if n < _paroles_noeuds.size() else 0.0
+	return Rect2(p, Vector2(l, hauteur_etage_paroles()))
+
+
+# LA MISE EN PAGE ENTIÈRE, RENDUE TELLE QUELLE — de quoi prouver le centrage, le non-débordement et le
+# remplissage étage par étage sans qu'un harnais refasse un seul calcul.
+func _etages_pour_preuve() -> Array:
+	var a: Array = []
+	for n in _paroles_etages.size():
+		var e: Dictionary = _paroles_etages[n]
+		var lg := float(e["largeur"])
+		a.append({
+			"texte": str(e["texte"]),
+			"rect": _rect_etage(n, false),
+			"voile_rect": _rect_etage(n, true),
+			"largeur": lg,
+			"syl0": int(e["syl0"]),
+			"syl1": int(e["syl1"]),
+			"part": 0.0 if lg <= 0.0 else _rect_etage(n, true).size.x / lg,
+		})
+	return a
 
 
 # L'HORLOGE DU VOILE : LA TÊTE DE LECTURE DU CHANT LUI-MÊME. Pas un chronomètre parallèle — un compteur à côté
@@ -3314,7 +3640,9 @@ func _poser_ligne_paroles(i: int) -> void:
 #   maintenant a été mélangé il y a une latence. Inverser le second signe ferait AVANCER le voile de deux fois
 #   la latence — et la latence ne pèse ici que quelques centièmes (le harnais l'écrit au journal), là où le
 #   retard vu par Fabrice se compte en dixièmes. CE N'ÉTAIT DONC PAS LA CAUSE : la cause est le minutage, et
-#   c'est `PAROLES_AVANCE` qui la compense.
+#   c'est l'avance qui la compense — et, depuis B29, CHANSON PAR CHANSON
+#   (`PAROLES_AVANCE_PAR_CHANSON`) : les trois chansons au minutage réel n'ont pas ce défaut-là, donc pas
+#   cette correction-là.
 #
 # ⚠⚠ (B27) DEUX LECTEURS, DEUX HORLOGES — ET LA CORRECTION DE LATENCE NE S'APPLIQUE QU'À L'UN DES DEUX.
 #   Sur « La petite feuille », le chant n'est pas un `AudioStreamPlayer` mais une VIDÉO : son horloge est
@@ -3323,7 +3651,8 @@ func _poser_ligne_paroles(i: int) -> void:
 #   ⚠ ON NE LUI AJOUTE PAS la recette `+ get_time_since_last_mix() − get_output_latency()` : ces deux valeurs
 #     décrivent le MÉLANGEUR AUDIO, et `stream_position` n'en vient pas — c'est le décodeur vidéo qui l'écrit
 #     image par image. Les plaquer dessus serait une correction inventée, de l'ordre du centième, appliquée à
-#     une horloge qui n'a pas ce décalage-là. Le seul réglage reste `PAROLES_AVANCE`, le même pour les dix.
+#     une horloge qui n'a pas ce décalage-là. Le seul réglage reste l'avance — qui, depuis B29, se règle
+#     chanson par chanson (`PAROLES_AVANCE_PAR_CHANSON`) plutôt qu'en un seul chiffre pour les dix.
 func _position_chant() -> float:
 	if _video != null:
 		return maxf(0.0, _video.stream_position)
@@ -3333,7 +3662,7 @@ func _position_chant() -> float:
 		+ AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency())
 
 
-# LA BORNE, AVANCÉE — le seul endroit où `PAROLES_AVANCE` agit. Toutes les bornes du minutage passent par ici,
+# LA BORNE, AVANCÉE — le seul endroit où l'avance agit. Toutes les bornes du minutage passent par ici,
 # et aucune ne descend sous zéro : une syllabe qui tomberait avant l'avance se cale au tout début du chant.
 # LEQUEL DES DEUX LECTEURS DONNE L'HEURE — un seul mot, rendu au journal ET au harnais.
 func horloge_paroles() -> String:
@@ -3343,7 +3672,7 @@ func horloge_paroles() -> String:
 
 
 func _borne_avancee(x: float) -> float:
-	return maxf(0.0, x - PAROLES_AVANCE)
+	return maxf(0.0, x - _paroles_avance)
 
 
 func _suivre_paroles() -> void:
@@ -3351,8 +3680,7 @@ func _suivre_paroles() -> void:
 	var i := _ligne_a(t)
 	if i != _paroles_i:
 		_poser_ligne_paroles(i)
-	_paroles_part = _part_remplie(t)
-	_paroles_voile.size.x = _paroles_largeur * _paroles_part
+	_paroles_part = _remplir_etages(_position_syllabe(t))
 
 
 # LA LIGNE AFFICHÉE : la dernière dont le chant a franchi le début. Entre deux lignes, la précédente reste —
@@ -3365,11 +3693,16 @@ func _ligne_a(t: float) -> int:
 	return i
 
 
-# LA PART REMPLIE — SYLLABE PAR SYLLABE, et LISSE À L'INTÉRIEUR de chaque syllabe. Un escalier qui saute d'une
-# syllabe entière d'un coup donnerait un voile saccadé ; ce qui doit être syllabique, ce sont les BORNES, pas le
-# mouvement. Entre deux syllabes (une respiration), le voile tient sa place au lieu d'avancer dans le vide.
-func _part_remplie(t: float) -> float:
-	if _paroles_largeur <= 0.0 or _paroles_w.size() < 2:
+# OÙ EN EST LE CHANT, EN SYLLABES — un nombre CONTINU : 3,0 = au seuil de la 4ᵉ syllabe, 3,5 = en plein milieu.
+# ⚠⚠ C'EST LE DÉCOUPAGE EN ÉTAGES QUI A IMPOSÉ CE CHANGEMENT (B28). Avant, cette fonction rendait directement une
+#   PART de la ligne (un nombre entre 0 et 1) : avec un seul étage, part × largeur donnait le voile. Avec
+#   plusieurs étages, une part unique ne dit plus QUEL étage remplir ni jusqu'où — alors qu'une position en
+#   syllabes, elle, se compare aux bornes `syl0`/`syl1` de chaque étage. Le MINUTAGE, lui, n'a pas bougé d'un
+#   centième : mêmes bornes, même avance (`_borne_avancee`), même horloge (`_position_chant`).
+# ⚠ LISSE À L'INTÉRIEUR DE CHAQUE SYLLABE, comme avant : ce qui doit être syllabique, ce sont les BORNES, pas le
+#   mouvement. Entre deux syllabes (une respiration), le voile tient sa place au lieu d'avancer dans le vide.
+func _position_syllabe(t: float) -> float:
+	if _paroles_i < 0 or _paroles_i >= _paroles_lignes.size():
 		return 0.0
 	var syl: Array = (_paroles_lignes[_paroles_i] as Dictionary)["syllabes"] as Array
 	for k in syl.size():
@@ -3378,13 +3711,45 @@ func _part_remplie(t: float) -> float:
 		var f := _borne_avancee(float(s["fin"]))
 		if t < d:
 			_paroles_syllabe = k - 1
-			return _paroles_w[k] / _paroles_largeur
+			return float(k)
 		if t < f:
 			_paroles_syllabe = k
 			var u: float = 0.0 if f <= d else clampf((t - d) / (f - d), 0.0, 1.0)
-			return lerpf(_paroles_w[k], _paroles_w[k + 1], u) / _paroles_largeur
+			return float(k) + u
 	_paroles_syllabe = syl.size() - 1
-	return 1.0
+	return float(syl.size())
+
+
+# LE REMPLISSAGE **ÉTAGE PAR ÉTAGE** — celui du HAUT d'abord, puis le suivant (brief B28).
+# ⚠⚠ AUCUN « ET MAINTENANT LE DEUXIÈME » N'EST ÉCRIT NULLE PART : chaque étage porte ses deux bornes de syllabes,
+#   et il se remplit tout seul selon qu'elles sont DERRIÈRE la position du chant (plein), DEVANT (vide) ou AUTOUR
+#   (en cours). L'ordre haut → bas en découle, puisque `syl0` croît d'un étage au suivant. Un étage déjà chanté
+#   RESTE plein pendant que le suivant se remplit — c'est le propre d'une phrase qu'on lit en entier.
+# ⚠ REND LA PART DE LA LIGNE ENTIÈRE (pixels remplis / pixels de texte), pour le journal et le harnais : 0,5 veut
+#   dire « la moitié de la phrase est chantée », tous étages confondus.
+func _remplir_etages(pos: float) -> float:
+	var fait := 0.0
+	var tout := 0.0
+	_paroles_etage = 0
+	for n in _paroles_etages.size():
+		var e: Dictionary = _paroles_etages[n]
+		var lg := float(e["largeur"])
+		var w: PackedFloat32Array = e["w"]
+		var s0 := float(e["syl0"])
+		var s1 := float(e["syl1"])
+		var x := 0.0
+		if pos > s0:
+			_paroles_etage = n
+		if pos >= s1:
+			x = lg
+		elif pos > s0:
+			var j: int = clampi(int(floor(pos)) - int(e["syl0"]), 0, w.size() - 2)
+			x = lerpf(w[j], w[j + 1], pos - floor(pos))
+		if n < _paroles_noeuds.size():
+			(_paroles_noeuds[n]["voile"] as Control).size.x = x
+		fait += x
+		tout += lg
+	return 0.0 if tout <= 0.0 else fait / tout
 
 
 # (B8) LES BOUTONS DE LA FIN — UN SEUL CALCUL POUR LES DEUX OU LES TROIS. La rangée est CENTRÉE quel qu'en soit le
@@ -3870,18 +4235,37 @@ func etat_pour_preuve() -> Dictionary:
 		"paroles_existe": _paroles_porteur != null,
 		"paroles_visible": _paroles_porteur != null and _paroles_porteur.visible,
 		"paroles_rect": cadre_paroles(),
-		"paroles_texte": _paroles_base.text if _paroles_base != null else "",
+		"paroles_texte": _paroles_texte,
 		"paroles_ligne": _paroles_i,
 		"paroles_syllabe": _paroles_syllabe,
-		"paroles_syllabes_ligne": (_paroles_w.size() - 1) if _paroles_w.size() > 0 else 0,
+		"paroles_syllabes_ligne": _nb_syllabes_ligne(),
 		"paroles_part": _paroles_part,
-		"paroles_texte_rect": Rect2(cadre_paroles().position + Vector2(_paroles_x0, 0.0),
-			Vector2(_paroles_largeur, PAROLES_HAUTEUR)),
-		"paroles_voile_rect": Rect2(cadre_paroles().position + Vector2(_paroles_x0, 0.0),
-			Vector2(_paroles_voile.size.x if _paroles_voile != null else 0.0, PAROLES_HAUTEUR)),
+		# (B28) LA MISE EN PAGE EN ÉTAGES, RENDUE TELLE QUELLE — un Dictionary par étage, en coordonnées de
+		# CANVAS (la position de la plaque est déjà ajoutée) : son texte, son rectangle, celui de son voile
+		# ROSE, sa largeur, les deux bornes de syllabes qu'il porte et sa part remplie.
+		"paroles_etages": _etages_pour_preuve(),
+		"paroles_nb_etages": nb_etages_paroles(),
+		"paroles_etage_courant": _paroles_etage,
+		# LES RÉGLAGES DE LA REFONTE, LUS PLUTÔT QUE RECOPIÉS DANS LE HARNAIS — la taille FIXE (le harnais doit
+		# pouvoir prouver qu'elle ne bouge sur aucune ligne d'aucune chanson), la largeur de référence, et ce
+		# qu'elles donnent sur CE canvas-ci.
+		"paroles_taille_police": PAROLES_TAILLE,
+		"paroles_largeur_ref": PAROLES_LARGEUR_REF,
+		"paroles_largeur_plaque": largeur_plaque_paroles(),
+		"paroles_largeur_texte": largeur_texte_paroles(),
+		"paroles_hauteur_etage": hauteur_etage_paroles(),
+		# ⚠⚠ LES DEUX CLÉS HISTORIQUES (B25 → B27) DÉSIGNENT DÉSORMAIS **L'ÉTAGE DU HAUT**, et rien d'autre :
+		#   une ligne n'a plus « un » rectangle de texte, elle en a un par étage. Un harnais qui croit encore
+		#   mesurer la ligne entière avec elles mesure le premier étage — `paroles_etages` est ce qu'il doit lire.
+		"paroles_texte_rect": _rect_etage(0, false),
+		"paroles_voile_rect": _rect_etage(0, true),
 		# L'HORLOGE ELLE-MÊME, RENDUE MESURABLE : l'avance réglée, la latence que le moteur annonce, et la
 		# position « ce que l'oreille entend » — pour qu'un harnais lise les trois au lieu de les supposer.
-		"paroles_avance": PAROLES_AVANCE,
+		"paroles_avance": _paroles_avance,
+		# (B29) L'AVANCE EST PAR CHANSON : le harnais lit CELLE DE LA CHANSON SERVIE (`paroles_avance`), le
+		# réglage de repli, et le nombre de chansons qui ont leur propre ligne — il ne suppose plus un chiffre.
+		"paroles_avance_defaut": PAROLES_AVANCE_DEFAUT,
+		"paroles_avance_table": PAROLES_AVANCE_PAR_CHANSON.size(),
 		# (B27) QUI DONNE L'HEURE AU VOILE — « video » sur « La petite feuille », « musique » ailleurs. Le
 		# harnais le LIT plutôt que de le déduire du numéro de tableau.
 		"paroles_horloge_source": horloge_paroles(),
