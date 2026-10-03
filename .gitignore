@@ -41,3 +41,9 @@ voix_android/
 bin/**/*.so
 # Paquets installables produits localement.
 installable_android/
+
+# Fichiers régénérés à chaque build du GDExtension (dump de l'API Godot et
+# interface godot-cpp) : 7,4 Mo recréés par --dump-extension-api, jamais versionnés.
+outils/piper_gdextension/extension_api.json
+outils/piper_gdextension/gdextension_interface.h
+outils/piper_gdextension/gdextension_interface.json
