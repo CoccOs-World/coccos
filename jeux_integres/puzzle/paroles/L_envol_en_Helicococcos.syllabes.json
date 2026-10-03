@@ -1,86 +1,94 @@
 {
  "chanson": "L_envol_en_Helicococcos",
  "source_audio": "audio/L_envol_en_Helicococcos.mp3",
- "duree_s": 160.54,
- "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "duree_s": 160.543,
+ "methode": "ALIGNEMENT FORCE sur l'onde reelle — separation de la voix (HDEMUCS_HIGH_MUSDB_PLUS) puis alignement force CTC lettre par lettre (torchaudio MMS_FA + forced_align) du texte VALIDE par Fabrice ; syllabation FR orthographique, chaque syllabe bornee par SES propres lettres (plus aucun partage a parts egales). Les fins de syllabe qui debordaient sur un silence sont rabotees. La grille de sous-titres du MP4 n'est plus utilisee.",
  "lignes": [
   {
    "index": 1,
-   "debut": 8.18,
-   "fin": 15.08,
-   "texte": "Bonjour l'ami l'abeille ! Bonjour Coccos « pareil »  !",
+   "debut": 8.68,
+   "fin": 10.76,
+   "texte": "Bonjour l'ami l'abeille",
    "syllabes": [
     {
      "t": "Bon",
-     "debut": 8.18,
-     "fin": 8.66
+     "debut": 8.68,
+     "fin": 8.98
     },
     {
      "t": "jour ",
-     "debut": 8.66,
-     "fin": 9.14
+     "debut": 8.98,
+     "fin": 9.58
     },
     {
      "t": "l'a",
-     "debut": 9.14,
-     "fin": 9.6
+     "debut": 9.58,
+     "fin": 9.78
     },
     {
      "t": "mi ",
-     "debut": 9.6,
-     "fin": 10.06
+     "debut": 9.78,
+     "fin": 10.1
     },
     {
      "t": "l'a",
-     "debut": 10.26,
-     "fin": 10.35
+     "debut": 10.1,
+     "fin": 10.28
     },
     {
-     "t": "beille ! ",
-     "debut": 10.35,
-     "fin": 10.44
-    },
-    {
-     "t": "Bon",
-     "debut": 11.42,
-     "fin": 11.54
-    },
-    {
-     "t": "jour ",
-     "debut": 11.54,
-     "fin": 11.66
-    },
-    {
-     "t": "Coc",
-     "debut": 11.66,
-     "fin": 12.02
-    },
-    {
-     "t": "cos « ",
-     "debut": 12.02,
-     "fin": 12.38
-    },
-    {
-     "t": "pa",
-     "debut": 12.38,
-     "fin": 12.55
-    },
-    {
-     "t": "reil »  !",
-     "debut": 12.55,
-     "fin": 12.72
+     "t": "beille",
+     "debut": 10.28,
+     "fin": 10.76
     }
    ]
   },
   {
    "index": 2,
-   "debut": 15.08,
-   "fin": 23.16,
-   "texte": "On laisse la route et les collines On s'en va vers la liberté",
+   "debut": 11.1,
+   "fin": 13.14,
+   "texte": "Bonjour Coccos pareille",
+   "syllabes": [
+    {
+     "t": "Bon",
+     "debut": 11.1,
+     "fin": 11.34
+    },
+    {
+     "t": "jour ",
+     "debut": 11.34,
+     "fin": 11.68
+    },
+    {
+     "t": "Coc",
+     "debut": 11.68,
+     "fin": 11.88
+    },
+    {
+     "t": "cos ",
+     "debut": 11.88,
+     "fin": 12.32
+    },
+    {
+     "t": "pa",
+     "debut": 12.32,
+     "fin": 12.48
+    },
+    {
+     "t": "reille",
+     "debut": 12.48,
+     "fin": 13.14
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "debut": 16.04,
+   "fin": 19.06,
+   "texte": "On laisse la route et les collines",
    "syllabes": [
     {
      "t": "On ",
-     "debut": 15.08,
+     "debut": 16.04,
      "fin": 16.22
     },
     {
@@ -91,822 +99,823 @@
     {
      "t": "la ",
      "debut": 16.5,
-     "fin": 16.88
+     "fin": 16.72
     },
     {
      "t": "route ",
-     "debut": 16.88,
-     "fin": 17.48
+     "debut": 16.72,
+     "fin": 17.28
     },
     {
      "t": "et ",
-     "debut": 17.48,
-     "fin": 17.94
+     "debut": 17.72,
+     "fin": 17.92
     },
     {
      "t": "les ",
-     "debut": 17.94,
-     "fin": 18.34
+     "debut": 17.92,
+     "fin": 18.14
     },
     {
      "t": "col",
-     "debut": 18.34,
-     "fin": 18.83
+     "debut": 18.14,
+     "fin": 18.42
     },
     {
-     "t": "lines ",
-     "debut": 18.83,
-     "fin": 19.32
-    },
-    {
-     "t": "On ",
-     "debut": 19.32,
-     "fin": 19.96
-    },
-    {
-     "t": "s'en ",
-     "debut": 19.96,
-     "fin": 20.5
-    },
-    {
-     "t": "va ",
-     "debut": 20.5,
-     "fin": 21.16
-    },
-    {
-     "t": "vers ",
-     "debut": 21.16,
-     "fin": 21.58
-    },
-    {
-     "t": "la ",
-     "debut": 21.58,
-     "fin": 22.14
-    },
-    {
-     "t": "li",
-     "debut": 22.14,
-     "fin": 22.48
-    },
-    {
-     "t": "ber",
-     "debut": 22.48,
-     "fin": 22.82
-    },
-    {
-     "t": "té",
-     "debut": 22.82,
-     "fin": 23.16
-    }
-   ]
-  },
-  {
-   "index": 3,
-   "debut": 23.16,
-   "fin": 29.98,
-   "texte": "Dans le ciel tout bleu en turbine On va planer tout cet été",
-   "syllabes": [
-    {
-     "t": "Dans ",
-     "debut": 23.16,
-     "fin": 24.04
-    },
-    {
-     "t": "le ",
-     "debut": 24.04,
-     "fin": 24.34
-    },
-    {
-     "t": "ciel ",
-     "debut": 24.34,
-     "fin": 25.02
-    },
-    {
-     "t": "tout ",
-     "debut": 25.02,
-     "fin": 25.42
-    },
-    {
-     "t": "bleu ",
-     "debut": 25.42,
-     "fin": 25.76
-    },
-    {
-     "t": "en ",
-     "debut": 25.76,
-     "fin": 26.04
-    },
-    {
-     "t": "tur",
-     "debut": 26.04,
-     "fin": 26.42
-    },
-    {
-     "t": "bine ",
-     "debut": 26.42,
-     "fin": 26.8
-    },
-    {
-     "t": "On ",
-     "debut": 26.8,
-     "fin": 27.8
-    },
-    {
-     "t": "va ",
-     "debut": 27.8,
-     "fin": 28.1
-    },
-    {
-     "t": "pla",
-     "debut": 28.1,
-     "fin": 28.59
-    },
-    {
-     "t": "ner ",
-     "debut": 28.59,
-     "fin": 29.08
-    },
-    {
-     "t": "tout ",
-     "debut": 29.08,
-     "fin": 29.4
-    },
-    {
-     "t": "cet ",
-     "debut": 29.4,
-     "fin": 29.9
-    },
-    {
-     "t": "é",
-     "debut": 29.9,
-     "fin": 29.94
-    },
-    {
-     "t": "té",
-     "debut": 29.94,
-     "fin": 29.98
+     "t": "lines",
+     "debut": 18.42,
+     "fin": 19.06
     }
    ]
   },
   {
    "index": 4,
-   "debut": 32.32,
-   "fin": 35.98,
-   "texte": "Vole, vole dans l'hélico-coco-coce",
+   "debut": 19.66,
+   "fin": 22.86,
+   "texte": "On s'en va vers la liberté",
    "syllabes": [
     {
-     "t": "Vole, ",
-     "debut": 32.32,
-     "fin": 33.08
+     "t": "On ",
+     "debut": 19.66,
+     "fin": 20.04
     },
     {
-     "t": "vole ",
-     "debut": 33.36,
-     "fin": 33.7
+     "t": "s'en ",
+     "debut": 20.04,
+     "fin": 20.34
     },
     {
-     "t": "dans ",
-     "debut": 33.7,
-     "fin": 34.06
+     "t": "va ",
+     "debut": 20.34,
+     "fin": 20.8
     },
     {
-     "t": "l'hé",
-     "debut": 34.06,
-     "fin": 34.7
+     "t": "vers ",
+     "debut": 21.24,
+     "fin": 21.56
+    },
+    {
+     "t": "la ",
+     "debut": 21.56,
+     "fin": 22.02
     },
     {
      "t": "li",
-     "debut": 34.7,
-     "fin": 35.34
+     "debut": 22.02,
+     "fin": 22.28
     },
     {
-     "t": "co-",
-     "debut": 35.34,
-     "fin": 35.98
+     "t": "ber",
+     "debut": 22.28,
+     "fin": 22.74
     },
     {
-     "t": "co",
-     "debut": 35.98,
-     "fin": 35.98
-    },
-    {
-     "t": "co-",
-     "debut": 35.98,
-     "fin": 35.98
-    },
-    {
-     "t": "coce",
-     "debut": 35.98,
-     "fin": 35.98
+     "t": "té",
+     "debut": 22.74,
+     "fin": 22.86
     }
    ]
   },
   {
    "index": 5,
-   "debut": 36.82,
-   "fin": 38.98,
-   "texte": "Rouge à pois noirs, c'est notre cosmos",
+   "debut": 23.72,
+   "fin": 26.74,
+   "texte": "Dans le ciel tout bleu on turbine",
    "syllabes": [
     {
-     "t": "Rouge ",
-     "debut": 36.82,
-     "fin": 37.18
+     "t": "Dans ",
+     "debut": 23.72,
+     "fin": 24.0
     },
     {
-     "t": "à ",
-     "debut": 37.18,
-     "fin": 37.3
+     "t": "le ",
+     "debut": 24.0,
+     "fin": 24.16
     },
     {
-     "t": "pois ",
-     "debut": 37.3,
-     "fin": 37.44
+     "t": "ciel ",
+     "debut": 24.16,
+     "fin": 24.72
     },
     {
-     "t": "noirs, ",
-     "debut": 37.44,
-     "fin": 37.66
+     "t": "tout ",
+     "debut": 25.12,
+     "fin": 25.32
     },
     {
-     "t": "c'est ",
-     "debut": 37.8,
-     "fin": 38.02
+     "t": "bleu ",
+     "debut": 25.32,
+     "fin": 25.74
     },
     {
-     "t": "notre ",
-     "debut": 38.02,
-     "fin": 38.5
+     "t": "on ",
+     "debut": 25.74,
+     "fin": 25.88
     },
     {
-     "t": "cos",
-     "debut": 38.5,
-     "fin": 38.74
+     "t": "tur",
+     "debut": 25.88,
+     "fin": 26.16
     },
     {
-     "t": "mos",
-     "debut": 38.74,
-     "fin": 38.98
+     "t": "bine",
+     "debut": 26.16,
+     "fin": 26.74
     }
    ]
   },
   {
    "index": 6,
-   "debut": 39.6,
-   "fin": 42.98,
-   "texte": "On est là ou tellement si bien",
+   "debut": 27.46,
+   "fin": 30.1,
+   "texte": "On va planer tout cet été",
    "syllabes": [
     {
      "t": "On ",
-     "debut": 39.6,
-     "fin": 40.48
+     "debut": 27.46,
+     "fin": 27.82
     },
     {
-     "t": "est ",
-     "debut": 40.48,
-     "fin": 40.8
+     "t": "va ",
+     "debut": 27.82,
+     "fin": 28.0
     },
     {
-     "t": "là ",
-     "debut": 40.8,
-     "fin": 41.54
+     "t": "pla",
+     "debut": 28.0,
+     "fin": 28.54
     },
     {
-     "t": "ou ",
-     "debut": 41.54,
-     "fin": 41.96
+     "t": "ner ",
+     "debut": 28.54,
+     "fin": 29.0
     },
     {
-     "t": "tel",
-     "debut": 41.96,
-     "fin": 42.16
+     "t": "tout ",
+     "debut": 29.0,
+     "fin": 29.26
     },
     {
-     "t": "lement ",
-     "debut": 42.16,
-     "fin": 42.36
+     "t": "cet ",
+     "debut": 29.26,
+     "fin": 29.82
     },
     {
-     "t": "si ",
-     "debut": 42.36,
-     "fin": 42.72
+     "t": "é",
+     "debut": 29.82,
+     "fin": 29.96
     },
     {
-     "t": "bien",
-     "debut": 42.72,
-     "fin": 42.98
+     "t": "té",
+     "debut": 29.96,
+     "fin": 30.1
     }
    ]
   },
   {
    "index": 7,
-   "debut": 44.16,
-   "fin": 46.98,
-   "texte": "Avec mon super bon copain",
+   "debut": 32.56,
+   "fin": 36.02,
+   "texte": "Vole vole dans l'Hélicococcos",
    "syllabes": [
     {
-     "t": "A",
-     "debut": 44.16,
-     "fin": 44.54
+     "t": "Vole ",
+     "debut": 32.56,
+     "fin": 33.08
     },
     {
-     "t": "vec ",
-     "debut": 44.54,
-     "fin": 44.92
+     "t": "vole ",
+     "debut": 33.08,
+     "fin": 33.74
     },
     {
-     "t": "mon ",
-     "debut": 44.92,
-     "fin": 45.28
+     "t": "dans ",
+     "debut": 33.74,
+     "fin": 34.0
     },
     {
-     "t": "su",
-     "debut": 45.28,
-     "fin": 45.69
+     "t": "l'Hé",
+     "debut": 34.0,
+     "fin": 34.26
     },
     {
-     "t": "per ",
-     "debut": 45.69,
-     "fin": 46.1
-    },
-    {
-     "t": "bon ",
-     "debut": 46.1,
-     "fin": 46.24
+     "t": "li",
+     "debut": 34.26,
+     "fin": 34.5
     },
     {
      "t": "co",
-     "debut": 46.24,
-     "fin": 46.61
+     "debut": 34.5,
+     "fin": 34.72
     },
     {
-     "t": "pain",
-     "debut": 46.61,
-     "fin": 46.98
+     "t": "coc",
+     "debut": 34.72,
+     "fin": 34.96
+    },
+    {
+     "t": "cos",
+     "debut": 34.96,
+     "fin": 36.02
     }
    ]
   },
   {
    "index": 8,
-   "debut": 47.72,
-   "fin": 50.98,
-   "texte": "Vole, vole dans l'hélico-coco-coce",
+   "debut": 36.88,
+   "fin": 39.58,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
    "syllabes": [
     {
-     "t": "Vole, ",
-     "debut": 47.72,
-     "fin": 48.48
+     "t": "Rouge ",
+     "debut": 36.88,
+     "fin": 37.16
     },
     {
-     "t": "vole ",
-     "debut": 48.74,
-     "fin": 49.02
+     "t": "à ",
+     "debut": 37.16,
+     "fin": 37.24
     },
     {
-     "t": "dans ",
-     "debut": 49.02,
-     "fin": 49.42
+     "t": "pois ",
+     "debut": 37.24,
+     "fin": 37.36
     },
     {
-     "t": "l'hé",
-     "debut": 49.42,
-     "fin": 49.94
+     "t": "noirs ",
+     "debut": 37.36,
+     "fin": 37.58
     },
     {
-     "t": "li",
-     "debut": 49.94,
-     "fin": 50.46
+     "t": "c'est ",
+     "debut": 37.58,
+     "fin": 38.08
     },
     {
-     "t": "co-",
-     "debut": 50.46,
-     "fin": 50.98
+     "t": "notre ",
+     "debut": 38.08,
+     "fin": 38.54
     },
     {
-     "t": "co",
-     "debut": 50.98,
-     "fin": 50.98
+     "t": "cos",
+     "debut": 38.54,
+     "fin": 38.82
     },
     {
-     "t": "co-",
-     "debut": 50.98,
-     "fin": 50.98
-    },
-    {
-     "t": "coce",
-     "debut": 50.98,
-     "fin": 50.98
+     "t": "mos",
+     "debut": 38.82,
+     "fin": 39.58
     }
    ]
   },
   {
    "index": 9,
-   "debut": 52.18,
-   "fin": 55.26,
-   "texte": "Rouge à pois noirs, c'est notre cosmos",
+   "debut": 40.28,
+   "fin": 42.98,
+   "texte": "On est là-haut tellement si bien",
    "syllabes": [
     {
-     "t": "Rouge ",
-     "debut": 52.18,
-     "fin": 52.64
+     "t": "On ",
+     "debut": 40.28,
+     "fin": 40.52
     },
     {
-     "t": "à ",
-     "debut": 52.64,
-     "fin": 52.68
+     "t": "est ",
+     "debut": 40.52,
+     "fin": 40.68
     },
     {
-     "t": "pois ",
-     "debut": 52.68,
-     "fin": 52.88
+     "t": "là-",
+     "debut": 40.68,
+     "fin": 41.02
     },
     {
-     "t": "noirs, ",
-     "debut": 52.88,
-     "fin": 53.02
+     "t": "haut ",
+     "debut": 41.02,
+     "fin": 41.84
     },
     {
-     "t": "c'est ",
-     "debut": 53.22,
-     "fin": 53.46
+     "t": "tel",
+     "debut": 41.84,
+     "fin": 42.06
     },
     {
-     "t": "notre ",
-     "debut": 53.46,
-     "fin": 53.94
+     "t": "lement ",
+     "debut": 42.06,
+     "fin": 42.36
     },
     {
-     "t": "cos",
-     "debut": 53.94,
-     "fin": 54.6
+     "t": "si ",
+     "debut": 42.36,
+     "fin": 42.56
     },
     {
-     "t": "mos",
-     "debut": 54.6,
-     "fin": 55.26
+     "t": "bien",
+     "debut": 42.56,
+     "fin": 42.98
     }
    ]
   },
   {
    "index": 10,
-   "debut": 55.26,
-   "fin": 59.3,
-   "texte": "On est là ou tellement si bien",
+   "debut": 44.16,
+   "fin": 47.08,
+   "texte": "Avec mon super bon copain",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 55.26,
-     "fin": 55.98
+     "t": "A",
+     "debut": 44.16,
+     "fin": 44.5
     },
     {
-     "t": "est ",
-     "debut": 55.98,
-     "fin": 56.24
+     "t": "vec ",
+     "debut": 44.5,
+     "fin": 45.02
     },
     {
-     "t": "là ",
-     "debut": 56.24,
-     "fin": 57.04
+     "t": "mon ",
+     "debut": 45.02,
+     "fin": 45.24
     },
     {
-     "t": "ou ",
-     "debut": 57.04,
-     "fin": 57.42
+     "t": "su",
+     "debut": 45.24,
+     "fin": 45.72
     },
     {
-     "t": "tel",
-     "debut": 57.42,
-     "fin": 57.61
+     "t": "per ",
+     "debut": 45.72,
+     "fin": 46.0
     },
     {
-     "t": "lement ",
-     "debut": 57.61,
-     "fin": 57.8
+     "t": "bon ",
+     "debut": 46.0,
+     "fin": 46.24
     },
     {
-     "t": "si ",
-     "debut": 57.8,
-     "fin": 58.28
+     "t": "co",
+     "debut": 46.24,
+     "fin": 46.46
     },
     {
-     "t": "bien",
-     "debut": 58.28,
-     "fin": 59.3
+     "t": "pain",
+     "debut": 46.46,
+     "fin": 47.08
     }
    ]
   },
   {
    "index": 11,
-   "debut": 59.3,
-   "fin": 62.7,
-   "texte": "Avec mon super bon copain",
+   "debut": 47.92,
+   "fin": 51.42,
+   "texte": "Vole vole dans l'Hélicococcos",
    "syllabes": [
     {
-     "t": "A",
-     "debut": 59.3,
-     "fin": 59.85
+     "t": "Vole ",
+     "debut": 47.92,
+     "fin": 48.4
     },
     {
-     "t": "vec ",
-     "debut": 59.85,
-     "fin": 60.4
+     "t": "vole ",
+     "debut": 48.4,
+     "fin": 49.14
     },
     {
-     "t": "mon ",
-     "debut": 60.4,
-     "fin": 60.78
+     "t": "dans ",
+     "debut": 49.14,
+     "fin": 49.42
     },
     {
-     "t": "su",
-     "debut": 60.78,
-     "fin": 61.17
+     "t": "l'Hé",
+     "debut": 49.42,
+     "fin": 49.66
     },
     {
-     "t": "per ",
-     "debut": 61.17,
-     "fin": 61.56
-    },
-    {
-     "t": "bon ",
-     "debut": 61.56,
-     "fin": 61.76
+     "t": "li",
+     "debut": 49.66,
+     "fin": 49.88
     },
     {
      "t": "co",
-     "debut": 61.76,
-     "fin": 62.23
+     "debut": 49.88,
+     "fin": 50.1
     },
     {
-     "t": "pain",
-     "debut": 62.23,
-     "fin": 62.7
+     "t": "coc",
+     "debut": 50.1,
+     "fin": 50.34
+    },
+    {
+     "t": "cos",
+     "debut": 50.34,
+     "fin": 51.42
     }
    ]
   },
   {
    "index": 12,
-   "debut": 63.9,
-   "fin": 67.66,
-   "texte": "Regarde la rivière qui serpente",
+   "debut": 52.32,
+   "fin": 55.16,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
    "syllabes": [
     {
-     "t": "Re",
-     "debut": 63.9,
-     "fin": 64.38
+     "t": "Rouge ",
+     "debut": 52.32,
+     "fin": 52.58
     },
     {
-     "t": "garde ",
-     "debut": 64.38,
-     "fin": 64.86
+     "t": "à ",
+     "debut": 52.58,
+     "fin": 52.66
     },
     {
-     "t": "la ",
-     "debut": 64.86,
-     "fin": 65.44
+     "t": "pois ",
+     "debut": 52.66,
+     "fin": 52.78
     },
     {
-     "t": "ri",
-     "debut": 65.44,
-     "fin": 65.8
+     "t": "noirs ",
+     "debut": 52.78,
+     "fin": 53.0
     },
     {
-     "t": "vière ",
-     "debut": 65.8,
-     "fin": 66.16
+     "t": "c'est ",
+     "debut": 53.0,
+     "fin": 53.5
     },
     {
-     "t": "qui ",
-     "debut": 66.16,
-     "fin": 66.44
+     "t": "notre ",
+     "debut": 53.5,
+     "fin": 53.98
     },
     {
-     "t": "ser",
-     "debut": 66.44,
-     "fin": 67.05
+     "t": "cos",
+     "debut": 53.98,
+     "fin": 54.26
     },
     {
-     "t": "pente",
-     "debut": 67.05,
-     "fin": 67.66
+     "t": "mos",
+     "debut": 54.26,
+     "fin": 55.16
     }
    ]
   },
   {
    "index": 13,
-   "debut": 67.66,
-   "fin": 71.8,
-   "texte": "Le monde est vert vu de en haut",
+   "debut": 55.76,
+   "fin": 58.4,
+   "texte": "On est là-haut tellement si bien",
    "syllabes": [
     {
-     "t": "Le ",
-     "debut": 67.66,
-     "fin": 68.42
-    },
-    {
-     "t": "monde ",
-     "debut": 68.42,
-     "fin": 68.74
+     "t": "On ",
+     "debut": 55.76,
+     "fin": 56.0
     },
     {
      "t": "est ",
-     "debut": 68.74,
-     "fin": 69.46
+     "debut": 56.0,
+     "fin": 56.16
     },
     {
-     "t": "vert ",
-     "debut": 69.46,
-     "fin": 69.7
+     "t": "là-",
+     "debut": 56.16,
+     "fin": 56.5
     },
     {
-     "t": "vu ",
-     "debut": 69.7,
-     "fin": 70.04
+     "t": "haut ",
+     "debut": 56.5,
+     "fin": 57.38
     },
     {
-     "t": "de ",
-     "debut": 70.04,
-     "fin": 70.52
+     "t": "tel",
+     "debut": 57.38,
+     "fin": 57.56
     },
     {
-     "t": "en ",
-     "debut": 70.52,
-     "fin": 70.86
+     "t": "lement ",
+     "debut": 57.56,
+     "fin": 57.84
     },
     {
-     "t": "haut",
-     "debut": 70.86,
-     "fin": 71.8
+     "t": "si ",
+     "debut": 57.84,
+     "fin": 58.06
+    },
+    {
+     "t": "bien",
+     "debut": 58.06,
+     "fin": 58.4
     }
    ]
   },
   {
    "index": 14,
-   "debut": 71.8,
-   "fin": 75.5,
-   "texte": "Sur la carte l'aventure chante",
+   "debut": 58.48,
+   "fin": 60.0,
+   "texte": "Avec mon super bon copain",
    "syllabes": [
     {
-     "t": "Sur ",
-     "debut": 71.8,
-     "fin": 72.38
+     "t": "A",
+     "debut": 58.48,
+     "fin": 58.5
     },
     {
-     "t": "la ",
-     "debut": 72.38,
-     "fin": 72.74
+     "t": "vec ",
+     "debut": 58.5,
+     "fin": 58.56
     },
     {
-     "t": "carte ",
-     "debut": 72.74,
-     "fin": 73.38
+     "t": "mon ",
+     "debut": 58.56,
+     "fin": 58.64
     },
     {
-     "t": "l'a",
-     "debut": 73.38,
-     "fin": 73.767
+     "t": "su",
+     "debut": 58.64,
+     "fin": 59.3
     },
     {
-     "t": "ven",
-     "debut": 73.767,
-     "fin": 74.153
+     "t": "per ",
+     "debut": 59.3,
+     "fin": 59.38
     },
     {
-     "t": "ture ",
-     "debut": 74.153,
-     "fin": 74.54
+     "t": "bon ",
+     "debut": 59.38,
+     "fin": 59.54
     },
     {
-     "t": "chante",
-     "debut": 74.54,
-     "fin": 75.5
+     "t": "co",
+     "debut": 59.54,
+     "fin": 59.6
+    },
+    {
+     "t": "pain",
+     "debut": 59.6,
+     "fin": 60.0
     }
    ]
   },
   {
    "index": 15,
-   "debut": 75.5,
-   "fin": 80.7,
-   "texte": "On est les rois du pinceau",
+   "debut": 64.2,
+   "fin": 67.24,
+   "texte": "Regarde la rivière qui serpente",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 75.5,
-     "fin": 76.2
+     "t": "Re",
+     "debut": 64.2,
+     "fin": 64.42
     },
     {
-     "t": "est ",
-     "debut": 76.2,
-     "fin": 76.5
+     "t": "garde ",
+     "debut": 64.42,
+     "fin": 64.94
     },
     {
-     "t": "les ",
-     "debut": 76.5,
-     "fin": 76.94
+     "t": "la ",
+     "debut": 64.94,
+     "fin": 65.42
     },
     {
-     "t": "rois ",
-     "debut": 76.94,
-     "fin": 77.42
+     "t": "ri",
+     "debut": 65.42,
+     "fin": 65.66
     },
     {
-     "t": "du ",
-     "debut": 77.42,
-     "fin": 78.0
+     "t": "vière ",
+     "debut": 65.66,
+     "fin": 66.14
     },
     {
-     "t": "pin",
-     "debut": 78.0,
-     "fin": 79.35
+     "t": "qui ",
+     "debut": 66.14,
+     "fin": 66.38
     },
     {
-     "t": "ceau",
-     "debut": 79.35,
-     "fin": 80.7
+     "t": "ser",
+     "debut": 66.38,
+     "fin": 66.68
+    },
+    {
+     "t": "pente",
+     "debut": 66.68,
+     "fin": 67.24
     }
    ]
   },
   {
    "index": 16,
-   "debut": 80.7,
-   "fin": 83.88,
-   "texte": "Vole, vole dans l'hélico-coco",
+   "debut": 68.14,
+   "fin": 71.1,
+   "texte": "Le monde est vert vu d'en haut",
    "syllabes": [
     {
-     "t": "Vole, ",
-     "debut": 80.7,
-     "fin": 81.26
+     "t": "Le ",
+     "debut": 68.14,
+     "fin": 68.36
     },
     {
-     "t": "vole ",
-     "debut": 81.58,
-     "fin": 82.0
+     "t": "monde ",
+     "debut": 68.36,
+     "fin": 68.86
     },
     {
-     "t": "dans ",
-     "debut": 82.0,
-     "fin": 82.4
+     "t": "est ",
+     "debut": 68.86,
+     "fin": 69.34
     },
     {
-     "t": "l'hé",
-     "debut": 82.4,
-     "fin": 82.893
+     "t": "vert ",
+     "debut": 69.34,
+     "fin": 69.64
     },
     {
-     "t": "li",
-     "debut": 82.893,
-     "fin": 83.387
+     "t": "vu ",
+     "debut": 69.64,
+     "fin": 70.04
     },
     {
-     "t": "co-",
-     "debut": 83.387,
-     "fin": 83.88
+     "t": "d'en ",
+     "debut": 70.04,
+     "fin": 70.62
     },
     {
-     "t": "co",
-     "debut": 83.88,
-     "fin": 83.88
-    },
-    {
-     "t": "co",
-     "debut": 83.88,
-     "fin": 83.88
+     "t": "haut",
+     "debut": 70.62,
+     "fin": 71.1
     }
    ]
   },
   {
    "index": 17,
-   "debut": 83.88,
-   "fin": 87.48,
-   "texte": "Rouge à pois noirs, c'est notre cosmos",
+   "debut": 72.04,
+   "fin": 75.12,
+   "texte": "Sur la carte l'aventure chante",
+   "syllabes": [
+    {
+     "t": "Sur ",
+     "debut": 72.04,
+     "fin": 72.32
+    },
+    {
+     "t": "la ",
+     "debut": 72.32,
+     "fin": 72.54
+    },
+    {
+     "t": "carte ",
+     "debut": 72.54,
+     "fin": 73.52
+    },
+    {
+     "t": "l'a",
+     "debut": 73.52,
+     "fin": 74.02
+    },
+    {
+     "t": "ven",
+     "debut": 74.02,
+     "fin": 74.24
+    },
+    {
+     "t": "ture ",
+     "debut": 74.24,
+     "fin": 74.5
+    },
+    {
+     "t": "chante",
+     "debut": 74.5,
+     "fin": 75.12
+    }
+   ]
+  },
+  {
+   "index": 18,
+   "debut": 75.82,
+   "fin": 78.4,
+   "texte": "On est les rois du pinceau",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 75.82,
+     "fin": 76.3
+    },
+    {
+     "t": "est ",
+     "debut": 76.3,
+     "fin": 76.52
+    },
+    {
+     "t": "les ",
+     "debut": 76.52,
+     "fin": 76.88
+    },
+    {
+     "t": "rois ",
+     "debut": 76.88,
+     "fin": 77.22
+    },
+    {
+     "t": "du ",
+     "debut": 77.46,
+     "fin": 77.9
+    },
+    {
+     "t": "pin",
+     "debut": 77.9,
+     "fin": 78.2
+    },
+    {
+     "t": "ceau",
+     "debut": 78.2,
+     "fin": 78.4
+    }
+   ]
+  },
+  {
+   "index": 19,
+   "debut": 80.88,
+   "fin": 84.5,
+   "texte": "Vole vole dans l'Hélicococcos",
+   "syllabes": [
+    {
+     "t": "Vole ",
+     "debut": 80.88,
+     "fin": 81.36
+    },
+    {
+     "t": "vole ",
+     "debut": 81.36,
+     "fin": 82.1
+    },
+    {
+     "t": "dans ",
+     "debut": 82.1,
+     "fin": 82.34
+    },
+    {
+     "t": "l'Hé",
+     "debut": 82.34,
+     "fin": 82.56
+    },
+    {
+     "t": "li",
+     "debut": 82.56,
+     "fin": 82.8
+    },
+    {
+     "t": "co",
+     "debut": 82.8,
+     "fin": 83.04
+    },
+    {
+     "t": "coc",
+     "debut": 83.04,
+     "fin": 83.28
+    },
+    {
+     "t": "cos",
+     "debut": 83.28,
+     "fin": 84.5
+    }
+   ]
+  },
+  {
+   "index": 20,
+   "debut": 85.22,
+   "fin": 88.2,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
    "syllabes": [
     {
      "t": "Rouge ",
-     "debut": 83.88,
-     "fin": 85.5
+     "debut": 85.22,
+     "fin": 85.52
     },
     {
      "t": "à ",
-     "debut": 85.5,
-     "fin": 85.66
+     "debut": 85.52,
+     "fin": 85.6
     },
     {
      "t": "pois ",
-     "debut": 85.66,
+     "debut": 85.6,
      "fin": 85.78
     },
     {
-     "t": "noirs, ",
+     "t": "noirs ",
      "debut": 85.78,
-     "fin": 85.96
+     "fin": 85.98
     },
     {
      "t": "c'est ",
-     "debut": 86.18,
-     "fin": 86.4
+     "debut": 85.98,
+     "fin": 86.42
     },
     {
      "t": "notre ",
-     "debut": 86.4,
-     "fin": 86.62
+     "debut": 86.42,
+     "fin": 86.88
     },
     {
      "t": "cos",
@@ -916,645 +925,826 @@
     {
      "t": "mos",
      "debut": 87.18,
-     "fin": 87.48
-    }
-   ]
-  },
-  {
-   "index": 18,
-   "debut": 87.48,
-   "fin": 91.48,
-   "texte": "On est là, oh tellement si bien",
-   "syllabes": [
-    {
-     "t": "On ",
-     "debut": 87.48,
-     "fin": 88.86
-    },
-    {
-     "t": "est ",
-     "debut": 88.86,
-     "fin": 89.3
-    },
-    {
-     "t": "là, ",
-     "debut": 89.3,
-     "fin": 89.98
-    },
-    {
-     "t": "oh ",
-     "debut": 90.14,
-     "fin": 90.42
-    },
-    {
-     "t": "tel",
-     "debut": 90.42,
-     "fin": 90.6
-    },
-    {
-     "t": "lement ",
-     "debut": 90.6,
-     "fin": 90.78
-    },
-    {
-     "t": "si ",
-     "debut": 90.78,
-     "fin": 91.18
-    },
-    {
-     "t": "bien",
-     "debut": 91.18,
-     "fin": 91.48
-    }
-   ]
-  },
-  {
-   "index": 19,
-   "debut": 92.52000000000001,
-   "fin": 95.47999999999999,
-   "texte": "Avec mon super bon copain",
-   "syllabes": [
-    {
-     "t": "A",
-     "debut": 92.52,
-     "fin": 92.94
-    },
-    {
-     "t": "vec ",
-     "debut": 92.94,
-     "fin": 93.36
-    },
-    {
-     "t": "mon ",
-     "debut": 93.36,
-     "fin": 93.72
-    },
-    {
-     "t": "su",
-     "debut": 93.72,
-     "fin": 94.13
-    },
-    {
-     "t": "per ",
-     "debut": 94.13,
-     "fin": 94.54
-    },
-    {
-     "t": "bon ",
-     "debut": 94.54,
-     "fin": 94.74
-    },
-    {
-     "t": "co",
-     "debut": 94.74,
-     "fin": 95.11
-    },
-    {
-     "t": "pain",
-     "debut": 95.11,
-     "fin": 95.48
-    }
-   ]
-  },
-  {
-   "index": 20,
-   "debut": 96.12,
-   "fin": 99.16,
-   "texte": "On nous vole dans l'hélico-coco",
-   "syllabes": [
-    {
-     "t": "On ",
-     "debut": 96.12,
-     "fin": 96.7
-    },
-    {
-     "t": "nous ",
-     "debut": 96.7,
-     "fin": 97.06
-    },
-    {
-     "t": "vole ",
-     "debut": 97.06,
-     "fin": 97.36
-    },
-    {
-     "t": "dans ",
-     "debut": 97.36,
-     "fin": 97.86
-    },
-    {
-     "t": "l'hé",
-     "debut": 97.86,
-     "fin": 98.293
-    },
-    {
-     "t": "li",
-     "debut": 98.293,
-     "fin": 98.727
-    },
-    {
-     "t": "co-",
-     "debut": 98.727,
-     "fin": 99.16
-    },
-    {
-     "t": "co",
-     "debut": 99.16,
-     "fin": 99.16
-    },
-    {
-     "t": "co",
-     "debut": 99.16,
-     "fin": 99.16
+     "fin": 88.2
     }
    ]
   },
   {
    "index": 21,
-   "debut": 100.08,
-   "fin": 103.62,
-   "texte": "Rouge à pois noirs, c'est notre cosmos",
+   "debut": 88.7,
+   "fin": 91.08,
+   "texte": "On est là-haut tellement si bien",
    "syllabes": [
     {
-     "t": "Rouge ",
-     "debut": 100.08,
-     "fin": 100.92
+     "t": "On ",
+     "debut": 88.7,
+     "fin": 88.94
     },
     {
-     "t": "à ",
-     "debut": 100.92,
-     "fin": 101.14
+     "t": "est ",
+     "debut": 88.94,
+     "fin": 89.1
     },
     {
-     "t": "pois ",
-     "debut": 101.14,
-     "fin": 101.44
+     "t": "là-",
+     "debut": 89.1,
+     "fin": 89.62
     },
     {
-     "t": "noirs, ",
-     "debut": 101.44,
-     "fin": 101.44
+     "t": "haut ",
+     "debut": 89.62,
+     "fin": 90.26
     },
     {
-     "t": "c'est ",
-     "debut": 101.62,
-     "fin": 101.88
+     "t": "tel",
+     "debut": 90.26,
+     "fin": 90.48
     },
     {
-     "t": "notre ",
-     "debut": 101.88,
-     "fin": 102.3
+     "t": "lement ",
+     "debut": 90.48,
+     "fin": 90.76
     },
     {
-     "t": "cos",
-     "debut": 102.3,
-     "fin": 102.96
+     "t": "si ",
+     "debut": 90.76,
+     "fin": 91.0
     },
     {
-     "t": "mos",
-     "debut": 102.96,
-     "fin": 103.62
+     "t": "bien",
+     "debut": 91.0,
+     "fin": 91.08
     }
    ]
   },
   {
    "index": 22,
-   "debut": 103.62,
-   "fin": 107.75999999999999,
-   "texte": "On est là, oh tellement si bien",
+   "debut": 91.14,
+   "fin": 101.32,
+   "texte": "Avec mon super bon copain",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 103.62,
-     "fin": 104.34
+     "t": "A",
+     "debut": 91.14,
+     "fin": 91.34
     },
     {
-     "t": "est ",
-     "debut": 104.34,
-     "fin": 104.62
+     "t": "vec ",
+     "debut": 91.34,
+     "fin": 96.1
     },
     {
-     "t": "là, ",
-     "debut": 104.62,
-     "fin": 105.28
+     "t": "mon ",
+     "debut": 100.7,
+     "fin": 100.9
     },
     {
-     "t": "oh ",
-     "debut": 105.5,
-     "fin": 105.78
+     "t": "su",
+     "debut": 100.9,
+     "fin": 100.96
     },
     {
-     "t": "tel",
-     "debut": 105.78,
-     "fin": 105.99
+     "t": "per ",
+     "debut": 100.96,
+     "fin": 101.06
     },
     {
-     "t": "lement ",
-     "debut": 105.99,
-     "fin": 106.2
+     "t": "bon ",
+     "debut": 101.06,
+     "fin": 101.18
     },
     {
-     "t": "si ",
-     "debut": 106.2,
-     "fin": 106.66
+     "t": "co",
+     "debut": 101.18,
+     "fin": 101.24
     },
     {
-     "t": "bien",
-     "debut": 106.66,
-     "fin": 107.76
+     "t": "pain",
+     "debut": 101.24,
+     "fin": 101.32
     }
    ]
   },
   {
    "index": 23,
-   "debut": 107.75999999999999,
-   "fin": 111.78,
-   "texte": "Avec mon super bon copain",
+   "debut": 101.32,
+   "fin": 102.24,
+   "texte": "Vole vole dans l'Hélicococcos",
    "syllabes": [
     {
-     "t": "A",
-     "debut": 107.76,
-     "fin": 108.32
+     "t": "Vole ",
+     "debut": 101.32,
+     "fin": 101.4
     },
     {
-     "t": "vec ",
-     "debut": 108.32,
-     "fin": 108.88
+     "t": "vole ",
+     "debut": 101.4,
+     "fin": 101.52
     },
     {
-     "t": "mon ",
-     "debut": 108.88,
-     "fin": 109.16
+     "t": "dans ",
+     "debut": 101.52,
+     "fin": 101.62
     },
     {
-     "t": "su",
-     "debut": 109.16,
-     "fin": 109.57
+     "t": "l'Hé",
+     "debut": 101.62,
+     "fin": 101.88
     },
     {
-     "t": "per ",
-     "debut": 109.57,
-     "fin": 109.98
-    },
-    {
-     "t": "bon ",
-     "debut": 109.98,
-     "fin": 110.16
+     "t": "li",
+     "debut": 101.88,
+     "fin": 101.92
     },
     {
      "t": "co",
-     "debut": 110.16,
-     "fin": 110.97
+     "debut": 101.92,
+     "fin": 102.0
     },
     {
-     "t": "pain",
-     "debut": 110.97,
-     "fin": 111.78
+     "t": "coc",
+     "debut": 102.0,
+     "fin": 102.12
+    },
+    {
+     "t": "cos",
+     "debut": 102.12,
+     "fin": 102.24
     }
    ]
   },
   {
    "index": 24,
-   "debut": 119.42,
-   "fin": 126.3,
-   "texte": "Vole, vole, dans l'hélico-coco-ce, Rouge à pois noirs, c'est notre cosmos",
+   "debut": 102.28,
+   "fin": 104.26,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
    "syllabes": [
     {
-     "t": "Vole, ",
-     "debut": 119.42,
-     "fin": 120.18
-    },
-    {
-     "t": "vole, ",
-     "debut": 120.38,
-     "fin": 120.7
-    },
-    {
-     "t": "dans ",
-     "debut": 120.96,
-     "fin": 121.14
-    },
-    {
-     "t": "l'hé",
-     "debut": 121.14,
-     "fin": 122.067
-    },
-    {
-     "t": "li",
-     "debut": 122.067,
-     "fin": 122.993
-    },
-    {
-     "t": "co-",
-     "debut": 122.993,
-     "fin": 123.92
-    },
-    {
-     "t": "co",
-     "debut": 123.92,
-     "fin": 123.92
-    },
-    {
-     "t": "co-",
-     "debut": 123.92,
-     "fin": 123.92
-    },
-    {
-     "t": "ce, ",
-     "debut": 123.92,
-     "fin": 123.92
-    },
-    {
      "t": "Rouge ",
-     "debut": 124.24,
-     "fin": 124.38
+     "debut": 102.28,
+     "fin": 102.42
     },
     {
      "t": "à ",
-     "debut": 124.38,
-     "fin": 124.98
+     "debut": 102.42,
+     "fin": 102.56
     },
     {
      "t": "pois ",
-     "debut": 124.98,
-     "fin": 124.98
+     "debut": 102.56,
+     "fin": 102.66
     },
     {
-     "t": "noirs, ",
-     "debut": 124.98,
-     "fin": 124.98
+     "t": "noirs ",
+     "debut": 102.66,
+     "fin": 103.7
     },
     {
      "t": "c'est ",
-     "debut": 125.18,
-     "fin": 125.38
+     "debut": 103.7,
+     "fin": 103.86
     },
     {
      "t": "notre ",
-     "debut": 125.38,
-     "fin": 125.68
+     "debut": 103.86,
+     "fin": 104.04
     },
     {
      "t": "cos",
-     "debut": 125.68,
-     "fin": 125.99
+     "debut": 104.04,
+     "fin": 104.2
     },
     {
      "t": "mos",
-     "debut": 125.99,
-     "fin": 126.3
+     "debut": 104.2,
+     "fin": 104.26
     }
    ]
   },
   {
    "index": 25,
-   "debut": 127.26,
-   "fin": 134.36,
-   "texte": "Vole, vole, dans l'hélico-coco-ce, Rouge à pois noirs, c'est notre cosmos",
+   "debut": 104.28,
+   "fin": 106.88,
+   "texte": "On est là-haut tellement si bien",
    "syllabes": [
     {
-     "t": "Vole, ",
-     "debut": 127.26,
-     "fin": 128.02
+     "t": "On ",
+     "debut": 104.28,
+     "fin": 104.38
     },
     {
-     "t": "vole, ",
-     "debut": 128.02,
-     "fin": 128.62
+     "t": "est ",
+     "debut": 104.38,
+     "fin": 104.54
     },
     {
-     "t": "dans ",
-     "debut": 128.84,
-     "fin": 128.92
+     "t": "là-",
+     "debut": 104.54,
+     "fin": 105.28
     },
     {
-     "t": "l'hé",
-     "debut": 128.92,
-     "fin": 129.767
+     "t": "haut ",
+     "debut": 105.28,
+     "fin": 105.72
     },
     {
-     "t": "li",
-     "debut": 129.767,
-     "fin": 130.613
+     "t": "tel",
+     "debut": 105.72,
+     "fin": 105.96
     },
     {
-     "t": "co-",
-     "debut": 130.613,
-     "fin": 131.46
+     "t": "lement ",
+     "debut": 105.96,
+     "fin": 106.2
     },
     {
-     "t": "co",
-     "debut": 131.46,
-     "fin": 131.46
+     "t": "si ",
+     "debut": 106.2,
+     "fin": 106.44
     },
     {
-     "t": "co-",
-     "debut": 131.46,
-     "fin": 131.46
-    },
-    {
-     "t": "ce, ",
-     "debut": 131.46,
-     "fin": 131.46
-    },
-    {
-     "t": "Rouge ",
-     "debut": 131.98,
-     "fin": 132.18
-    },
-    {
-     "t": "à ",
-     "debut": 132.18,
-     "fin": 132.72
-    },
-    {
-     "t": "pois ",
-     "debut": 132.72,
-     "fin": 132.72
-    },
-    {
-     "t": "noirs, ",
-     "debut": 132.72,
-     "fin": 132.72
-    },
-    {
-     "t": "c'est ",
-     "debut": 132.8,
-     "fin": 133.04
-    },
-    {
-     "t": "notre ",
-     "debut": 133.04,
-     "fin": 133.46
-    },
-    {
-     "t": "cos",
-     "debut": 133.46,
-     "fin": 133.91
-    },
-    {
-     "t": "mos",
-     "debut": 133.91,
-     "fin": 134.36
+     "t": "bien",
+     "debut": 106.44,
+     "fin": 106.88
     }
    ]
   },
   {
    "index": 26,
-   "debut": 134.36,
-   "fin": 142.42000000000002,
-   "texte": "On est là, on a tellement c'est bien Avec mon super bon copain",
+   "debut": 108.2,
+   "fin": 111.72,
+   "texte": "Avec mon super bon copain",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 134.36,
-     "fin": 135.52
-    },
-    {
-     "t": "est ",
-     "debut": 135.52,
-     "fin": 136.02
-    },
-    {
-     "t": "là, ",
-     "debut": 136.02,
-     "fin": 136.52
-    },
-    {
-     "t": "on ",
-     "debut": 136.68,
-     "fin": 137.06
-    },
-    {
-     "t": "a ",
-     "debut": 137.06,
-     "fin": 137.1
-    },
-    {
-     "t": "tel",
-     "debut": 137.1,
-     "fin": 137.29
-    },
-    {
-     "t": "lement ",
-     "debut": 137.29,
-     "fin": 137.48
-    },
-    {
-     "t": "c'est ",
-     "debut": 137.48,
-     "fin": 137.96
-    },
-    {
-     "t": "bien ",
-     "debut": 137.96,
-     "fin": 138.92
-    },
-    {
      "t": "A",
-     "debut": 138.92,
-     "fin": 139.49
+     "debut": 108.2,
+     "fin": 108.42
     },
     {
      "t": "vec ",
-     "debut": 139.49,
-     "fin": 140.06
+     "debut": 108.42,
+     "fin": 108.88
     },
     {
      "t": "mon ",
-     "debut": 140.06,
-     "fin": 140.38
+     "debut": 108.88,
+     "fin": 109.12
     },
     {
      "t": "su",
-     "debut": 140.38,
-     "fin": 140.77
+     "debut": 109.12,
+     "fin": 109.6
     },
     {
      "t": "per ",
-     "debut": 140.77,
-     "fin": 141.16
+     "debut": 109.6,
+     "fin": 109.94
     },
     {
      "t": "bon ",
-     "debut": 141.16,
-     "fin": 141.4
+     "debut": 109.94,
+     "fin": 110.1
     },
     {
      "t": "co",
-     "debut": 141.4,
-     "fin": 141.91
+     "debut": 110.1,
+     "fin": 110.34
     },
     {
      "t": "pain",
-     "debut": 141.91,
-     "fin": 142.42
+     "debut": 110.34,
+     "fin": 111.72
     }
    ]
   },
   {
    "index": 27,
-   "debut": 142.42000000000002,
-   "fin": 147.14,
-   "texte": "On rentre à la maison",
+   "debut": 120.12,
+   "fin": 122.36,
+   "texte": "Vole vole dans l'Hélicococcos",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 142.42,
-     "fin": 143.6
+     "t": "Vole ",
+     "debut": 120.12,
+     "fin": 120.34
     },
     {
-     "t": "rentre ",
-     "debut": 143.6,
-     "fin": 144.36
+     "t": "vole ",
+     "debut": 120.34,
+     "fin": 120.82
     },
     {
-     "t": "à ",
-     "debut": 144.36,
-     "fin": 144.7
+     "t": "dans ",
+     "debut": 120.82,
+     "fin": 121.08
     },
     {
-     "t": "la ",
-     "debut": 144.7,
-     "fin": 145.16
+     "t": "l'Hé",
+     "debut": 121.08,
+     "fin": 121.34
     },
     {
-     "t": "mai",
-     "debut": 145.16,
-     "fin": 146.15
+     "t": "li",
+     "debut": 121.34,
+     "fin": 121.56
     },
     {
-     "t": "son",
-     "debut": 146.15,
-     "fin": 147.14
+     "t": "co",
+     "debut": 121.56,
+     "fin": 121.8
+    },
+    {
+     "t": "coc",
+     "debut": 121.8,
+     "fin": 122.06
+    },
+    {
+     "t": "cos",
+     "debut": 122.06,
+     "fin": 122.36
     }
    ]
   },
   {
    "index": 28,
-   "debut": 147.14,
-   "fin": 152.42000000000002,
+   "debut": 122.36,
+   "fin": 124.78,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
+   "syllabes": [
+    {
+     "t": "Rouge ",
+     "debut": 122.36,
+     "fin": 123.5
+    },
+    {
+     "t": "à ",
+     "debut": 123.5,
+     "fin": 123.52
+    },
+    {
+     "t": "pois ",
+     "debut": 123.52,
+     "fin": 123.66
+    },
+    {
+     "t": "noirs ",
+     "debut": 123.66,
+     "fin": 123.74
+    },
+    {
+     "t": "c'est ",
+     "debut": 124.02,
+     "fin": 124.18
+    },
+    {
+     "t": "notre ",
+     "debut": 124.18,
+     "fin": 124.42
+    },
+    {
+     "t": "cos",
+     "debut": 124.42,
+     "fin": 124.56
+    },
+    {
+     "t": "mos",
+     "debut": 124.56,
+     "fin": 124.78
+    }
+   ]
+  },
+  {
+   "index": 29,
+   "debut": 124.8,
+   "fin": 128.38,
+   "texte": "On est là-haut tellement si bien",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 124.8,
+     "fin": 124.86
+    },
+    {
+     "t": "est ",
+     "debut": 124.86,
+     "fin": 125.76
+    },
+    {
+     "t": "là-",
+     "debut": 125.76,
+     "fin": 125.96
+    },
+    {
+     "t": "haut ",
+     "debut": 125.96,
+     "fin": 126.1
+    },
+    {
+     "t": "tel",
+     "debut": 126.1,
+     "fin": 126.28
+    },
+    {
+     "t": "lement ",
+     "debut": 126.28,
+     "fin": 127.98
+    },
+    {
+     "t": "si ",
+     "debut": 127.98,
+     "fin": 128.22
+    },
+    {
+     "t": "bien",
+     "debut": 128.22,
+     "fin": 128.38
+    }
+   ]
+  },
+  {
+   "index": 30,
+   "debut": 128.44,
+   "fin": 129.92,
+   "texte": "Avec mon super bon copain",
+   "syllabes": [
+    {
+     "t": "A",
+     "debut": 128.44,
+     "fin": 128.54
+    },
+    {
+     "t": "vec ",
+     "debut": 128.54,
+     "fin": 128.72
+    },
+    {
+     "t": "mon ",
+     "debut": 128.72,
+     "fin": 128.82
+    },
+    {
+     "t": "su",
+     "debut": 128.82,
+     "fin": 128.92
+    },
+    {
+     "t": "per ",
+     "debut": 128.92,
+     "fin": 129.16
+    },
+    {
+     "t": "bon ",
+     "debut": 129.16,
+     "fin": 129.42
+    },
+    {
+     "t": "co",
+     "debut": 129.42,
+     "fin": 129.64
+    },
+    {
+     "t": "pain",
+     "debut": 129.64,
+     "fin": 129.92
+    }
+   ]
+  },
+  {
+   "index": 31,
+   "debut": 129.92,
+   "fin": 134.58,
+   "texte": "Vole vole dans l'Hélicococcos",
+   "syllabes": [
+    {
+     "t": "Vole ",
+     "debut": 129.92,
+     "fin": 132.2
+    },
+    {
+     "t": "vole ",
+     "debut": 132.2,
+     "fin": 132.32
+    },
+    {
+     "t": "dans ",
+     "debut": 132.32,
+     "fin": 132.8
+    },
+    {
+     "t": "l'Hé",
+     "debut": 132.8,
+     "fin": 133.04
+    },
+    {
+     "t": "li",
+     "debut": 133.04,
+     "fin": 133.26
+    },
+    {
+     "t": "co",
+     "debut": 133.26,
+     "fin": 133.54
+    },
+    {
+     "t": "coc",
+     "debut": 133.54,
+     "fin": 134.3
+    },
+    {
+     "t": "cos",
+     "debut": 134.3,
+     "fin": 134.58
+    }
+   ]
+  },
+  {
+   "index": 32,
+   "debut": 134.58,
+   "fin": 136.82,
+   "texte": "Rouge à pois noirs c'est notre cosmos",
+   "syllabes": [
+    {
+     "t": "Rouge ",
+     "debut": 134.58,
+     "fin": 134.84
+    },
+    {
+     "t": "à ",
+     "debut": 134.84,
+     "fin": 135.22
+    },
+    {
+     "t": "pois ",
+     "debut": 135.22,
+     "fin": 135.46
+    },
+    {
+     "t": "noirs ",
+     "debut": 135.46,
+     "fin": 135.7
+    },
+    {
+     "t": "c'est ",
+     "debut": 135.7,
+     "fin": 136.04
+    },
+    {
+     "t": "notre ",
+     "debut": 136.04,
+     "fin": 136.48
+    },
+    {
+     "t": "cos",
+     "debut": 136.48,
+     "fin": 136.7
+    },
+    {
+     "t": "mos",
+     "debut": 136.7,
+     "fin": 136.82
+    }
+   ]
+  },
+  {
+   "index": 33,
+   "debut": 136.88,
+   "fin": 138.72,
+   "texte": "On est là-haut tellement si bien",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 136.88,
+     "fin": 137.0
+    },
+    {
+     "t": "est ",
+     "debut": 137.0,
+     "fin": 137.16
+    },
+    {
+     "t": "là-",
+     "debut": 137.16,
+     "fin": 137.2
+    },
+    {
+     "t": "haut ",
+     "debut": 137.2,
+     "fin": 137.48
+    },
+    {
+     "t": "tel",
+     "debut": 137.48,
+     "fin": 137.66
+    },
+    {
+     "t": "lement ",
+     "debut": 137.66,
+     "fin": 138.32
+    },
+    {
+     "t": "si ",
+     "debut": 138.32,
+     "fin": 138.52
+    },
+    {
+     "t": "bien",
+     "debut": 138.52,
+     "fin": 138.72
+    }
+   ]
+  },
+  {
+   "index": 34,
+   "debut": 138.78,
+   "fin": 141.86,
+   "texte": "Avec mon super bon copain",
+   "syllabes": [
+    {
+     "t": "A",
+     "debut": 138.78,
+     "fin": 138.94
+    },
+    {
+     "t": "vec ",
+     "debut": 138.94,
+     "fin": 139.2
+    },
+    {
+     "t": "mon ",
+     "debut": 139.2,
+     "fin": 139.44
+    },
+    {
+     "t": "su",
+     "debut": 139.44,
+     "fin": 139.66
+    },
+    {
+     "t": "per ",
+     "debut": 139.66,
+     "fin": 140.8
+    },
+    {
+     "t": "bon ",
+     "debut": 140.8,
+     "fin": 141.32
+    },
+    {
+     "t": "co",
+     "debut": 141.32,
+     "fin": 141.56
+    },
+    {
+     "t": "pain",
+     "debut": 141.56,
+     "fin": 141.86
+    }
+   ]
+  },
+  {
+   "index": 35,
+   "debut": 143.3,
+   "fin": 146.08,
+   "texte": "On rentre à la maison",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 143.3,
+     "fin": 143.52
+    },
+    {
+     "t": "rentre ",
+     "debut": 143.52,
+     "fin": 144.36
+    },
+    {
+     "t": "à ",
+     "debut": 144.36,
+     "fin": 144.52
+    },
+    {
+     "t": "la ",
+     "debut": 144.52,
+     "fin": 145.0
+    },
+    {
+     "t": "mai",
+     "debut": 145.0,
+     "fin": 145.56
+    },
+    {
+     "t": "son",
+     "debut": 145.56,
+     "fin": 146.08
+    }
+   ]
+  },
+  {
+   "index": 36,
+   "debut": 148.42,
+   "fin": 150.66,
    "texte": "Quelle belle chanson",
    "syllabes": [
     {
      "t": "Quelle ",
-     "debut": 147.14,
-     "fin": 149.04
+     "debut": 148.42,
+     "fin": 148.78
     },
     {
      "t": "belle ",
-     "debut": 149.04,
-     "fin": 149.64
+     "debut": 148.78,
+     "fin": 149.68
     },
     {
      "t": "chan",
-     "debut": 149.64,
-     "fin": 151.03
+     "debut": 149.68,
+     "fin": 150.22
     },
     {
      "t": "son",
-     "debut": 151.03,
-     "fin": 152.42
+     "debut": 150.22,
+     "fin": 150.66
+    }
+   ]
+  },
+  {
+   "index": 37,
+   "debut": 153.8,
+   "fin": 155.76,
+   "texte": "Hélicococcos oh oui",
+   "syllabes": [
+    {
+     "t": "Hé",
+     "debut": 153.8,
+     "fin": 153.96
+    },
+    {
+     "t": "li",
+     "debut": 153.96,
+     "fin": 154.22
+    },
+    {
+     "t": "co",
+     "debut": 154.22,
+     "fin": 154.44
+    },
+    {
+     "t": "coc",
+     "debut": 154.44,
+     "fin": 154.68
+    },
+    {
+     "t": "cos ",
+     "debut": 154.68,
+     "fin": 155.18
+    },
+    {
+     "t": "oh ",
+     "debut": 155.18,
+     "fin": 155.38
+    },
+    {
+     "t": "oui",
+     "debut": 155.38,
+     "fin": 155.76
+    }
+   ]
+  },
+  {
+   "index": 38,
+   "debut": 156.56,
+   "fin": 157.66,
+   "texte": "On reviendra ici",
+   "syllabes": [
+    {
+     "t": "On ",
+     "debut": 156.56,
+     "fin": 156.7
+    },
+    {
+     "t": "re",
+     "debut": 156.7,
+     "fin": 156.86
+    },
+    {
+     "t": "vien",
+     "debut": 156.86,
+     "fin": 157.1
+    },
+    {
+     "t": "dra ",
+     "debut": 157.1,
+     "fin": 157.36
+    },
+    {
+     "t": "i",
+     "debut": 157.36,
+     "fin": 157.52
+    },
+    {
+     "t": "ci",
+     "debut": 157.52,
+     "fin": 157.66
     }
    ]
   }

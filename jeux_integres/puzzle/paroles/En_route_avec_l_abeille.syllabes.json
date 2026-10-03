@@ -1,1247 +1,1263 @@
 {
  "chanson": "En_route_avec_l_abeille",
  "source_audio": "audio/En_route_avec_l_abeille.mp3",
- "duree_s": 157.36,
- "methode": "mots whisper (medium) realignes sur le .srt corrige + syllabation FR + duree du mot partagee a parts egales — AUCUN modele charge",
+ "duree_s": 157.362,
+ "methode": "ALIGNEMENT FORCE sur l'onde reelle — separation de la voix (HDEMUCS_HIGH_MUSDB_PLUS) puis alignement force CTC lettre par lettre (torchaudio MMS_FA + forced_align) du texte VALIDE par Fabrice ; syllabation FR orthographique, chaque syllabe bornee par SES propres lettres (plus aucun partage a parts egales). Les fins de syllabe qui debordaient sur un silence sont rabotees. La grille de sous-titres du MP4 n'est plus utilisee.",
  "lignes": [
   {
    "index": 1,
-   "debut": 13.06,
-   "fin": 16.4,
+   "debut": 13.1,
+   "fin": 16.32,
    "texte": "Regardez ce grand camion tout rouge",
    "syllabes": [
     {
      "t": "Re",
-     "debut": 13.06,
-     "fin": 13.42
+     "debut": 13.1,
+     "fin": 13.36
     },
     {
      "t": "gar",
-     "debut": 13.42,
-     "fin": 13.78
+     "debut": 13.36,
+     "fin": 13.64
     },
     {
      "t": "dez ",
-     "debut": 13.78,
-     "fin": 14.14
+     "debut": 13.64,
+     "fin": 13.92
     },
     {
      "t": "ce ",
-     "debut": 14.14,
-     "fin": 14.38
+     "debut": 14.12,
+     "fin": 14.34
     },
     {
      "t": "grand ",
-     "debut": 14.38,
-     "fin": 14.7
+     "debut": 14.34,
+     "fin": 14.64
     },
     {
      "t": "ca",
-     "debut": 14.7,
-     "fin": 15.06
+     "debut": 14.64,
+     "fin": 14.88
     },
     {
      "t": "mion ",
-     "debut": 15.06,
-     "fin": 15.42
+     "debut": 14.88,
+     "fin": 15.4
     },
     {
      "t": "tout ",
-     "debut": 15.42,
-     "fin": 15.86
+     "debut": 15.4,
+     "fin": 15.7
     },
     {
      "t": "rouge",
-     "debut": 15.86,
-     "fin": 16.4
+     "debut": 15.7,
+     "fin": 16.32
     }
    ]
   },
   {
    "index": 2,
-   "debut": 17.0,
-   "fin": 20.94,
+   "debut": 16.96,
+   "fin": 20.44,
    "texte": "Sur la longue route il avance et bouge",
    "syllabes": [
     {
      "t": "Sur ",
-     "debut": 17.0,
+     "debut": 16.96,
      "fin": 17.24
     },
     {
      "t": "la ",
      "debut": 17.24,
-     "fin": 17.58
+     "fin": 17.5
     },
     {
      "t": "lon",
-     "debut": 17.58,
-     "fin": 17.8
+     "debut": 17.5,
+     "fin": 17.72
     },
     {
      "t": "gue ",
-     "debut": 17.8,
+     "debut": 17.72,
      "fin": 18.02
     },
     {
      "t": "route ",
      "debut": 18.02,
-     "fin": 18.56
+     "fin": 18.34
     },
     {
      "t": "il ",
-     "debut": 18.56,
-     "fin": 19.16
+     "debut": 18.6,
+     "fin": 18.88
     },
     {
      "t": "a",
-     "debut": 19.16,
-     "fin": 19.41
+     "debut": 18.88,
+     "fin": 19.16
     },
     {
      "t": "vance ",
-     "debut": 19.41,
-     "fin": 19.66
+     "debut": 19.16,
+     "fin": 19.68
     },
     {
      "t": "et ",
-     "debut": 19.66,
-     "fin": 20.04
+     "debut": 19.68,
+     "fin": 19.8
     },
     {
      "t": "bouge",
-     "debut": 20.04,
-     "fin": 20.94
+     "debut": 19.8,
+     "fin": 20.44
     }
    ]
   },
   {
    "index": 3,
-   "debut": 20.94,
-   "fin": 25.12,
+   "debut": 21.1,
+   "fin": 24.46,
    "texte": "Coccos sourit en tenant le volant",
    "syllabes": [
     {
      "t": "Coc",
-     "debut": 20.94,
-     "fin": 21.33
+     "debut": 21.1,
+     "fin": 21.34
     },
     {
      "t": "cos ",
-     "debut": 21.33,
-     "fin": 21.72
+     "debut": 21.34,
+     "fin": 21.6
     },
     {
      "t": "sou",
-     "debut": 21.72,
-     "fin": 22.16
+     "debut": 21.6,
+     "fin": 21.9
     },
     {
      "t": "rit ",
-     "debut": 22.16,
-     "fin": 22.6
+     "debut": 21.9,
+     "fin": 22.5
     },
     {
      "t": "en ",
-     "debut": 22.6,
-     "fin": 22.8
+     "debut": 22.5,
+     "fin": 22.66
     },
     {
      "t": "te",
-     "debut": 22.8,
-     "fin": 23.04
+     "debut": 22.66,
+     "fin": 22.92
     },
     {
      "t": "nant ",
-     "debut": 23.04,
-     "fin": 23.28
+     "debut": 22.92,
+     "fin": 23.34
     },
     {
      "t": "le ",
-     "debut": 23.28,
-     "fin": 23.82
+     "debut": 23.34,
+     "fin": 23.64
     },
     {
      "t": "vo",
-     "debut": 23.82,
-     "fin": 24.47
+     "debut": 23.64,
+     "fin": 23.94
     },
     {
      "t": "lant",
-     "debut": 24.47,
-     "fin": 25.12
+     "debut": 23.94,
+     "fin": 24.46
     }
    ]
   },
   {
    "index": 4,
-   "debut": 25.12,
-   "fin": 28.7,
+   "debut": 25.34,
+   "fin": 28.5,
    "texte": "En route pour un voyage très grand",
    "syllabes": [
     {
      "t": "En ",
-     "debut": 25.12,
-     "fin": 25.56
+     "debut": 25.34,
+     "fin": 25.52
     },
     {
      "t": "route ",
-     "debut": 25.56,
-     "fin": 25.98
+     "debut": 25.52,
+     "fin": 26.02
     },
     {
      "t": "pour ",
-     "debut": 25.98,
-     "fin": 26.52
+     "debut": 26.02,
+     "fin": 26.4
     },
     {
      "t": "un ",
-     "debut": 26.52,
-     "fin": 26.88
+     "debut": 26.4,
+     "fin": 26.74
     },
     {
      "t": "voyage ",
-     "debut": 26.88,
-     "fin": 27.62
+     "debut": 26.74,
+     "fin": 27.82
     },
     {
      "t": "très ",
-     "debut": 27.62,
-     "fin": 28.26
+     "debut": 27.82,
+     "fin": 28.1
     },
     {
      "t": "grand",
-     "debut": 28.26,
-     "fin": 28.7
+     "debut": 28.1,
+     "fin": 28.5
     }
    ]
   },
   {
    "index": 5,
-   "debut": 28.7,
-   "fin": 33.36,
-   "texte": "Vroum, vroum, le gros camion chante",
+   "debut": 29.1,
+   "fin": 32.84,
+   "texte": "Vroom vroom le gros camion chante",
    "syllabes": [
     {
-     "t": "Vroum, ",
-     "debut": 28.7,
-     "fin": 29.98
+     "t": "Vroom ",
+     "debut": 29.1,
+     "fin": 29.82
     },
     {
-     "t": "vroum, ",
+     "t": "vroom ",
      "debut": 30.12,
-     "fin": 30.7
+     "fin": 30.66
     },
     {
      "t": "le ",
-     "debut": 30.7,
-     "fin": 30.92
+     "debut": 30.66,
+     "fin": 30.9
     },
     {
      "t": "gros ",
-     "debut": 30.92,
-     "fin": 31.26
+     "debut": 30.9,
+     "fin": 31.16
     },
     {
      "t": "ca",
-     "debut": 31.26,
-     "fin": 31.71
+     "debut": 31.16,
+     "fin": 31.66
     },
     {
      "t": "mion ",
-     "debut": 31.71,
-     "fin": 32.16
+     "debut": 31.66,
+     "fin": 32.18
     },
     {
      "t": "chante",
-     "debut": 32.16,
-     "fin": 33.36
+     "debut": 32.18,
+     "fin": 32.84
     }
    ]
   },
   {
    "index": 6,
-   "debut": 33.36,
-   "fin": 37.3,
+   "debut": 33.54,
+   "fin": 36.98,
    "texte": "Notre belle aventure est si amusante",
    "syllabes": [
     {
      "t": "Notre ",
-     "debut": 33.36,
-     "fin": 33.92
+     "debut": 33.54,
+     "fin": 34.04
     },
     {
      "t": "belle ",
-     "debut": 33.92,
+     "debut": 34.04,
      "fin": 34.38
     },
     {
      "t": "a",
      "debut": 34.38,
-     "fin": 34.693
+     "fin": 34.46
     },
     {
      "t": "ven",
-     "debut": 34.693,
-     "fin": 35.007
+     "debut": 34.46,
+     "fin": 34.68
     },
     {
      "t": "ture ",
-     "debut": 35.007,
-     "fin": 35.32
+     "debut": 34.68,
+     "fin": 35.38
     },
     {
      "t": "est ",
-     "debut": 35.32,
-     "fin": 35.62
+     "debut": 35.38,
+     "fin": 35.5
     },
     {
      "t": "si ",
-     "debut": 35.62,
-     "fin": 36.04
+     "debut": 35.5,
+     "fin": 35.82
     },
     {
      "t": "a",
-     "debut": 36.04,
-     "fin": 36.46
+     "debut": 35.82,
+     "fin": 36.06
     },
     {
      "t": "mu",
-     "debut": 36.46,
-     "fin": 36.88
+     "debut": 36.06,
+     "fin": 36.36
     },
     {
      "t": "sante",
-     "debut": 36.88,
-     "fin": 37.3
+     "debut": 36.36,
+     "fin": 36.98
     }
    ]
   },
   {
    "index": 7,
-   "debut": 37.3,
-   "fin": 41.42,
-   "texte": "Avec mon meilleur ami, l'abeille",
+   "debut": 37.48,
+   "fin": 38.98,
+   "texte": "Avec mon meilleur ami l'abeille",
    "syllabes": [
     {
      "t": "A",
-     "debut": 37.3,
-     "fin": 37.78
+     "debut": 37.48,
+     "fin": 37.62
     },
     {
      "t": "vec ",
-     "debut": 37.78,
-     "fin": 38.26
+     "debut": 37.62,
+     "fin": 38.24
     },
     {
      "t": "mon ",
-     "debut": 38.26,
-     "fin": 38.76
+     "debut": 38.24,
+     "fin": 38.3
     },
     {
      "t": "meil",
-     "debut": 38.76,
-     "fin": 39.03
+     "debut": 38.3,
+     "fin": 38.5
     },
     {
      "t": "leur ",
-     "debut": 39.03,
-     "fin": 39.3
+     "debut": 38.5,
+     "fin": 38.6
     },
     {
      "t": "a",
-     "debut": 39.3,
-     "fin": 39.56
+     "debut": 38.6,
+     "fin": 38.62
     },
     {
-     "t": "mi, ",
-     "debut": 39.56,
-     "fin": 39.82
+     "t": "mi ",
+     "debut": 38.62,
+     "fin": 38.7
     },
     {
      "t": "l'a",
-     "debut": 40.3,
-     "fin": 40.86
+     "debut": 38.7,
+     "fin": 38.76
     },
     {
      "t": "beille",
-     "debut": 40.86,
-     "fin": 41.42
+     "debut": 38.76,
+     "fin": 38.98
     }
    ]
   },
   {
    "index": 8,
-   "debut": 41.42,
-   "fin": 45.7,
+   "debut": 39.0,
+   "fin": 41.56,
    "texte": "On roule sous un soleil de merveille",
    "syllabes": [
     {
      "t": "On ",
-     "debut": 41.42,
-     "fin": 42.1
+     "debut": 39.0,
+     "fin": 39.1
     },
     {
      "t": "roule ",
-     "debut": 42.1,
-     "fin": 42.64
+     "debut": 39.1,
+     "fin": 39.22
     },
     {
      "t": "sous ",
-     "debut": 42.64,
-     "fin": 43.1
+     "debut": 39.22,
+     "fin": 39.3
     },
     {
      "t": "un ",
-     "debut": 43.1,
-     "fin": 43.34
+     "debut": 39.3,
+     "fin": 39.4
     },
     {
      "t": "so",
-     "debut": 43.34,
-     "fin": 43.67
+     "debut": 39.4,
+     "fin": 39.46
     },
     {
      "t": "leil ",
-     "debut": 43.67,
-     "fin": 44.0
+     "debut": 39.46,
+     "fin": 39.64
     },
     {
      "t": "de ",
-     "debut": 44.0,
-     "fin": 44.34
+     "debut": 39.64,
+     "fin": 39.68
     },
     {
      "t": "mer",
-     "debut": 44.34,
-     "fin": 45.02
+     "debut": 39.68,
+     "fin": 39.76
     },
     {
      "t": "veille",
-     "debut": 45.02,
-     "fin": 45.7
+     "debut": 39.76,
+     "fin": 41.56
     }
    ]
   },
   {
    "index": 9,
-   "debut": 46.9,
-   "fin": 50.1,
-   "texte": "Regards, images, peintes sur le côté",
+   "debut": 46.94,
+   "fin": 49.72,
+   "texte": "Regarde l'image peinte sur le côté",
    "syllabes": [
     {
      "t": "Re",
-     "debut": 46.9,
-     "fin": 47.24
+     "debut": 46.94,
+     "fin": 47.2
     },
     {
-     "t": "gards, ",
-     "debut": 47.24,
-     "fin": 47.58
+     "t": "garde ",
+     "debut": 47.2,
+     "fin": 47.5
     },
     {
-     "t": "i",
-     "debut": 47.9,
-     "fin": 48.12
+     "t": "l'i",
+     "debut": 47.5,
+     "fin": 47.74
     },
     {
-     "t": "mages, ",
-     "debut": 48.12,
-     "fin": 48.34
+     "t": "mage ",
+     "debut": 47.74,
+     "fin": 48.5
     },
     {
-     "t": "peintes ",
-     "debut": 48.58,
-     "fin": 48.86
+     "t": "peinte ",
+     "debut": 48.5,
+     "fin": 48.8
     },
     {
      "t": "sur ",
-     "debut": 48.86,
-     "fin": 49.16
+     "debut": 48.8,
+     "fin": 49.08
     },
     {
      "t": "le ",
-     "debut": 49.16,
-     "fin": 49.44
+     "debut": 49.08,
+     "fin": 49.28
     },
     {
      "t": "cô",
-     "debut": 49.44,
-     "fin": 49.77
+     "debut": 49.28,
+     "fin": 49.56
     },
     {
      "t": "té",
-     "debut": 49.77,
-     "fin": 50.1
+     "debut": 49.56,
+     "fin": 49.72
     }
    ]
   },
   {
    "index": 10,
-   "debut": 50.1,
-   "fin": 54.4,
+   "debut": 50.84,
+   "fin": 53.88,
    "texte": "C'est un beau coucher de soleil d'été",
    "syllabes": [
     {
      "t": "C'est ",
-     "debut": 50.1,
-     "fin": 51.38
+     "debut": 50.84,
+     "fin": 51.44
     },
     {
      "t": "un ",
-     "debut": 51.38,
-     "fin": 51.72
+     "debut": 51.44,
+     "fin": 51.64
     },
     {
      "t": "beau ",
-     "debut": 51.72,
-     "fin": 51.94
+     "debut": 51.64,
+     "fin": 51.88
     },
     {
      "t": "cou",
-     "debut": 51.94,
-     "fin": 52.31
+     "debut": 51.88,
+     "fin": 52.26
     },
     {
      "t": "cher ",
-     "debut": 52.31,
-     "fin": 52.68
+     "debut": 52.26,
+     "fin": 52.7
     },
     {
      "t": "de ",
-     "debut": 52.68,
-     "fin": 53.08
+     "debut": 52.7,
+     "fin": 52.92
     },
     {
      "t": "so",
-     "debut": 53.08,
-     "fin": 53.34
+     "debut": 52.92,
+     "fin": 53.22
     },
     {
      "t": "leil ",
-     "debut": 53.34,
-     "fin": 53.6
+     "debut": 53.22,
+     "fin": 53.5
     },
     {
      "t": "d'é",
-     "debut": 53.6,
-     "fin": 54.0
+     "debut": 53.5,
+     "fin": 53.72
     },
     {
      "t": "té",
-     "debut": 54.0,
-     "fin": 54.4
+     "debut": 53.72,
+     "fin": 53.88
     }
    ]
   },
   {
    "index": 11,
-   "debut": 54.4,
-   "fin": 64.08,
-   "texte": "On est assis tous les deux sur les pierres Dans un grand désert plein de mystères",
+   "debut": 55.32,
+   "fin": 58.6,
+   "texte": "On est assis tous les deux sur les pierres",
    "syllabes": [
     {
      "t": "On ",
-     "debut": 54.4,
-     "fin": 55.52
+     "debut": 55.32,
+     "fin": 55.6
     },
     {
      "t": "est ",
-     "debut": 55.52,
-     "fin": 55.9
+     "debut": 55.6,
+     "fin": 55.82
     },
     {
      "t": "as",
-     "debut": 55.9,
-     "fin": 56.22
+     "debut": 55.82,
+     "fin": 56.0
     },
     {
      "t": "sis ",
-     "debut": 56.22,
-     "fin": 56.54
+     "debut": 56.0,
+     "fin": 56.52
     },
     {
      "t": "tous ",
-     "debut": 56.54,
-     "fin": 56.76
+     "debut": 56.52,
+     "fin": 56.7
     },
     {
      "t": "les ",
-     "debut": 56.76,
-     "fin": 56.96
+     "debut": 56.7,
+     "fin": 56.84
     },
     {
      "t": "deux ",
-     "debut": 56.96,
+     "debut": 56.84,
      "fin": 57.32
     },
     {
      "t": "sur ",
      "debut": 57.32,
-     "fin": 57.62
+     "fin": 57.6
     },
     {
      "t": "les ",
-     "debut": 57.62,
-     "fin": 57.9
+     "debut": 57.6,
+     "fin": 57.78
     },
     {
-     "t": "pierres ",
-     "debut": 57.9,
-     "fin": 59.4
-    },
-    {
-     "t": "Dans ",
-     "debut": 59.4,
-     "fin": 59.98
-    },
-    {
-     "t": "un ",
-     "debut": 59.98,
-     "fin": 60.3
-    },
-    {
-     "t": "grand ",
-     "debut": 60.3,
-     "fin": 60.58
-    },
-    {
-     "t": "dé",
-     "debut": 60.58,
-     "fin": 60.88
-    },
-    {
-     "t": "sert ",
-     "debut": 60.88,
-     "fin": 61.18
-    },
-    {
-     "t": "plein ",
-     "debut": 61.18,
-     "fin": 61.54
-    },
-    {
-     "t": "de ",
-     "debut": 61.54,
-     "fin": 62.1
-    },
-    {
-     "t": "mys",
-     "debut": 62.1,
-     "fin": 63.09
-    },
-    {
-     "t": "tères",
-     "debut": 63.09,
-     "fin": 64.08
+     "t": "pierres",
+     "debut": 57.78,
+     "fin": 58.6
     }
    ]
   },
   {
    "index": 12,
-   "debut": 64.08,
-   "fin": 71.9,
-   "texte": "Vroom, vroom le gros camion chante Notre belle aventure est si amusante",
+   "debut": 59.64,
+   "fin": 63.42,
+   "texte": "Dans un grand désert plein de mystère",
    "syllabes": [
     {
-     "t": "Vroom, ",
-     "debut": 64.08,
-     "fin": 64.94
+     "t": "Dans ",
+     "debut": 59.64,
+     "fin": 59.98
     },
     {
-     "t": "vroom ",
-     "debut": 65.3,
-     "fin": 65.84
+     "t": "un ",
+     "debut": 59.98,
+     "fin": 60.14
     },
     {
-     "t": "le ",
-     "debut": 65.84,
-     "fin": 66.16
+     "t": "grand ",
+     "debut": 60.14,
+     "fin": 60.52
     },
     {
-     "t": "gros ",
-     "debut": 66.16,
-     "fin": 66.46
+     "t": "dé",
+     "debut": 60.52,
+     "fin": 60.82
     },
     {
-     "t": "ca",
-     "debut": 66.46,
-     "fin": 66.93
+     "t": "sert ",
+     "debut": 60.82,
+     "fin": 61.14
     },
     {
-     "t": "mion ",
-     "debut": 66.93,
-     "fin": 67.4
+     "t": "plein ",
+     "debut": 61.14,
+     "fin": 61.58
     },
     {
-     "t": "chante ",
-     "debut": 67.4,
-     "fin": 68.46
+     "t": "de ",
+     "debut": 61.58,
+     "fin": 61.88
     },
     {
-     "t": "Notre ",
-     "debut": 68.46,
-     "fin": 69.1
+     "t": "mys",
+     "debut": 61.88,
+     "fin": 62.22
     },
     {
-     "t": "belle ",
-     "debut": 69.1,
-     "fin": 69.62
-    },
-    {
-     "t": "a",
-     "debut": 69.62,
-     "fin": 69.933
-    },
-    {
-     "t": "ven",
-     "debut": 69.933,
-     "fin": 70.247
-    },
-    {
-     "t": "ture ",
-     "debut": 70.247,
-     "fin": 70.56
-    },
-    {
-     "t": "est ",
-     "debut": 70.56,
-     "fin": 70.82
-    },
-    {
-     "t": "si ",
-     "debut": 70.82,
-     "fin": 71.2
-    },
-    {
-     "t": "a",
-     "debut": 71.2,
-     "fin": 71.433
-    },
-    {
-     "t": "mu",
-     "debut": 71.433,
-     "fin": 71.667
-    },
-    {
-     "t": "sante",
-     "debut": 71.667,
-     "fin": 71.9
+     "t": "tère",
+     "debut": 62.22,
+     "fin": 63.42
     }
    ]
   },
   {
    "index": 13,
-   "debut": 72.44,
-   "fin": 79.94,
-   "texte": "Avec mon meilleur ami, l'abeille, on roule Sous un soleil de merveille",
+   "debut": 64.28,
+   "fin": 68.06,
+   "texte": "Vroom vroom le gros camion chante",
    "syllabes": [
     {
-     "t": "A",
-     "debut": 72.44,
-     "fin": 72.94
+     "t": "Vroom ",
+     "debut": 64.28,
+     "fin": 65.02
     },
     {
-     "t": "vec ",
-     "debut": 72.94,
-     "fin": 73.44
+     "t": "vroom ",
+     "debut": 65.32,
+     "fin": 65.86
     },
     {
-     "t": "mon ",
-     "debut": 73.44,
-     "fin": 74.04
+     "t": "le ",
+     "debut": 65.86,
+     "fin": 66.1
     },
     {
-     "t": "meil",
-     "debut": 74.04,
-     "fin": 74.26
+     "t": "gros ",
+     "debut": 66.1,
+     "fin": 66.36
     },
     {
-     "t": "leur ",
-     "debut": 74.26,
-     "fin": 74.48
+     "t": "ca",
+     "debut": 66.36,
+     "fin": 66.86
     },
     {
-     "t": "a",
-     "debut": 74.48,
-     "fin": 74.73
+     "t": "mion ",
+     "debut": 66.86,
+     "fin": 67.38
     },
     {
-     "t": "mi, ",
-     "debut": 74.73,
-     "fin": 74.98
-    },
-    {
-     "t": "l'a",
-     "debut": 74.98,
-     "fin": 75.35
-    },
-    {
-     "t": "beille, ",
-     "debut": 75.35,
-     "fin": 75.72
-    },
-    {
-     "t": "on ",
-     "debut": 75.72,
-     "fin": 76.18
-    },
-    {
-     "t": "roule ",
-     "debut": 76.18,
-     "fin": 76.92
-    },
-    {
-     "t": "Sous ",
-     "debut": 76.92,
-     "fin": 77.36
-    },
-    {
-     "t": "un ",
-     "debut": 77.36,
-     "fin": 77.52
-    },
-    {
-     "t": "so",
-     "debut": 77.52,
-     "fin": 77.8
-    },
-    {
-     "t": "leil ",
-     "debut": 77.8,
-     "fin": 78.08
-    },
-    {
-     "t": "de ",
-     "debut": 78.08,
-     "fin": 78.48
-    },
-    {
-     "t": "mer",
-     "debut": 78.48,
-     "fin": 79.21
-    },
-    {
-     "t": "veille",
-     "debut": 79.21,
-     "fin": 79.94
+     "t": "chante",
+     "debut": 67.38,
+     "fin": 68.06
     }
    ]
   },
   {
    "index": 14,
-   "debut": 113.68,
-   "fin": 118.12,
-   "texte": "Vroom, vroom, le gros camion chante",
+   "debut": 68.7,
+   "fin": 72.14,
+   "texte": "Notre belle aventure est si amusante",
    "syllabes": [
     {
-     "t": "Vroom, ",
-     "debut": 113.68,
-     "fin": 114.58
+     "t": "Notre ",
+     "debut": 68.7,
+     "fin": 69.22
     },
     {
-     "t": "vroom, ",
-     "debut": 115.02,
-     "fin": 115.52
+     "t": "belle ",
+     "debut": 69.22,
+     "fin": 69.54
     },
     {
-     "t": "le ",
-     "debut": 115.66,
-     "fin": 115.82
+     "t": "a",
+     "debut": 69.54,
+     "fin": 69.64
     },
     {
-     "t": "gros ",
-     "debut": 115.82,
-     "fin": 116.12
+     "t": "ven",
+     "debut": 69.64,
+     "fin": 69.86
     },
     {
-     "t": "ca",
-     "debut": 116.12,
-     "fin": 116.57
+     "t": "ture ",
+     "debut": 69.86,
+     "fin": 70.56
     },
     {
-     "t": "mion ",
-     "debut": 116.57,
-     "fin": 117.02
+     "t": "est ",
+     "debut": 70.56,
+     "fin": 70.68
     },
     {
-     "t": "chante",
-     "debut": 117.02,
-     "fin": 118.12
+     "t": "si ",
+     "debut": 70.68,
+     "fin": 70.98
+    },
+    {
+     "t": "a",
+     "debut": 70.98,
+     "fin": 71.18
+    },
+    {
+     "t": "mu",
+     "debut": 71.18,
+     "fin": 71.5
+    },
+    {
+     "t": "sante",
+     "debut": 71.5,
+     "fin": 72.14
     }
    ]
   },
   {
    "index": 15,
-   "debut": 118.12,
-   "fin": 122.08,
-   "texte": "Notre belle aventure est si amusante",
+   "debut": 72.66,
+   "fin": 76.02,
+   "texte": "Avec mon meilleur ami l'abeille",
    "syllabes": [
     {
-     "t": "Notre ",
-     "debut": 118.12,
-     "fin": 118.76
+     "t": "A",
+     "debut": 72.66,
+     "fin": 73.06
     },
     {
-     "t": "belle ",
-     "debut": 118.76,
-     "fin": 119.28
+     "t": "vec ",
+     "debut": 73.06,
+     "fin": 73.6
     },
     {
-     "t": "a",
-     "debut": 119.28,
-     "fin": 119.567
+     "t": "mon ",
+     "debut": 73.6,
+     "fin": 73.86
     },
     {
-     "t": "ven",
-     "debut": 119.567,
-     "fin": 119.853
+     "t": "meil",
+     "debut": 73.86,
+     "fin": 74.14
     },
     {
-     "t": "ture ",
-     "debut": 119.853,
-     "fin": 120.14
-    },
-    {
-     "t": "est ",
-     "debut": 120.14,
-     "fin": 120.48
-    },
-    {
-     "t": "si ",
-     "debut": 120.48,
-     "fin": 120.92
+     "t": "leur ",
+     "debut": 74.14,
+     "fin": 74.48
     },
     {
      "t": "a",
-     "debut": 120.92,
-     "fin": 121.307
+     "debut": 74.48,
+     "fin": 74.64
     },
     {
-     "t": "mu",
-     "debut": 121.307,
-     "fin": 121.693
+     "t": "mi ",
+     "debut": 74.64,
+     "fin": 75.14
     },
     {
-     "t": "sante",
-     "debut": 121.693,
-     "fin": 122.08
+     "t": "l'a",
+     "debut": 75.14,
+     "fin": 75.66
+    },
+    {
+     "t": "beille",
+     "debut": 75.66,
+     "fin": 76.02
     }
    ]
   },
   {
    "index": 16,
-   "debut": 122.08,
-   "fin": 126.62,
-   "texte": "Avec mon meilleur ami, l'abeille, on roule",
+   "debut": 76.28,
+   "fin": 79.76,
+   "texte": "On roule sous un soleil de merveille",
    "syllabes": [
     {
-     "t": "A",
-     "debut": 122.08,
-     "fin": 122.58
+     "t": "On ",
+     "debut": 76.28,
+     "fin": 76.46
     },
     {
-     "t": "vec ",
-     "debut": 122.58,
-     "fin": 123.08
+     "t": "roule ",
+     "debut": 76.46,
+     "fin": 76.72
     },
     {
-     "t": "mon ",
-     "debut": 123.08,
-     "fin": 123.6
+     "t": "sous ",
+     "debut": 76.98,
+     "fin": 77.32
     },
     {
-     "t": "meil",
-     "debut": 123.6,
-     "fin": 123.88
+     "t": "un ",
+     "debut": 77.32,
+     "fin": 77.46
     },
     {
-     "t": "leur ",
-     "debut": 123.88,
-     "fin": 124.16
+     "t": "so",
+     "debut": 77.46,
+     "fin": 77.62
     },
     {
-     "t": "a",
-     "debut": 124.16,
-     "fin": 124.48
+     "t": "leil ",
+     "debut": 77.62,
+     "fin": 78.02
     },
     {
-     "t": "mi, ",
-     "debut": 124.48,
-     "fin": 124.8
+     "t": "de ",
+     "debut": 78.02,
+     "fin": 78.24
     },
     {
-     "t": "l'a",
-     "debut": 125.12,
-     "fin": 125.31
+     "t": "mer",
+     "debut": 78.24,
+     "fin": 78.78
     },
     {
-     "t": "beille, ",
-     "debut": 125.31,
-     "fin": 125.5
-    },
-    {
-     "t": "on ",
-     "debut": 125.5,
-     "fin": 125.9
-    },
-    {
-     "t": "roule",
-     "debut": 125.9,
-     "fin": 126.62
+     "t": "veille",
+     "debut": 78.78,
+     "fin": 79.76
     }
    ]
   },
   {
    "index": 17,
-   "debut": 126.62,
-   "fin": 130.0,
-   "texte": "Sous un soleil de merveille",
+   "debut": 113.9,
+   "fin": 117.72,
+   "texte": "Vroom vroom le gros camion chante",
    "syllabes": [
     {
-     "t": "Sous ",
-     "debut": 126.62,
-     "fin": 126.92
+     "t": "Vroom ",
+     "debut": 113.9,
+     "fin": 114.66
     },
     {
-     "t": "un ",
-     "debut": 126.92,
-     "fin": 127.18
+     "t": "vroom ",
+     "debut": 114.96,
+     "fin": 115.54
     },
     {
-     "t": "so",
-     "debut": 127.18,
-     "fin": 127.5
+     "t": "le ",
+     "debut": 115.54,
+     "fin": 115.74
     },
     {
-     "t": "leil ",
-     "debut": 127.5,
-     "fin": 127.82
+     "t": "gros ",
+     "debut": 115.74,
+     "fin": 116.02
     },
     {
-     "t": "de ",
-     "debut": 127.82,
-     "fin": 128.2
+     "t": "ca",
+     "debut": 116.02,
+     "fin": 116.5
     },
     {
-     "t": "mer",
-     "debut": 128.2,
-     "fin": 129.1
+     "t": "mion ",
+     "debut": 116.5,
+     "fin": 117.02
     },
     {
-     "t": "veille",
-     "debut": 129.1,
-     "fin": 130.0
+     "t": "chante",
+     "debut": 117.02,
+     "fin": 117.72
     }
    ]
   },
   {
    "index": 18,
-   "debut": 130.0,
-   "fin": 134.34,
-   "texte": "On roule ensemble jusqu'au bout du soir",
+   "debut": 118.38,
+   "fin": 121.82,
+   "texte": "Notre belle aventure est si amusante",
    "syllabes": [
     {
-     "t": "On ",
-     "debut": 130.0,
-     "fin": 130.94
+     "t": "Notre ",
+     "debut": 118.38,
+     "fin": 118.88
     },
     {
-     "t": "roule ",
-     "debut": 130.94,
-     "fin": 131.44
+     "t": "belle ",
+     "debut": 118.88,
+     "fin": 119.22
     },
     {
-     "t": "en",
-     "debut": 131.44,
-     "fin": 131.85
+     "t": "a",
+     "debut": 119.22,
+     "fin": 119.32
     },
     {
-     "t": "semble ",
-     "debut": 131.85,
-     "fin": 132.26
+     "t": "ven",
+     "debut": 119.32,
+     "fin": 119.5
     },
     {
-     "t": "jus",
-     "debut": 132.26,
-     "fin": 132.54
+     "t": "ture ",
+     "debut": 119.5,
+     "fin": 119.96
     },
     {
-     "t": "qu",
-     "debut": 132.54,
-     "fin": 132.82
+     "t": "est ",
+     "debut": 120.22,
+     "fin": 120.34
     },
     {
-     "t": "'au ",
-     "debut": 132.82,
-     "fin": 133.1
+     "t": "si ",
+     "debut": 120.34,
+     "fin": 120.64
     },
     {
-     "t": "bout ",
-     "debut": 133.1,
-     "fin": 133.34
+     "t": "a",
+     "debut": 120.64,
+     "fin": 120.94
     },
     {
-     "t": "du ",
-     "debut": 133.34,
-     "fin": 133.72
+     "t": "mu",
+     "debut": 120.94,
+     "fin": 121.2
     },
     {
-     "t": "soir",
-     "debut": 133.72,
-     "fin": 134.34
+     "t": "sante",
+     "debut": 121.2,
+     "fin": 121.82
     }
    ]
   },
   {
    "index": 19,
-   "debut": 134.34,
-   "fin": 138.64,
-   "texte": "Avec des rires et plein d'espoir",
+   "debut": 122.34,
+   "fin": 125.7,
+   "texte": "Avec mon meilleur ami l'abeille",
    "syllabes": [
     {
      "t": "A",
-     "debut": 134.34,
-     "fin": 134.87
+     "debut": 122.34,
+     "fin": 122.76
     },
     {
      "t": "vec ",
-     "debut": 134.87,
-     "fin": 135.4
+     "debut": 122.76,
+     "fin": 123.28
     },
     {
-     "t": "des ",
-     "debut": 135.4,
-     "fin": 135.8
+     "t": "mon ",
+     "debut": 123.28,
+     "fin": 123.56
     },
     {
-     "t": "rires ",
-     "debut": 135.8,
-     "fin": 136.12
+     "t": "meil",
+     "debut": 123.56,
+     "fin": 123.86
     },
     {
-     "t": "et ",
-     "debut": 136.12,
-     "fin": 136.28
+     "t": "leur ",
+     "debut": 123.86,
+     "fin": 124.12
     },
     {
-     "t": "plein ",
-     "debut": 136.28,
-     "fin": 136.46
+     "t": "a",
+     "debut": 124.12,
+     "fin": 124.3
     },
     {
-     "t": "d'es",
-     "debut": 136.46,
-     "fin": 137.55
+     "t": "mi ",
+     "debut": 124.3,
+     "fin": 124.82
     },
     {
-     "t": "poir",
-     "debut": 137.55,
-     "fin": 138.64
+     "t": "l'a",
+     "debut": 124.82,
+     "fin": 125.34
+    },
+    {
+     "t": "beille",
+     "debut": 125.34,
+     "fin": 125.7
     }
    ]
   },
   {
    "index": 20,
-   "debut": 138.64,
-   "fin": 143.1,
-   "texte": "C'est notre voyage",
+   "debut": 125.7,
+   "fin": 129.46,
+   "texte": "On roule sous un soleil de merveille",
    "syllabes": [
     {
-     "t": "C'est ",
-     "debut": 138.64,
-     "fin": 140.96
+     "t": "On ",
+     "debut": 125.7,
+     "fin": 125.84
     },
     {
-     "t": "notre ",
-     "debut": 140.96,
-     "fin": 141.8
+     "t": "roule ",
+     "debut": 125.84,
+     "fin": 126.38
     },
     {
-     "t": "voyage",
-     "debut": 141.8,
-     "fin": 143.1
+     "t": "sous ",
+     "debut": 126.88,
+     "fin": 126.96
+    },
+    {
+     "t": "un ",
+     "debut": 126.96,
+     "fin": 127.12
+    },
+    {
+     "t": "so",
+     "debut": 127.12,
+     "fin": 127.28
+    },
+    {
+     "t": "leil ",
+     "debut": 127.28,
+     "fin": 127.72
+    },
+    {
+     "t": "de ",
+     "debut": 127.72,
+     "fin": 127.92
+    },
+    {
+     "t": "mer",
+     "debut": 127.92,
+     "fin": 128.46
+    },
+    {
+     "t": "veille",
+     "debut": 128.46,
+     "fin": 129.46
     }
    ]
   },
   {
    "index": 21,
-   "debut": 143.1,
-   "fin": 146.52,
-   "texte": "C'est merveilleux",
+   "debut": 130.66,
+   "fin": 133.98,
+   "texte": "On roule ensemble jusqu'au bout du soir",
    "syllabes": [
     {
-     "t": "C'est ",
-     "debut": 143.1,
-     "fin": 144.16
+     "t": "On ",
+     "debut": 130.66,
+     "fin": 130.94
     },
     {
-     "t": "mer",
-     "debut": 144.16,
-     "fin": 144.947
+     "t": "roule ",
+     "debut": 130.94,
+     "fin": 131.38
     },
     {
-     "t": "veil",
-     "debut": 144.947,
-     "fin": 145.733
+     "t": "en",
+     "debut": 131.38,
+     "fin": 131.58
     },
     {
-     "t": "leux",
-     "debut": 145.733,
-     "fin": 146.52
+     "t": "semble ",
+     "debut": 131.58,
+     "fin": 132.28
+    },
+    {
+     "t": "jus",
+     "debut": 132.28,
+     "fin": 132.58
+    },
+    {
+     "t": "qu",
+     "debut": 132.58,
+     "fin": 132.62
+    },
+    {
+     "t": "'au ",
+     "debut": 132.62,
+     "fin": 132.96
+    },
+    {
+     "t": "bout ",
+     "debut": 132.96,
+     "fin": 133.32
+    },
+    {
+     "t": "du ",
+     "debut": 133.32,
+     "fin": 133.56
+    },
+    {
+     "t": "soir",
+     "debut": 133.56,
+     "fin": 133.98
     }
    ]
   },
   {
    "index": 22,
-   "debut": 147.1,
-   "fin": 154.5,
+   "debut": 134.72,
+   "fin": 137.16,
+   "texte": "Avec des rires et plein d'espoir",
+   "syllabes": [
+    {
+     "t": "A",
+     "debut": 134.72,
+     "fin": 135.0
+    },
+    {
+     "t": "vec ",
+     "debut": 135.0,
+     "fin": 135.36
+    },
+    {
+     "t": "des ",
+     "debut": 135.36,
+     "fin": 135.68
+    },
+    {
+     "t": "rires ",
+     "debut": 135.68,
+     "fin": 136.04
+    },
+    {
+     "t": "et ",
+     "debut": 136.04,
+     "fin": 136.2
+    },
+    {
+     "t": "plein ",
+     "debut": 136.2,
+     "fin": 136.48
+    },
+    {
+     "t": "d'es",
+     "debut": 136.48,
+     "fin": 136.74
+    },
+    {
+     "t": "poir",
+     "debut": 136.74,
+     "fin": 137.16
+    }
+   ]
+  },
+  {
+   "index": 23,
+   "debut": 138.28,
+   "fin": 146.82,
+   "texte": "C'est notre voyage si merveilleux",
+   "syllabes": [
+    {
+     "t": "C'est ",
+     "debut": 138.28,
+     "fin": 138.4
+    },
+    {
+     "t": "notre ",
+     "debut": 138.82,
+     "fin": 139.14
+    },
+    {
+     "t": "voyage ",
+     "debut": 139.14,
+     "fin": 140.32
+    },
+    {
+     "t": "si ",
+     "debut": 143.38,
+     "fin": 143.46
+    },
+    {
+     "t": "mer",
+     "debut": 143.94,
+     "fin": 146.36
+    },
+    {
+     "t": "veil",
+     "debut": 146.36,
+     "fin": 146.44
+    },
+    {
+     "t": "leux",
+     "debut": 146.74,
+     "fin": 146.82
+    }
+   ]
+  },
+  {
+   "index": 24,
+   "debut": 147.16,
+   "fin": 153.76,
    "texte": "Et nous sommes tous les deux si heureux",
    "syllabes": [
     {
      "t": "Et ",
-     "debut": 147.1,
-     "fin": 147.46
+     "debut": 147.16,
+     "fin": 147.42
     },
     {
      "t": "nous ",
-     "debut": 147.46,
-     "fin": 147.8
+     "debut": 147.42,
+     "fin": 147.78
     },
     {
      "t": "sommes ",
-     "debut": 147.8,
-     "fin": 148.34
+     "debut": 147.78,
+     "fin": 148.24
     },
     {
      "t": "tous ",
-     "debut": 148.34,
-     "fin": 148.94
+     "debut": 148.24,
+     "fin": 148.84
     },
     {
      "t": "les ",
-     "debut": 148.94,
-     "fin": 149.5
+     "debut": 148.84,
+     "fin": 149.34
     },
     {
      "t": "deux ",
-     "debut": 149.5,
-     "fin": 150.02
+     "debut": 149.34,
+     "fin": 150.12
     },
     {
      "t": "si ",
-     "debut": 150.02,
-     "fin": 151.18
+     "debut": 150.12,
+     "fin": 150.8
     },
     {
      "t": "heu",
-     "debut": 151.18,
-     "fin": 152.84
+     "debut": 150.8,
+     "fin": 151.78
     },
     {
      "t": "reux",
-     "debut": 152.84,
-     "fin": 154.5
+     "debut": 151.78,
+     "fin": 153.76
     }
    ]
   }
