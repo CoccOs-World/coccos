@@ -14,7 +14,9 @@ Recette (identique à celle d'Odyssée, variante femme) :
 
 Le NOM DE FICHIER est le terme EXACT passé à Voix.dire (casse et accents
 compris) ; l'INPUT donné à Piper est un texte LISIBLE (les mots tout en
-capitales sont mis en minuscules, sinon espeak les ÉPELLE).
+capitales sont mis en minuscules, sinon espeak les ÉPELLE ; une LETTRE SEULE
+est remplacée par son nom écrit, sinon espeak lui colle un marqueur parasite —
+voir NOMS_LETTRES).
 
 Les termes sont LUS dans les sources du bureau (aucune liste recopiée à la
 main) : voir enumerer_termes(). Idempotent : un WAV valide n'est pas refait.
@@ -47,9 +49,27 @@ CHIFFRE_MAX = 200
 _re_db = re.compile(r"max_volume:\s*(-?[0-9.]+)\s*dB")
 _RE_CAPS = re.compile(r"[A-ZÀ-ÖØ-ÞŒŸ]{2,}")
 
+# Le NOM ÉCRIT des 26 lettres. Une lettre SEULE envoyée au phonémiseur reçoit
+# d'espeak un marqueur parasite — « _! » sur les 12 lettres à attaque vocalique
+# (E F H I L M N O R S U X), « _| » sur Y — et l'enfant entend une attaque en
+# trop (« le » pour E, « vi » pour U). Le nom écrit lève le marqueur.
+# Pièges déjà réglés dans la table : « èmme » pour M (sinon la nasale « amme »),
+# « ie grec » pour Y (sinon le marqueur revient sur le « i » isolé).
+# Table JUMELLE de scripts/voix_piper.gd : les deux restent en phase.
+NOMS_LETTRES = {
+    "A": "a", "B": "bé", "C": "cé", "D": "dé", "E": "euh", "F": "effe",
+    "G": "gé", "H": "ache", "I": "ie", "J": "ji", "K": "ka", "L": "elle",
+    "M": "èmme", "N": "enne", "O": "eau", "P": "pé", "Q": "ku", "R": "erre",
+    "S": "esse", "T": "té", "U": "ue", "V": "vé", "W": "doublevé",
+    "X": "ixe", "Y": "ie grec", "Z": "zède",
+}
+
 
 def texte_pour_tts(texte):
-    """Casse normalisée pour le phonémiseur : un mot tout en capitales est LU, pas épelé."""
+    """Texte LISIBLE pour le phonémiseur : une lettre SEULE devient son nom
+    écrit ; un mot tout en capitales est LU, pas épelé."""
+    if len(texte) == 1:
+        return NOMS_LETTRES.get(texte.upper(), texte)
     return _RE_CAPS.sub(lambda m: m.group(0).lower(), texte)
 
 
