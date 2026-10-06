@@ -37,6 +37,21 @@ const DEPOT_ANDROID := "user://voix_android"
 ## l'installation recommence proprement au lancement suivant.
 const TEMOIN_ANDROID := "installee.txt"
 
+## Le NOM ÉCRIT des 26 lettres. Une lettre SEULE envoyée au phonémiseur reçoit
+## d'espeak un marqueur parasite — « _! » sur les 12 lettres à attaque vocalique
+## (E F H I L M N O R S U X), « _| » sur Y — et l'enfant entend une attaque en
+## trop (« le » pour E, « vi » pour U). Le nom écrit lève le marqueur.
+## Pièges déjà réglés dans la table : « èmme » pour M (sinon la nasale « amme »),
+## « ie grec » pour Y (sinon le marqueur revient sur le « i » isolé).
+## Table JUMELLE de outils/generer_voix_bureau.py : les deux restent en phase.
+const NOMS_LETTRES := {
+	"A": "a", "B": "bé", "C": "cé", "D": "dé", "E": "euh", "F": "effe",
+	"G": "gé", "H": "ache", "I": "ie", "J": "ji", "K": "ka", "L": "elle",
+	"M": "èmme", "N": "enne", "O": "eau", "P": "pé", "Q": "ku", "R": "erre",
+	"S": "esse", "T": "té", "U": "ue", "V": "vé", "W": "doublevé",
+	"X": "ixe", "Y": "ie grec", "Z": "zède",
+}
+
 enum Etat { INCONNU, PRET, INDISPONIBLE }
 
 static var _etat := Etat.INCONNU
@@ -64,13 +79,25 @@ static func flux(terme: String, categorie: String) -> AudioStream:
 		var garde := AudioStreamWAV.load_from_file(chemin)
 		if garde != null:
 			return garde
-	var flux_neuf: AudioStreamWAV = Engine.get_singleton("PiperTTS").synthese(terme)
+	var flux_neuf: AudioStreamWAV = Engine.get_singleton("PiperTTS").synthese(
+		texte_pour_tts(terme))
 	if flux_neuf == null:
 		push_warning("Piper : %s" % Engine.get_singleton("PiperTTS").derniere_erreur())
 		return null
 	DirAccess.make_dir_recursive_absolute(chemin.get_base_dir())
 	flux_neuf.save_to_wav(chemin)
 	return flux_neuf
+
+
+## Le texte à PHONÉMISER pour un terme : une lettre seule devient son nom écrit
+## (NOMS_LETTRES), tout le reste passe inchangé. Le terme BRUT reste la clé du
+## cache et le nom des clips pré-rendus — seule l'entrée du moteur change.
+## La mise en minuscules des mots tout en capitales est faite ensuite par
+## PiperTTS::texte_pour_tts, côté extension.
+static func texte_pour_tts(terme: String) -> String:
+	if terme.length() != 1:
+		return terme
+	return NOMS_LETTRES.get(terme.to_upper(), terme)
 
 
 ## Efface les mots mis en cache (l'adulte a changé de modèle ou de recette).
