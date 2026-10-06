@@ -33,8 +33,11 @@ const FILIGRANE_PIECES := [4, 15]       # « pour les tableaux quatre pièces et
 const ELEMENTS := ["modele", "maison", "recadrer"]
 
 # --- CUISSON : début (bloc réécrit par l'outil DEV) ---
-const CUIT_LE := ""
+const CUIT_LE := "2026-10-06 20:07:37"
 const CAS := {
+	"15pieces_bureau": {"maison":[0.72602,0.16905,0.07689,0.07192],"modele":[0.90625,0.13131,0.18831,0.22063],"recadrer":[0.79712,0.16727,0.07323,0.0685]},
+	"30pieces_bureau": {"maison":[0.74986,0.16551,0.08073,0.07552],"modele":[0.90272,0.14109,0.22828,0.26817],"recadrer":[0.66971,0.16715,0.08073,0.07552]},
+	"4pieces_bureau": {"maison":[0.79407,0.14584,0.07323,0.0685],"modele":[0.91587,0.12306,0.18831,0.22064],"recadrer":[0.72626,0.1442,0.07322,0.0685]},
 }
 # --- CUISSON : fin ---
 
