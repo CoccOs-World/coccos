@@ -371,6 +371,7 @@ func _ready() -> void:
 	print("[accueil] son : bus « %s » = n°%d · volume %d %% (%.1f dB, muet %s) · musique de marche %s"
 		% [SonPuzzle.BUS, _bus, int(round(_volume * 100.0)), SonPuzzle.volume_bus_db(),
 			str(SonPuzzle.bus_muet()), "EN BOUCLE" if (_musique != null and _musique.playing) else "ABSENTE"])
+	_batir_effets_clic()                             # (#192) les fleurs au clic, comme dans le jeu
 
 
 # LA TAILLE RÉELLE DU CANVAS. ⚠ `get_visible_rect()` du viewport, et NON `DisplayServer.window_get_size()` : sous
@@ -1773,6 +1774,47 @@ func _quitter() -> void:
 		get_tree().quit()
 
 
+# (#192) LES PETITES FLEURS AU CLIC + UN SON PAR ENTRÉE — LES MÊMES QUE DANS LE JEU (`puzzle.gd:_fleurs_au_clic`).
+# Fabrice : « j'aurais voulu que ça le fasse aussi sur l'accueil ». Même brique `effets_clic.gd`, rien de dupliqué.
+# ⚠⚠ `_input` ET PAS `_unhandled_input` : les cases, les flèches, la jauge et JOUER sont des boutons — un clic
+#   sur eux est consommé par l'interface et n'arriverait JAMAIS jusqu'à `_unhandled_input`. `_input` passe AVANT
+#   l'interface ; il NE REND RIEN ET NE CONSOMME RIEN (ni `return` utile, ni `set_input_as_handled`), donc le
+#   bouton reçoit son clic exactement comme avant.
+# ⚠ « QUAND ON A UN CURSEUR » : la règle du jeu, relue sur `_curseur` — cocher « Sans curseur » coupe les fleurs
+#   au clic suivant. Et à la souris seulement, comme au jeu : un appui de doigt arrive AUSSI en clic émulé
+#   (`emulate_mouse_from_touch`), reconnaissable à `DEVICE_ID_EMULATION` — il ne fait pas de fleur.
+# ⚠ AU CLIC SUR « JOUER », l'accueil part (`queue_free`) au RELÂCHÉ : sa ronde et son son s'éteignent avec lui ;
+#   le jeu reprend la main avec ses propres fleurs.
+const EffetsClic := preload("res://jeux_integres/puzzle/scripts/effets_clic.gd")
+var _effets_clic: Node = null
+
+
+func _batir_effets_clic() -> void:
+	if _effets_clic != null:
+		return
+	_effets_clic = EffetsClic.new()
+	_effets_clic.name = "EffetsClic"
+	add_child(_effets_clic)
+
+
+func _input(evt: InputEvent) -> void:
+	if evt is InputEventMouseButton:
+		_fleurs_au_clic(evt as InputEventMouseButton)
+
+
+func _fleurs_au_clic(mb: InputEventMouseButton) -> void:
+	if _effets_clic == null or not mb.pressed or mb.device == InputEvent.DEVICE_ID_EMULATION \
+			or CurseursPuzzle.sans_curseur(_curseur):
+		return
+	match mb.button_index:
+		MOUSE_BUTTON_LEFT:
+			_effets_clic.cliquer("gauche", mb.position)
+		MOUSE_BUTTON_RIGHT:
+			_effets_clic.cliquer("droit", mb.position)
+		MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
+			_effets_clic.cliquer("roulette", mb.position)
+
+
 # La touche Entrée ou la barre d'espace lancent aussi la partie : un clavier suffit, aucune souris n'est exigée.
 # (B4) Et les touches ← → font ce que font les deux flèches — MÊME FONCTION, donc même plafond de progression :
 # le clavier ne peut pas ouvrir un tableau que la souris n'ouvrirait pas.
@@ -1886,6 +1928,8 @@ func etat_accueil() -> Dictionary:
 		"volume": _volume,
 		"volume_rect": _vol_rect,
 		"volume_valeur": (_vol_curseur.value if _vol_curseur != null else -1.0),
+		"fleurs_clic": {} if _effets_clic == null else _effets_clic.compte.duplicate(),   # (#192)
+		"fleurs_vivantes": 0 if _effets_clic == null else _effets_clic.nombre_fleurs(),
 		"volume_libelle": (_vol_libelle.text if _vol_libelle != null else ""),
 		"volume_bus": SonPuzzle.BUS,
 		"volume_bus_index": SonPuzzle.index_bus(),
