@@ -859,6 +859,27 @@ var _modele_plein := false
 var _modele_ouvertures := 0            # combien de fois il a été ouvert — relu au harnais
 var _dernier_appui := -9999            # (ms) l'appui précédent sur le modèle : c'est lui qui fait le double-clic
 var _btn_recadrer: Button = null       # (B6) « revenir au puzzle, aussi grand que possible » (GDD §10 bis)
+
+# (#192 · 06-10) LA DISPOSITION RÉGLÉE PAR FABRICE ET LE MODÈLE EN FILIGRANE — cf. `scripts/disposition_puzzle.gd`.
+# ⚠ `disposition_dev` et `filigrane_dev` ne sont posés QUE par l'outil DEV (`outils/outil_dev_puzzle.gd`) : ils
+#   montrent en direct ce que Fabrice règle, avant toute cuisson. Le jeu livré les laisse vides et lit la table cuite.
+var disposition_dev: Dictionary = {}
+var filigrane_dev := -1.0
+var _cas_dispo := ""                   # « 15pieces_bureau »… — la clé du cas lue pour cette partie
+var _dispo_source := "calculée"        # « cuite » · « outil DEV » · « calculée » — écrit au journal
+var _modele_boite := Rect2()           # la boîte réglée où la vignette est posée (vide = disposition calculée)
+var _maison_reglee := Rect2()
+var _recadrer_reglee := Rect2()
+var _filigrane: Sprite2D = null        # le modèle grisé DANS le cadre de montage, SOUS les pièces (4 et 15 pièces)
+var _filigrane_alpha := 0.0
+const FILIGRANE_SHADER := """shader_type canvas_item;
+uniform float opacite = 0.3;
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+	COLOR = vec4(vec3(l), c.a * opacite);
+}
+"""
 # (B12 · §21) LE BOUTON PRENDRE ⇄ POSER et sa disposition
 var _trois_colonnes := false           # au doigt : modèle · plateau · tas (§21.2 ; B13 : plus de condition d'écran)
 # (B13 · §21.9) LE CADRE DE MONTAGE EST-IL DÉPORTÉ À GAUCHE ? Vrai quand l'échelle est plafonnée par la LARGEUR
@@ -983,6 +1004,10 @@ func _ready() -> void:
 			% [str(_modele_rect), str(_plateau), str(_tas)])
 	else:
 		_dire("disposition bureau (§21.5 : le bureau garde le jeu de B6) — AUCUN bouton PRENDRE/POSER (§31.3 ; souris : prise au clic maintenu)")
+
+	_dire("disposition « %s » : %s · vignette %s · maison %s · recadrer %s · filigrane %s"
+		% [_cas_dispo, _dispo_source, str(_modele_rect), str(cadre_maison()), str(cadre_recadrer()),
+			("opacité %.2f, gris (luminance seule)" % _filigrane_alpha) if _filigrane_alpha > 0.0 else "aucun"])
 
 	_tailler()
 	_batir_plateau()
@@ -1114,6 +1139,44 @@ func _calculer_mise_en_page() -> void:
 	_tol_aimant = TOL_AIMANT_FRAC * (_cellule * _echelle).length()
 	_calculer_modele_et_tas()
 	_calculer_places()
+	_appliquer_disposition()
+
+
+# (#192) LA DISPOSITION RÉGLÉE PAR FABRICE PASSE **APRÈS** LE CALCUL, ET NE TOUCHE QU'À TROIS RECTANGLES.
+# ⚠⚠ ON DÉPLACE ET ON DIMENSIONNE, ON NE REFOND PAS : le plateau, la réserve, le tas et les places de départ sont
+#   déjà posés quand on arrive ici, et rien ici ne les relit — le tas reste donc EXACTEMENT celui du jeu calculé,
+#   même si la vignette part ailleurs. Seuls changent `_modele_rect` (vu, double-cliqué, exclu des prises par
+#   `_sur_hud`) et les cadres de la maison et du recadrage.
+# ⚠ LA VIGNETTE EST POSÉE **DANS** SA BOÎTE, au plus grand sans déformer et centrée — exactement ce que le jeu
+#   calculé fait déjà : une boîte réglée sur la ferme (debout) reste juste pour le tracteur (couché).
+func _appliquer_disposition() -> void:
+	var n := _cols * _rangs
+	_cas_dispo = DispositionPuzzle.cle(n, _tactile)
+	var d: Dictionary = DispositionPuzzle.cas(_cas_dispo)
+	_dispo_source = "cuite" if not d.is_empty() else "calculée"
+	if not disposition_dev.is_empty():
+		d = disposition_dev
+		_dispo_source = "outil DEV"
+	_modele_boite = Rect2()
+	_maison_reglee = Rect2()
+	_recadrer_reglee = Rect2()
+	if d.has("modele"):
+		_modele_boite = DispositionPuzzle.borner(DispositionPuzzle.rect(d["modele"], _ecran), _ecran)
+		var k: float = minf(_modele_boite.size.x / _taille.x, _modele_boite.size.y / _taille.y)
+		var t: Vector2 = _taille * k
+		_modele_rect = Rect2(_modele_boite.position + (_modele_boite.size - t) * 0.5, t)
+	if d.has("maison"):
+		_maison_reglee = DispositionPuzzle.borner(DispositionPuzzle.rect(d["maison"], _ecran), _ecran)
+	if d.has("recadrer"):
+		_recadrer_reglee = DispositionPuzzle.borner(DispositionPuzzle.rect(d["recadrer"], _ecran), _ecran)
+	_filigrane_alpha = DispositionPuzzle.filigrane(n, _tactile)
+	if filigrane_dev >= 0.0 and DispositionPuzzle.FILIGRANE_PIECES.has(n):
+		_filigrane_alpha = clampf(filigrane_dev, 0.0, 1.0)
+	elif d.has("filigrane") and DispositionPuzzle.FILIGRANE_PIECES.has(n):
+		_filigrane_alpha = clampf(float(d["filigrane"]), 0.0, 1.0)
+	# ⚠ UNE GRILLE FORCÉE (contrôle de scalabilité) n'est pas un tableau livré : pas de guide sous ses pièces.
+	if cols_forcees > 0 and rangs_forcees > 0:
+		_filigrane_alpha = 0.0
 
 
 # LA RÉSERVE PREND UN CÔTÉ, ET C'EST TOUJOURS LA DROITE (B2 → B6 en paysage).
@@ -1289,6 +1352,7 @@ func _refaire_geometrie() -> void:
 		_fond_plateau.polygon = p
 		if _cadre_plateau != null:
 			_cadre_plateau.points = p
+	_poser_filigrane()
 	for i in _noeud.size():
 		var r := i / _cols
 		var c := i % _cols
@@ -1430,6 +1494,24 @@ func _batir_plateau() -> void:
 	cadre.default_color = Color(1.0, 1.0, 1.0, 0.30)
 	_jeu.add_child(cadre)
 	_cadre_plateau = cadre
+	# (#192) LE MODÈLE EN FILIGRANE — « l'image de la vignette modèle légèrement grisée », DANS le cadre de
+	# montage, pour les 4 et 15 pièces. Ajouté ICI, donc APRÈS le plateau et AVANT les calques de suggestion et
+	# les pièces : il est SOUS tout ce qui se joue, il ne prend aucun clic (un `Sprite2D` n'en prend pas, et
+	# `_prendre` ne descend que `_noeud`), et il suit le zoom comme le plateau.
+	# ⚠ GRIS = LUMINANCE SEULE (shader) : le guide se lit par le clair et le sombre, jamais par la teinte — et il
+	#   ne se confond pas avec les pièces, qui gardent leurs couleurs.
+	_filigrane = Sprite2D.new()
+	_filigrane.name = "Filigrane"
+	_filigrane.texture = _image
+	_filigrane.centered = false
+	_filigrane.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	var mat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = FILIGRANE_SHADER
+	mat.shader = sh
+	_filigrane.material = mat
+	_jeu.add_child(_filigrane)
+	_poser_filigrane()
 	# (B2) LE CALQUE DES SUGGESTIONS, posé ICI et pas ailleurs : il doit être DERRIÈRE les pièces (une place qui
 	# clignote par-dessus la pièce qu'on déplace cacherait le jeu) mais DEVANT le plateau. Il est ajouté à `_jeu`,
 	# donc il suit le zoom comme le reste : la place clignote au bon endroit quelle que soit la vue.
@@ -1480,6 +1562,25 @@ func _batir_plateau() -> void:
 	_prise_lisere.width = PRISE_LISERE_LARGEUR
 	_prise_lisere.default_color = PRISE_LISERE_BLANC
 	_prise_calque.add_child(_prise_lisere)
+
+
+# (#192) LE FILIGRANE SUIT LE PLATEAU : même coin, même échelle — il se superpose donc pile à l'image refaite.
+func _poser_filigrane() -> void:
+	if _filigrane == null:
+		return
+	_filigrane.position = _plateau.position
+	_filigrane.scale = Vector2(_echelle, _echelle)
+	_filigrane.visible = _filigrane_alpha > 0.0
+	(_filigrane.material as ShaderMaterial).set_shader_parameter("opacite", _filigrane_alpha)
+
+
+# (#192) LA PORTE DE L'OUTIL DEV — et de lui seul : il pose ce que Fabrice règle, le jeu se remet en page sans
+# rien rebâtir (les pièces restent où elles sont). Le jeu livré ne l'appelle jamais.
+func appliquer_disposition_dev(d: Dictionary, filigrane: float) -> void:
+	disposition_dev = d.duplicate(true)
+	filigrane_dev = filigrane
+	_calculer_mise_en_page()
+	_refaire_geometrie()
 
 
 func _batir_pieces() -> void:
@@ -1555,6 +1656,14 @@ func _batir_maison() -> void:
 # LE RECTANGLE DE LA MAISON — rendu au jeu ET au harnais, pour que la mesure et la mise en page lisent le même
 # nombre. En paysage : le coin HAUT-DROIT du panneau (donc de l'écran). En portrait : le bout DROIT du bandeau.
 func cadre_maison() -> Rect2:
+	if _maison_reglee.has_area():
+		return _maison_reglee
+	return _cadre_maison_calcule()
+
+
+# ⚠ (#192) LE RECADRAGE CALCULÉ SE CALE SUR LA MAISON **CALCULÉE**, pas sur la maison réglée : déplacer la maison
+#   seule ne doit pas emporter le recadrage avec elle.
+func _cadre_maison_calcule() -> Rect2:
 	return Rect2(Vector2(_panneau.end.x - MAISON_MARGE - MAISON_TAILLE.x, _panneau.position.y + MAISON_MARGE),
 		MAISON_TAILLE)
 
@@ -1564,7 +1673,9 @@ func cadre_maison() -> Rect2:
 # réserve : c'est le geste de secours d'un joueur qui s'est éloigné dans son plan de travail, il doit être là où
 # l'œil le cherche — avec la sortie, jamais dans l'aire de jeu.
 func cadre_recadrer() -> Rect2:
-	var m := cadre_maison()
+	if _recadrer_reglee.has_area():
+		return _recadrer_reglee
+	var m := _cadre_maison_calcule()
 	return Rect2(m.position - Vector2(MAISON_TAILLE.x + MAISON_MARGE, 0.0), MAISON_TAILLE)
 
 
@@ -4436,6 +4547,15 @@ func etat_pour_preuve() -> Dictionary:
 		"tas_pas": _tas_pas,
 		"modele": _modele_rect,
 		"modele_pose": _modele_vue != null,
+		"cas_dispo": _cas_dispo,
+		"dispo_source": _dispo_source,
+		"modele_boite": _modele_boite,
+		"maison_reglee": _maison_reglee,
+		"recadrer_reglee": _recadrer_reglee,
+		"filigrane_alpha": _filigrane_alpha,
+		"filigrane_visible": _filigrane != null and _filigrane.visible,
+		"filigrane_rang": _filigrane.get_index() if _filigrane != null else -1,
+		"premiere_piece_rang": _noeud[0].get_index() if not _noeud.is_empty() else -1,
 		"compte_rect": _compte_rect,
 		"libelles": _libelles(),                   # tous les écrits de la réserve, avec leur rectangle
 		"plan": _plan_travail(),
