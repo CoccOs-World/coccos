@@ -1016,6 +1016,7 @@ func _ready() -> void:
 	_eparpiller()
 	_poser_curseur()
 	_batir_curseur_doigt()
+	_batir_effets_clic()
 	# (B2) Le canvas peut changer en cours de route — fenêtre redimensionnée, téléphone qu'on tourne, passage au
 	# projecteur. On se branche sur le signal du viewport : le recadrage est une réaction à un événement rare.
 	var vp := get_viewport()
@@ -2024,6 +2025,7 @@ func _input(evt: InputEvent) -> void:
 		return
 	if evt is InputEventMouseButton:
 		var mb := evt as InputEventMouseButton
+		_fleurs_au_clic(mb)                  # (#192) décoratif : rien n'est consommé, la suite joue comme avant
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_zoomer_autour(mb.position, ZOOM_PAS_MOLETTE)
 			return
@@ -2056,6 +2058,36 @@ func _input(evt: InputEvent) -> void:
 			_appliquer_zoom()
 		elif _saisi >= 0 and not _pincement:
 			_glisser(_vers_jeu(mm.position))
+
+
+# (#192) LES PETITES FLEURS AU CLIC + UN SON PAR ENTRÉE — reprises du bureau et de la découverte de la souris.
+# ⚠ « QUAND ON A UN CURSEUR » (Fabrice) : la Main, la Coccinelle ou l'Abeille. « Sans curseur », rien — c'est le
+#   pointeur du système, le bureau CoccOs n'y est pas. Et à la souris seulement : au doigt, `_input` est déjà
+#   sorti plus haut (`_tactile`), le geste reste celui de B23.
+# ⚠ CETTE FONCTION NE REND RIEN ET NE CONSOMME RIEN : la prise (gauche), le déplacement de la vue (droit) et le
+#   zoom (roulette) sont joués juste après, exactement comme avant. Tout le détail vit dans `effets_clic.gd`.
+const EffetsClic := preload("res://jeux_integres/puzzle/scripts/effets_clic.gd")
+var _effets_clic: Node = null
+
+
+func _batir_effets_clic() -> void:
+	if _effets_clic != null:
+		return
+	_effets_clic = EffetsClic.new()
+	_effets_clic.name = "EffetsClic"
+	add_child(_effets_clic)
+
+
+func _fleurs_au_clic(mb: InputEventMouseButton) -> void:
+	if _effets_clic == null or not mb.pressed or sans_curseur():
+		return
+	match mb.button_index:
+		MOUSE_BUTTON_LEFT:
+			_effets_clic.cliquer("gauche", mb.position)
+		MOUSE_BUTTON_RIGHT:
+			_effets_clic.cliquer("droit", mb.position)
+		MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
+			_effets_clic.cliquer("roulette", mb.position)
 
 
 # LES TROIS RECTANGLES QUE LE JEU NE TOUCHE PAS : la maison, le recadrage, le modèle. (Le compte est un libellé
@@ -4409,6 +4441,8 @@ func etat_pour_preuve() -> Dictionary:
 		# (B10) LE CURSEUR EN JEU — au bureau le pointeur du système (`curseur_taille` non nulle le prouve), au
 		# doigt le sprite DESSINÉ. Le harnais lit les deux mondes par la même porte.
 		"tactile": _tactile,
+		"fleurs_clic": {} if _effets_clic == null else _effets_clic.compte.duplicate(),   # (#192)
+		"fleurs_vivantes": 0 if _effets_clic == null else _effets_clic.nombre_fleurs(),
 		"curseur_dessine": _curseur_vue != null,
 		"curseur_visible": _curseur_vue != null and _curseur_vue.visible,
 		"curseur_rect": curseur_doigt_rect(),
