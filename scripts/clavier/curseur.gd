@@ -58,7 +58,6 @@ const POINTS_FLECHE: Array[Vector2] = [
 ]
 
 var forme_forcee := ""  # pour les aperçus des réglages (prime sur la config)
-var facteur := 1.0      # multiplicateur propre à un jeu (jeu des lettres : 2.0), posé avant add_child
 
 var gamme := gamme_pour(OS.has_feature("android"))  # multiplicateur de la gamme, posé avant add_child
 
@@ -84,7 +83,7 @@ func _ready() -> void:
 		# sinon les aperçus deviennent géants dès que « Grand » est choisi.
 		_forme = forme_forcee
 	else:
-		scale = Vector2.ONE * _echelle_base * facteur
+		scale = Vector2.ONE * _echelle_base
 	# Image du curseur si disponible (sinon repli sur le dessin par code)
 	if CHEMINS_TEXTURES.has(_forme) and ResourceLoader.exists(CHEMINS_TEXTURES[_forme]):
 		_texture = load(CHEMINS_TEXTURES[_forme])
@@ -156,14 +155,14 @@ func decalage_doigt() -> Vector2:
 		ancre_locale = ((ANCRES.get(_forme, Vector2(0.5, 0.5)) as Vector2) - (HOTSPOTS[_forme] as Vector2)) * taille
 	else:
 		ancre_locale = ANCRES_DESSIN.get(_forme, Vector2.ZERO)
-	return -ancre_locale * _echelle_base * facteur
+	return -ancre_locale * _echelle_base
 
 
 ## Écrasement/rebond au clic — le curseur « vit ».
 func pulser() -> void:
 	var animation := create_tween()
-	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base * facteur * 0.8, 0.06)
-	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base * facteur, 0.14) \
+	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base * 0.8, 0.06)
+	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base, 0.14) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
@@ -176,7 +175,7 @@ static func gamme_pour(android: bool) -> float:
 func zoomer(direction: int) -> void:
 	_echelle_base = clampf(_echelle_base + 0.12 * float(direction), ECHELLE_MIN * gamme, ECHELLE_MAX * gamme)
 	var animation := create_tween()
-	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base * facteur, 0.15) \
+	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base, 0.15) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 

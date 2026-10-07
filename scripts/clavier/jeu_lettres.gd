@@ -53,7 +53,6 @@ const LONGUEUR_MAX_MOT := 14  # au-delà, la ligne « glisse » (les plus ancien
 const BULLE_TACTILE_MIN := 120.0
 const BULLE_TACTILE_MAX := 260.0
 const MARGE_BULLE_TACTILE := 14.0
-const FACTEUR_CURSEUR := 2.0  # le curseur de ce jeu, deux fois plus gros (demande Fabrice 2026-10-07)
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
 const COULEUR_BOUTON_DIRE := Color(0.30, 0.62, 0.45)   # vert doux : le bouton « dire le mot »
 const COULEUR_PACMAN := Color(1.0, 0.85, 0.25)          # jaune : le visage qui parle
@@ -157,7 +156,6 @@ func _creer_lecteurs() -> void:
 func _creer_curseur() -> void:
 	var dossier: String = (get_script() as GDScript).resource_path.get_base_dir()
 	_curseur = (load(dossier + "/curseur.gd") as GDScript).new()
-	_curseur.facteur = FACTEUR_CURSEUR  # taille ×2, pointe toujours en (0, 0)
 	add_child(_curseur)
 	_curseur.position = get_viewport().get_mouse_position()
 	_dernier_point = _curseur.position
@@ -170,7 +168,7 @@ func _creer_curseur() -> void:
 ## appel tant qu'aucune voix n'a été trouvée. Repli : n'importe quelle voix
 ## disponible (mieux qu'un silence). "" si le système n'a aucune voix.
 func _creer_bulle_et_mot() -> void:
-	# En mode tactile, le clavier dessiné (REMONTÉ à portée de la pointe, ×4 ici)
+	# En mode tactile, le clavier dessiné (REMONTÉ à portée de la pointe du curseur réglé)
 	# occupe le bas : il ne reste qu'une bande au-dessus. La bulle passe donc À
 	# CÔTÉ du tableau (une seule rangée) et prend la hauteur qui reste —
 	# cf. _ajuster_au_clavier.

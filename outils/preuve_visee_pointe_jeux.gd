@@ -8,7 +8,7 @@
 #   B  ballons   doigt sur le ballon / pointe dehors → intact ; pointe dessus / doigt dehors → eclate ;
 #   S  souris    fleurs du clic nees a la pointe ; croix : pointe dessus / doigt dehors → quitte,
 #                doigt dessus / pointe dehors → reste ;
-#   L  lettres   touche sous la POINTE tapee (≠ touche sous le doigt), lettre affichee ; curseur x2 ;
+#   L  lettres   touche sous la POINTE tapee (≠ touche sous le doigt), lettre affichee ; curseur sans facteur propre ;
 #   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non (jeu SOURIS, sans clavier) ;
 #   Mots : PLUS de visee a la pointe (decision Fabrice 07-10, retour a l'origine) — sa preuve, avec
 #   Chasse sans clavier : outils/preuve_chasse_mots_android.gd ;
@@ -320,8 +320,8 @@ func _souris() -> void:
 func _lettres() -> void:
 	print("--- LETTRES ---")
 	await _monter("res://scenes/lettres.tscn", true)
-	_mesurer_decalage("lettres x2")
-	_verifier("L curseur x2 garde (facteur %.1f)" % float(_curseur.get("facteur")), float(_curseur.get("facteur")) == 2.0)
+	_mesurer_decalage("lettres")
+	_verifier("L curseur sans facteur propre (meme taille que les autres jeux)", not ("facteur" in _curseur))
 	await _cas_tap("lettres", Vector2(400, 200))
 	_cas_portee("lettres")
 	var tapees := _espionner_touches()

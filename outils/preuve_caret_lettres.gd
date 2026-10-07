@@ -1,4 +1,5 @@
-## PREUVE du caret positionnable + curseur ×2 du jeu des lettres (REQ 261007).
+## PREUVE du caret positionnable + curseur du jeu des lettres a la MEME taille que les autres jeux
+## (REQ 261007 ; le ×2 de #99 est leve par REQ_261007_lettres_curseur_reglable_fond).
 ## Monte la VRAIE scene res://scenes/lettres.tscn dans un SubViewport 1024x768 et
 ## lui INJECTE de vrais evenements (touches, fleches, clics) par push_input :
 ## c'est le chemin _input du jeu qui travaille, comme sous les doigts de l'enfant.
@@ -32,13 +33,13 @@ func _ready() -> void:
 	await _trames(12)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-	print("=== PREUVE CARET + CURSEUR x2 — jeu des lettres ===")
+	print("=== PREUVE CARET + CURSEUR x1 — jeu des lettres ===")
 	await _non_regression()
 	await _fleches()
 	await _clic()
 	await _bornes()
 	await _debordement()
-	await _curseur_x2()
+	await _curseur_x1()
 	print("=== BILAN : %s (%d KO) ===" % ["TOUT VERT" if _ko == 0 else "ROUGE", _ko])
 	get_tree().quit(0 if _ko == 0 else 1)
 
@@ -139,17 +140,17 @@ func _debordement() -> void:
 	_verifier("le Z est a gauche du caret", _jeu._mot[_jeu._caret - 1], "Z")
 
 
-## Curseur du jeu : echelle x2 par rapport au meme curseur sans facteur.
-func _curseur_x2() -> void:
-	print("-- F. curseur du jeu x2")
+## Curseur du jeu : MEME echelle que le curseur des autres jeux (plus de facteur propre).
+func _curseur_x1() -> void:
+	print("-- F. curseur du jeu x1 (comme les autres jeux)")
 	var curseur: Node2D = _jeu._curseur
 	await _attendre(2.0)  # rebonds des clics et effets (fleurs, etoiles) retombes
 	var temoin: Node2D = (load("res://scripts/clavier/curseur.gd") as GDScript).new()
-	_vue.add_child(temoin)  # facteur par defaut : ce que voient les jeux mots/chasse
+	_vue.add_child(temoin)  # ce que voient les jeux mots/chasse
 	var rapport := curseur.scale.x / temoin.scale.x
-	_verifier("echelle lettres / echelle temoin = 2", is_equal_approx(rapport, 2.0), true,
+	_verifier("echelle lettres / echelle temoin = 1", is_equal_approx(rapport, 1.0), true,
 		"lettres=%.3f temoin=%.3f" % [curseur.scale.x, temoin.scale.x])
-	_verifier("le temoin (autres jeux) garde facteur 1", temoin.facteur, 1.0)
+	_verifier("plus de facteur propre au jeu des lettres", "facteur" in curseur, false)
 	# Pixels : boite englobante du curseur, puis du temoin a la meme place
 	curseur.position = Vector2(120, 140)
 	temoin.visible = false
@@ -157,12 +158,12 @@ func _curseur_x2() -> void:
 	temoin.position = curseur.position
 	temoin.visible = true
 	var h_temoin := await _hauteur_pixels(temoin, "F_curseur_temoin")
-	_verifier("hauteur pixels ~x2", absf(float(h_lettres) / float(h_temoin) - 2.0) < 0.1, true,
+	_verifier("hauteur pixels ~x1", absf(float(h_lettres) / float(h_temoin) - 1.0) < 0.05, true,
 		"lettres=%d px temoin=%d px" % [h_lettres, h_temoin])
-	# Clic : le rebond revient a l'echelle x2 ; molette : reste x2 du temoin
+	# Clic : le rebond revient a l'echelle du temoin
 	curseur.pulser()
 	await _attendre(0.4)
-	_verifier("apres un clic : toujours x2", is_equal_approx(curseur.scale.x / temoin.scale.x, 2.0), true)
+	_verifier("apres un clic : toujours x1", is_equal_approx(curseur.scale.x / temoin.scale.x, 1.0), true)
 	temoin.queue_free()
 
 

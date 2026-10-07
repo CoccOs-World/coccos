@@ -3,7 +3,8 @@
 # Pour chaque plateforme (PC = feature reelle ; Android = gamme forcee par gamme_pour(true)
 # AVANT _ready, la feature « android » ne pouvant pas etre simulee sur PC — meme principe que
 # preuve_barre_android) et chaque reglage [souris] taille_curseur ecrit dans un user:// ISOLE,
-# monte les 4 copies de curseur.gd + le curseur du jeu des lettres (clavier, facteur 2.0)
+# monte les 4 copies de curseur.gd (le jeu des lettres n'a plus de facteur propre : il suit la gamme
+# comme les autres, cf. outils/preuve_lettres_reglable_fond.gd)
 # et lit l'echelle effective, les bornes de la molette et le defaut sans config.
 # Attendus ecrits ICI (gamme d'origine 0.55 / 1.0 / 1.45) — pas lus dans le code teste.
 # Lancement :
@@ -13,7 +14,6 @@ extends SceneTree
 
 const ORIGINE := {"petit": 0.55, "moyen": 1.0, "grand": 1.45}
 const BORNES_ORIGINE := Vector2(0.55, 1.8)
-const FACTEUR_LETTRES := 2.0   # jeu_lettres.gd FACTEUR_CURSEUR
 const COPIES := ["res://scripts/effets/curseur.gd", "res://scripts/souris/curseur.gd",
 	"res://scripts/ballons/curseur.gd", "res://scripts/clavier/curseur.gd"]
 
@@ -30,12 +30,10 @@ func _initialize() -> void:
 	_derouler.call_deferred()
 
 
-func _monter(chemin: String, android: bool, facteur := 1.0) -> Node2D:
+func _monter(chemin: String, android: bool) -> Node2D:
 	var c: Node2D = (load(chemin) as GDScript).new()
 	if android:
 		c.gamme = c.gamme_pour(true)
-	if facteur != 1.0:
-		c.facteur = facteur
 	root.add_child(c)
 	return c
 
@@ -64,10 +62,6 @@ func _plateforme(android: bool) -> void:
 			var n := _monter(chemin, android)
 			_verifier("%s = %.2f" % [_nom(chemin), attendu], is_equal_approx(n.scale.x, attendu), "echelle = %.3f" % n.scale.x)
 			n.free()
-		var l := _monter("res://scripts/clavier/curseur.gd", android, FACTEUR_LETTRES)
-		_verifier("lettres = %.2f (2 x curseur normal)" % (attendu * 2.0), is_equal_approx(l.scale.x, attendu * 2.0),
-			"echelle = %.3f" % l.scale.x)
-		l.free()
 	print("-- C. bornes molette = %.2f / %.2f" % [BORNES_ORIGINE.x * x, BORNES_ORIGINE.y * x])
 	for chemin in COPIES:
 		var g := _monter(chemin, android)

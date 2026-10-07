@@ -42,6 +42,7 @@ var curseur: Node2D = null  # curseur du jeu, posé avant add_child (null = pas 
 var remontee := 0.0         # bande sous les touches, en px viewport
 
 var _marge: MarginContainer
+var _style_fond: StyleBoxFlat  # fond crème des touches, peint par _draw (la bande dessous reste la prairie)
 
 const RANGEES := ["1234567890", "AZERTYUIOP", "QSDFGHJKLM", "WXCVBN"]
 const TAILLE_POLICE := 46
@@ -60,13 +61,15 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # la bande avale les taps entre les touches
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.97, 0.96, 0.92, 0.92)
-	style.corner_radius_top_left = 24
-	style.corner_radius_top_right = 24
-	style.border_width_top = 4
-	style.border_color = Color(0.60, 0.66, 0.72)
-	add_theme_stylebox_override("panel", style)
+	# Le panneau lui-même ne peint rien : le fond crème est dessiné SOUS LES TOUCHES seulement
+	# (cf. _draw), la bande repose-doigt de la remontée laisse voir la prairie (demande Fabrice 07-10).
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_style_fond = StyleBoxFlat.new()
+	_style_fond.bg_color = Color(0.97, 0.96, 0.92, 0.92)
+	_style_fond.corner_radius_top_left = 24
+	_style_fond.corner_radius_top_right = 24
+	_style_fond.border_width_top = 4
+	_style_fond.border_color = Color(0.60, 0.66, 0.72)
 
 	var marge := MarginContainer.new()
 	for cote in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -103,6 +106,17 @@ func encombrement() -> float:
 	return HAUTEUR + remontee
 
 
+## Rect (repère viewport) du fond crème : les touches, sans la bande de remontée dessous.
+func rect_fond_touches() -> Rect2:
+	var r := get_global_rect()
+	r.size.y = maxf(0.0, r.size.y - remontee)
+	return r
+
+
+func _draw() -> void:
+	draw_style_box(_style_fond, Rect2(Vector2.ZERO, Vector2(size.x, maxf(0.0, size.y - remontee))))
+
+
 ## La taille du curseur peut changer en cours de jeu (molette) : la remontée suit.
 func _process(_delta: float) -> void:
 	if is_instance_valid(curseur):
@@ -116,6 +130,7 @@ func _remonter(valeur: float) -> void:
 	offset_top = -encombrement()
 	offset_bottom = 0.0
 	_marge.add_theme_constant_override("margin_bottom", 12 + int(remontee))
+	queue_redraw()
 	encombrement_change.emit(encombrement())
 
 
