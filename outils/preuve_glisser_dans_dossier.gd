@@ -219,8 +219,10 @@ func _derouler() -> void:
 	var d_coul: Color = dossier.get("_dossier").couleur
 	_verifier("④ en vol au-dessus du dossier : il grossit (pas la couleur seule)", dossier.scale.x > 1.0,
 		"echelle %.2f" % dossier.scale.x)
+	# Reference = teinte de REPOS du dessin (rouge coccinelle si le dossier est decore), pas la couleur de categorie
+	var repos: Color = dossier.get("_couleur_dossier")
 	_verifier("④ en vol au-dessus du dossier : il s'eclaircit",
-		d_coul.get_luminance() > dossier.couleur.get_luminance(), "%.2f > %.2f" % [d_coul.get_luminance(), dossier.couleur.get_luminance()])
+		d_coul.get_luminance() > repos.get_luminance(), "%.2f > %.2f" % [d_coul.get_luminance(), repos.get_luminance()])
 	var autre := _icone(bureau, "clavier")
 	_verifier("④ l'AUTRE dossier ne se signale pas", autre != null and autre.scale == Vector2.ONE)
 	await _souris("relache", cible)
