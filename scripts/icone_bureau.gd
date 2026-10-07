@@ -13,8 +13,9 @@
 ## bureau), puis elle suit le doigt et se pose au relâché, comme à la souris.
 ## Rangement : pendant le vol, `survol` dit où passe la souris (le bureau signale
 ## le dossier visé) ; au relâché, `lachee` dit où elle a été lâchée. Dans une
-## fenêtre-dossier (`rangeable`), le jeu se soulève de la même façon et peut
-## être lâché HORS de la fenêtre pour le ressortir sur le bureau.
+## fenêtre-dossier (`rangeable`), le jeu se soulève de la même façon (au doigt :
+## par l'appui long, là aussi) et peut être lâché HORS de la fenêtre pour le
+## ressortir sur le bureau.
 extends VBoxContainer
 
 signal lancee(id: String)
@@ -219,19 +220,23 @@ func _prendre_le_vol() -> void:
 	z_index = 1  # passe au-dessus des autres icônes pendant le vol
 
 
-## Appui long au doigt posé SUR l'icône : elle se soulève sans attendre que le
-## doigt bouge. Faux si le doigt n'est pas posé sur elle (rien n'est soulevé).
+## Appui long au doigt posé SUR l'icône (bureau ou fenêtre-dossier) : elle se
+## soulève sans attendre que le doigt bouge. Faux si le doigt n'est pas posé sur elle (rien n'est soulevé).
 func soulever() -> bool:
-	if not deplacable or not _appui:
+	if not (deplacable or rangeable) or not _appui:
 		return false
 	if not _glisse:
-		_prendre_le_vol()
+		if rangeable:
+			_quitter_la_rangee()
+		else:
+			_prendre_le_vol()
 	return true
 
 
 ## Jeu dans une fenêtre-dossier : maintien + déplacement = il se soulève et suit
 ## la souris par-dessus tout (top_level, hors de la rangée) ; au relâché, le
 ## bureau décide (`lachee`) — hors de la fenêtre, il ressort sur le bureau.
+## Au doigt (`par_appui_long`) : seul l'appui long le soulève (`soulever()`).
 ## Simple clic = laissé au bouton (lance le jeu, comme avant).
 func _sur_saisie_fenetre(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -254,16 +259,23 @@ func _sur_saisie_fenetre(event: InputEvent) -> void:
 					(get_parent() as Container).queue_sort()
 				lachee.emit(id, event.global_position, coin)  # … sauf si le bureau le ressort
 	elif event is InputEventMouseMotion and _appui:
-		if not _glisse and event.global_position.distance_to(_origine) >= SEUIL_GLISSE:
-			_glisse = true
-			var ici := global_position
-			top_level = true  # quitte la rangée : libre de sortir de la fenêtre
-			global_position = ici
-			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
-			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
-			z_index = 1
+		if not _glisse and not par_appui_long \
+				and event.global_position.distance_to(_origine) >= SEUIL_GLISSE:
+			_quitter_la_rangee()
 		if _glisse:
 			global_position = event.global_position - _prise
+
+
+## Le jeu de la fenêtre-dossier se soulève : il quitte la rangée (top_level),
+## grossit et s'éclaircit, sans bouger de là où il était.
+func _quitter_la_rangee() -> void:
+	_glisse = true
+	var ici := global_position
+	top_level = true  # quitte la rangée : libre de sortir de la fenêtre
+	global_position = ici
+	scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+	modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+	z_index = 1
 
 
 ## Dossier visé (ou plus) par un jeu en vol : il grossit et s'éclaircit —

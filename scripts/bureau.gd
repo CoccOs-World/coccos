@@ -199,12 +199,13 @@ func _creer_curseur_et_effets() -> void:
 	tactile.appui_long.connect(_sur_appui_long)
 
 
-## Appui long au doigt. SUR une icône du bureau : elle se soulève et suit le doigt.
+## Appui long au doigt. SUR une icône du bureau ou un jeu d'une fenêtre-dossier :
+## il se soulève et suit le doigt.
 ## Ailleurs : clic droit — étoiles + carillon, nés sous la pointe de la
 ## coccinelle, pas sous le doigt ; sur le bureau nu, avec l'option parent, la
 ## bulle de menu s'ouvre EN PLUS, au-dessus des étoiles.
 func _sur_appui_long(ou: Vector2) -> void:
-	for icone in _icones:
+	for icone in _icones_des_fenetres() + _icones:
 		if is_instance_valid(icone) and icone.contient(ou) and icone.soulever():
 			return
 	_curseur.pulser()
@@ -214,6 +215,16 @@ func _sur_appui_long(ou: Vector2) -> void:
 		_lecteurs["etoiles"].play()
 	if _menu_contextuel and _appui_sur_bureau and not _sur_une_icone(ou):
 		_ouvrir_bulle(ou)
+
+
+## Les jeux des fenêtres-dossiers ouvertes (ils passent avant le bureau qu'elles couvrent).
+func _icones_des_fenetres() -> Array:
+	var liste: Array = []
+	for fenetre in _fenetres_ouvertes.values():
+		if is_instance_valid(fenetre):
+			liste.append_array(fenetre.contenu.get_children().filter(
+				func(n: Node) -> bool: return n.has_method("soulever")))
+	return liste
 
 
 ## Le point tombe-t-il sur une icône du bureau (bouton ou libellé) ?
@@ -464,7 +475,7 @@ func _memoriser_place_icone(id: String, ou: Vector2) -> void:
 	PinConfig.ecrire_option("bureau", "places_icones", ranges)
 
 
-# --- Ranger un jeu dans un dossier / l'en ressortir (glissé souris) -----------
+# --- Ranger un jeu dans un dossier / l'en ressortir (glissé souris ou appui long)
 # Seules les applications du registre se rangent (pas les dossiers eux-mêmes,
 # ni les applis externes ou du téléphone). Choix retenu par enfant :
 # Registre.ranger() → user://config.cfg [bureau_rangement].
@@ -617,8 +628,9 @@ func _remplir_fenetre(fenetre: Control, id: String) -> void:
 		icone.id = jeu["id"]
 		icone.nom = Lang.t(jeu["nom_cle"])
 		icone.couleur = jeu["couleur"]
-		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
-		icone.rangeable = not Tactile.actif()
+		# Au doigt, un doigt qui dérive doit rester un tap : seul l'appui long soulève
+		icone.rangeable = true
+		icone.par_appui_long = Tactile.actif()
 		icone.lancee.connect(_lancer_jeu)
 		icone.lachee.connect(_ressortir_du_dossier.bind(id))
 		fenetre.contenu.add_child(icone)
