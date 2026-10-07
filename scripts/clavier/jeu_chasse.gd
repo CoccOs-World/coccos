@@ -42,7 +42,8 @@ var _Sons: GDScript
 var _Clavier: GDScript
 
 var _clavier: Control = null
-var _decal_clavier := 0.0  # hauteur du clavier dessiné (0 hors mode tactile)
+var _decal_clavier := 0.0  # place prise par le clavier dessiné, remontée comprise (0 hors mode tactile)
+var _conteneur_tableau: Control
 var _pioche := []  # lettres proposées (tirées des mots à apprendre)
 var _mot := ""
 var _label_mot: Label
@@ -80,6 +81,8 @@ func _ready() -> void:
 	Voix.amorcer()  # natif : voix prête tout de suite ; web : résolue à la volée
 	if Tactile.actif():
 		_clavier = _Clavier.new()  # clavier CoccOs dessiné (remplace celui du système)
+		_clavier.curseur = _curseur  # touches remontées à portée de la POINTE
+		_clavier.encombrement_change.connect(_ajuster_au_clavier)
 		add_child(_clavier)
 		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
 	_construire_pioche()
@@ -91,6 +94,18 @@ func _ready() -> void:
 	minuterie.start()
 	for i in 3:
 		get_tree().create_timer(0.3 + 0.6 * float(i)).timeout.connect(_lacher_bulle)
+
+
+## Le clavier dessiné (remonté à portée de la pointe) prend `hauteur` en bas : le
+## tableau se pousse au-dessus, et les bulles naissent toujours derrière les touches.
+func _ajuster_au_clavier(hauteur: float) -> void:
+	_decal_clavier = hauteur
+	_placer_tableau()
+
+
+func _placer_tableau() -> void:
+	_conteneur_tableau.offset_top = -128.0 - _decal_clavier  # au-dessus du clavier dessiné
+	_conteneur_tableau.offset_bottom = -20.0 - _decal_clavier
 
 
 func _charger_briques() -> void:
@@ -241,8 +256,8 @@ static func _caractere_de(event: InputEventKey) -> String:
 func _creer_tableau() -> void:
 	var conteneur := CenterContainer.new()
 	conteneur.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	conteneur.offset_top = -128.0 - _decal_clavier  # au-dessus du clavier dessiné
-	conteneur.offset_bottom = -20.0 - _decal_clavier
+	_conteneur_tableau = conteneur
+	_placer_tableau()
 	add_child(conteneur)
 
 	var ligne := HBoxContainer.new()

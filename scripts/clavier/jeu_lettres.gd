@@ -49,6 +49,10 @@ const CLES_SPECIAUX := {
 ## Ce que la bulle affiche pour certains caractères peu visibles.
 const AFFICHAGES_SPECIAUX := {" ": "_"}
 const LONGUEUR_MAX_MOT := 14  # au-delà, la ligne « glisse » (les plus anciennes sortent)
+## Mode tactile : bulle de la lettre à côté du tableau, à la hauteur laissée par le clavier.
+const BULLE_TACTILE_MIN := 120.0
+const BULLE_TACTILE_MAX := 260.0
+const MARGE_BULLE_TACTILE := 14.0
 const FACTEUR_CURSEUR := 2.0  # le curseur de ce jeu, deux fois plus gros (demande Fabrice 2026-10-07)
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
 const COULEUR_BOUTON_DIRE := Color(0.30, 0.62, 0.45)   # vert doux : le bouton « dire le mot »
@@ -84,6 +88,7 @@ var _Sons: GDScript
 var _Clavier: GDScript
 
 var _clavier: Control = null
+var _centre: CenterContainer       # contenu au-dessus du clavier dessiné
 var _bulle: PanelContainer
 var _style_bulle: StyleBoxFlat
 var _label_lettre: Label
@@ -117,6 +122,8 @@ func _ready() -> void:
 	tactile.appui_long.connect(_clic_droit)
 	if Tactile.actif():
 		_clavier = _Clavier.new()
+		_clavier.curseur = _curseur  # touches remontées à portée de la POINTE
+		_clavier.encombrement_change.connect(_ajuster_au_clavier)
 		add_child(_clavier)
 		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
 
@@ -163,16 +170,19 @@ func _creer_curseur() -> void:
 ## appel tant qu'aucune voix n'a été trouvée. Repli : n'importe quelle voix
 ## disponible (mieux qu'un silence). "" si le système n'a aucune voix.
 func _creer_bulle_et_mot() -> void:
-	# En mode tactile, le clavier dessiné occupe le bas : le contenu remonte
-	# et la bulle se fait un peu plus petite pour que rien ne soit masqué.
+	# En mode tactile, le clavier dessiné (REMONTÉ à portée de la pointe, ×4 ici)
+	# occupe le bas : il ne reste qu'une bande au-dessus. La bulle passe donc À
+	# CÔTÉ du tableau (une seule rangée) et prend la hauteur qui reste —
+	# cf. _ajuster_au_clavier.
 	var tactile_actif := Tactile.actif()
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	if tactile_actif:
 		centre.offset_bottom = -_Clavier.HAUTEUR
 	add_child(centre)
+	_centre = centre
 
-	var colonne := VBoxContainer.new()
+	var colonne: BoxContainer = HBoxContainer.new() if tactile_actif else VBoxContainer.new()
 	colonne.alignment = BoxContainer.ALIGNMENT_CENTER
 	colonne.add_theme_constant_override("separation", 18 if tactile_actif else 34)
 	centre.add_child(colonne)
@@ -196,12 +206,24 @@ func _creer_bulle_et_mot() -> void:
 	_label_lettre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label_lettre.add_theme_font_size_override("font_size", 170 if tactile_actif else 230)
 	_label_lettre.add_theme_color_override("font_color", Color(0.20, 0.60, 0.90))
-	_bulle.add_child(_label_lettre)
+	if tactile_actif:
+		# La hauteur de LIGNE de la police (OpenDyslexic : ~1,7 × sa taille) dépasse la
+		# bulle réduite et la ferait grossir sur le clavier : la lettre est posée sur un
+		# support sans taille minimale, centrée, et déborde à vide en haut comme en bas.
+		var support := Control.new()
+		support.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_bulle.add_child(support)
+		_label_lettre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_label_lettre.grow_vertical = Control.GROW_DIRECTION_BOTH
+		support.add_child(_label_lettre)
+	else:
+		_bulle.add_child(_label_lettre)
 
 	# --- Le tableau blanc (le prénom se construit ici) + bouton tout effacer ---
 	var ligne_tableau := HBoxContainer.new()
 	ligne_tableau.alignment = BoxContainer.ALIGNMENT_CENTER
 	ligne_tableau.add_theme_constant_override("separation", 18)
+	ligne_tableau.size_flags_vertical = Control.SIZE_SHRINK_CENTER  # à côté de la bulle (tactile)
 	colonne.add_child(ligne_tableau)
 
 	# Bouton « dire le mot » : en première position, à gauche du tableau.
@@ -216,7 +238,7 @@ func _creer_bulle_et_mot() -> void:
 	ligne_tableau.add_child(btn_dire)
 
 	var tableau := PanelContainer.new()
-	tableau.custom_minimum_size = Vector2(720, 104)
+	tableau.custom_minimum_size = Vector2(620, 104) if tactile_actif else Vector2(720, 104)
 	var style_tableau := StyleBoxFlat.new()
 	style_tableau.bg_color = Color(0.995, 0.995, 0.98)          # blanc feuille
 	style_tableau.set_corner_radius_all(18)
@@ -275,6 +297,16 @@ func _creer_bouton_rond(couleur: Color) -> Button:
 		style.set_corner_radius_all(32)
 		btn.add_theme_stylebox_override(etat, style)
 	return btn
+
+
+## Le clavier dessiné prend `hauteur` en bas : le contenu se pousse au-dessus et la
+## bulle prend la hauteur restante (bornée), sa lettre en proportion.
+func _ajuster_au_clavier(hauteur: float) -> void:
+	_centre.offset_bottom = -hauteur
+	var dispo := get_viewport_rect().size.y - hauteur - 2.0 * MARGE_BULLE_TACTILE
+	var cote := clampf(dispo, BULLE_TACTILE_MIN, BULLE_TACTILE_MAX)
+	_bulle.custom_minimum_size = Vector2(cote, cote)
+	_label_lettre.add_theme_font_size_override("font_size", int(cote * 0.65))
 
 
 ## Android : le doigt déplace le curseur, la POINTE vise (touches du clavier dessiné, caret, boutons) — cf. visee_pointe.gd.

@@ -13,8 +13,8 @@
 #   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non ; touche a la pointe ;
 #   P  souris PC INCHANGEE (ballons, lettres) : clic et curseur au pointeur, aucun decalage.
 #   R  (clavier) PORTEE : chaque touche du clavier dessine doit etre atteignable par la pointe
-#      sur au moins la moitie de sa hauteur. ROUGE PAR CONCEPTION tant que Fabrice n'a pas
-#      tranche (la pointe ne descend pas sous bord bas − decalage) — cf. RES_261007_android_visee_pointe_JEUX.
+#      sur au moins la moitie de sa hauteur. Vert depuis la REMONTEE du clavier (decision Fabrice,
+#      REQ_261007_android_clavier_remonte) ; portee stricte et 4 cibles : outils/preuve_clavier_remonte.gd.
 # Lancement :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_visee_pointe_jeux.gd
 # Code de sortie 0 = tout vert, 1 = au moins un echec.
@@ -137,9 +137,11 @@ func _touche_sous(p: Vector2) -> Button:
 
 
 ## Touche « lettre » (texte non vide) ; `filtre` facultatif sur le texte.
+## Point FRANC (4 px a l'interieur) : un point pile sur le bord d'une touche est un artefact de mesure.
 func _est_lettre(p: Vector2, filtre := "") -> bool:
 	var t := _touche_sous(p)
-	return t != null and t.text != "" and (filtre == "" or t.text == filtre)
+	return t != null and t.text != "" and (filtre == "" or t.text == filtre) \
+		and t.get_global_rect().grow(-4.0).has_point(p)
 
 
 func _espionner_touches() -> Array:
@@ -156,14 +158,15 @@ func _cas_touche(nom: String, tapees: Array, cible := "") -> Array:
 	var autour := clavier.get_global_rect().get_center()
 	var p := _chercher(autour,
 		func(q: Vector2) -> bool: return _est_lettre(q, cible),
-		func(q: Vector2) -> bool: return _est_lettre(q) and _touche_sous(q) != _touche_sous(_pointe_pour(q)),
+		# doigt sur une AUTRE touche, ou (rangee du bas) sur la bande de remontee du clavier
+		func(q: Vector2) -> bool: return clavier.contient(q) and _touche_sous(q) != _touche_sous(_pointe_pour(q)),
 		clavier.size.x / 2.0)
 	if p == Vector2.INF:
 		_verifier("K[%s] mise en place : pointe et doigt sur deux touches differentes" % nom, false)
 		return []
 	var d := _doigt_pour(p)
 	var visee: String = _touche_sous(p).text
-	var sous_doigt: String = _touche_sous(d).text
+	var sous_doigt: String = "(bande de remontee)" if _touche_sous(d) == null else _touche_sous(d).text
 	_verifier("K[%s] mise en place : pointe sur « %s », doigt sur « %s »" % [nom, visee, sous_doigt],
 		visee != sous_doigt, "pointe %s, doigt %s" % [p, d])
 	tapees.clear()

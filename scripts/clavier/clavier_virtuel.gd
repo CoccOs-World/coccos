@@ -13,15 +13,35 @@
 ##
 ## Usage (jeux clavier, en mode tactile seulement — voir tactile.gd) :
 ##   _clavier = (load(dossier + "/clavier_virtuel.gd") as GDScript).new()
+##   _clavier.curseur = _curseur   # remontée à la portée de la pointe (voir plus bas)
+##   _clavier.encombrement_change.connect(_ajuster_au_clavier)   # le contenu se pousse au-dessus
 ##   add_child(_clavier)
 ##   _curseur.move_to_front()   # le curseur-doigt reste visible sur les touches
 ## puis garder les clics du jeu hors de la bande :
 ##   if _clavier and _clavier.contient(event.position): return
 extends PanelContainer
 
-## Hauteur de la bande — les jeux remontent leur contenu d'autant.
+## Émis quand la place prise en bas change (création, taille du curseur) : le jeu
+## remonte son contenu de `hauteur` (= encombrement()).
+signal encombrement_change(hauteur: float)
+
+## Hauteur des touches — les jeux remontent leur contenu d'au moins autant.
 ## (≥ la taille minimale des 4 rangées de touches, mesurée à 314 px.)
 const HAUTEUR := 320.0
+## REMONTÉE DU CLAVIER (décision Fabrice 07-10, Android) : on vise à la POINTE du curseur,
+## qui est AU-DESSUS du doigt. Le doigt ne descendant pas sous le bas de l'écran, la pointe
+## ne descend pas sous (bas − décalage vertical) : les touches sont donc remontées d'autant,
+## et la bande libérée dessous (même panneau) sert de repose-doigt. Leçon des 7 différences
+## (sept_differences.gd, encadrés B10→B34) : tant qu'une marge sous la cible valait le
+## décalage, tout était atteignable ; et on ne demande JAMAIS au doigt le dernier pixel de
+## l'écran (bande des gestes système d'Android) → GARDE en plus du décalage. Ni zoom de bord,
+## ni fondu du décalage en bas (décision Fabrice).
+const GARDE := 12.0
+
+var curseur: Node2D = null  # curseur du jeu, posé avant add_child (null = pas de remontée)
+var remontee := 0.0         # bande sous les touches, en px viewport
+
+var _marge: MarginContainer
 
 const RANGEES := ["1234567890", "AZERTYUIOP", "QSDFGHJKLM", "WXCVBN"]
 const TAILLE_POLICE := 46
@@ -38,7 +58,6 @@ func _ready() -> void:
 	# _ready s'exécute APRÈS l'ajout à l'arbre : set_anchors_preset préserverait
 	# la taille courante (offsets compensatoires) — il faut aussi poser les offsets.
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	offset_top = -HAUTEUR
 	mouse_filter = Control.MOUSE_FILTER_STOP  # la bande avale les taps entre les touches
 
 	var style := StyleBoxFlat.new()
@@ -53,6 +72,7 @@ func _ready() -> void:
 	for cote in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		marge.add_theme_constant_override(cote, 12)
 	add_child(marge)
+	_marge = marge
 
 	var colonne := VBoxContainer.new()
 	colonne.add_theme_constant_override("separation", 10)
@@ -68,6 +88,35 @@ func _ready() -> void:
 	# Retour arrière au bout de la dernière rangée, deux fois plus large
 	var derniere: HBoxContainer = colonne.get_child(colonne.get_child_count() - 1)
 	derniere.add_child(_creer_touche(""))
+	_remonter(remontee_pour(curseur))
+
+
+## Remontée qui met la rangée du bas à portée de la pointe de `c` (0 sans curseur).
+static func remontee_pour(c: Node2D) -> float:
+	if c == null:
+		return 0.0
+	return ceilf(maxf(0.0, -(c.decalage_doigt() as Vector2).y)) + GARDE
+
+
+## Place totale prise en bas de l'écran (touches + bande de remontée).
+func encombrement() -> float:
+	return HAUTEUR + remontee
+
+
+## La taille du curseur peut changer en cours de jeu (molette) : la remontée suit.
+func _process(_delta: float) -> void:
+	if is_instance_valid(curseur):
+		var voulue := remontee_pour(curseur)
+		if absf(voulue - remontee) > 0.5:
+			_remonter(voulue)
+
+
+func _remonter(valeur: float) -> void:
+	remontee = valeur
+	offset_top = -encombrement()
+	offset_bottom = 0.0
+	_marge.add_theme_constant_override("margin_bottom", 12 + int(remontee))
+	encombrement_change.emit(encombrement())
 
 
 ## Le tap appartient-il à la bande ? (les jeux ignorent alors le clic)
