@@ -366,6 +366,9 @@ func _quitter() -> void:
 ## lettre colorée. Repli : disque blanc dessiné si l'image manque.
 class _BulleLettre extends Node2D:
 	const CHEMIN_BULLE := "res://assets/chasse/bulle.png"
+	const RAYON_GALET := 0.66  # fraction du rayon de la bulle : couvre le caractère
+	const COULEUR_GALET := Color(0.99, 0.98, 0.94, 0.85)
+	const EPAISSEUR_LISERE := 6
 	# Godot met les ressources chargées en cache : load() par bulle est gratuit
 	# (une statique retiendrait la texture à la fermeture → fuite signalée)
 	var texture_bulle: Texture2D = null
@@ -412,9 +415,16 @@ class _BulleLettre extends Node2D:
 			# Repli : le dessin d'origine (disque blanc cerclé)
 			draw_circle(Vector2.ZERO, rayon + 5.0, Color(couleur.darkened(0.15), 0.95))
 			draw_circle(Vector2.ZERO, rayon, Color(0.99, 0.98, 0.94, 0.96))
+		# Galet crème semi-opaque derrière le caractère : il le détache de la verdure
+		# vue à travers la bulle (retour Fabrice 07-10 : bulles peu contrastées)
+		draw_circle(Vector2.ZERO, rayon * RAYON_GALET, COULEUR_GALET)
 		var police := ThemeDB.fallback_font
 		var taille := int(rayon * 1.15)
 		var hauteur := police.get_ascent(taille) - police.get_descent(taille)
+		# Liseré foncé de la même teinte : contraste de LUMINANCE (daltonien) même pour
+		# les lettres jaunes et orangées, que le galet clair seul ne détache pas assez
+		draw_string_outline(police, Vector2(-rayon, hauteur / 2.0), lettre,
+			HORIZONTAL_ALIGNMENT_CENTER, rayon * 2.0, taille, EPAISSEUR_LISERE, couleur.darkened(0.55))
 		draw_string(police, Vector2(-rayon, hauteur / 2.0), lettre,
 			HORIZONTAL_ALIGNMENT_CENTER, rayon * 2.0, taille, couleur)
 

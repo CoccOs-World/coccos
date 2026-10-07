@@ -7,6 +7,8 @@
 ##                     puis un nouveau mot arrive (au hasard, différent du courant)
 ## Le mot est prononcé à son apparition. Aucun échec, aucun chrono, aucun texte.
 ## La souris garde ses effets (curseur OS, traînée, clics) — cohérence de l'OS.
+## En mode tactile, PAS de coccinelle-curseur (décision Fabrice 07-10) : l'enfant
+## tape directement les touches du clavier dessiné, sous son doigt.
 ##
 ## Sortie : bouton croix (haut droit) ou Échap.
 ## Activité AUTO-CONTENUE (briques chargées depuis le dossier de CE script).
@@ -87,7 +89,7 @@ func _ready() -> void:
 	if Tactile.actif():
 		_clavier = _Clavier.new()  # clavier CoccOs dessiné (remplace celui du système)
 		add_child(_clavier)
-		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
+		_curseur.visible = false  # tap direct sur les touches : pas de coccinelle-curseur
 	_charger_mots()
 	_nouveau_mot()
 
