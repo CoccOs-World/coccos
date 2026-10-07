@@ -21,6 +21,7 @@ const Fond := preload("res://scripts/fond.gd")
 const Voix := preload("res://scripts/voix.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
+const ViseePointe := preload("res://scripts/visee_pointe.gd")
 
 const COULEURS_BALLONS: Array[Color] = [
 	Color(0.95, 0.35, 0.35), Color(1.0, 0.65, 0.2), Color(1.0, 0.85, 0.25),
@@ -64,6 +65,7 @@ func _ready() -> void:
 	_curseur = _Curseur.new()
 	add_child(_curseur)
 	_curseur.position = get_viewport().get_mouse_position()
+	_brancher_visee()
 
 	_creer_lecteurs()
 	Voix.amorcer()  # natif : voix prête tout de suite ; web : résolue à la volée
@@ -107,7 +109,17 @@ func _input(event: InputEvent) -> void:
 		_curseur.position = event.position
 	elif event is InputEventMouseButton and event.pressed \
 			and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			# Tap Android : aucun mouvement émulé, seul ce clic (déjà ramené à la pointe) → le curseur s'y pose
+			_curseur.position = event.position
 		_clic_gauche(event.position)
+
+
+## Android : le doigt déplace le curseur, la POINTE vise (ballons, croix) — cf. visee_pointe.gd.
+func _brancher_visee() -> void:
+	var visee: Node = ViseePointe.new()
+	visee.curseur = _curseur
+	add_child(visee)
 
 
 # --- Ballons ----------------------------------------------------------------

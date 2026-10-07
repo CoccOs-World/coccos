@@ -27,6 +27,7 @@ const Fond := preload("res://scripts/fond.gd")
 const Tactile := preload("res://scripts/tactile.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
+const ViseePointe := preload("res://scripts/visee_pointe.gd")
 
 const PAS_TRAINEE := 26.0  # distance (px) entre deux étoiles de la traînée
 
@@ -94,6 +95,7 @@ func _ready() -> void:
 	add_child(_curseur)
 	_dernier_point = get_viewport().get_mouse_position()
 	_curseur.position = _dernier_point
+	_brancher_visee()
 
 	_creer_lecteurs()
 
@@ -132,6 +134,10 @@ func _input(event: InputEvent) -> void:
 		_sur_mouvement(event.position)
 	elif event is InputEventMouseButton:
 		if event.pressed:
+			if event.device == InputEvent.DEVICE_ID_EMULATION:
+				# Tap Android : aucun mouvement émulé, seul ce clic (déjà ramené à la pointe) → le curseur s'y pose
+				_curseur.position = event.position
+				_dernier_point = event.position
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
 					_bouton_tenu = MOUSE_BUTTON_LEFT
@@ -149,6 +155,13 @@ func _input(event: InputEvent) -> void:
 		elif event.button_index == _bouton_tenu:
 			# Relâchement du bouton tenu → retour à la traînée normale
 			_bouton_tenu = 0
+
+
+## Android : le doigt déplace le curseur, la POINTE vise (clics, croix) — cf. visee_pointe.gd.
+func _brancher_visee() -> void:
+	var visee: Node = ViseePointe.new()
+	visee.curseur = _curseur
+	add_child(visee)
 
 
 # --- Sortie du jeu ---------------------------------------------------------
