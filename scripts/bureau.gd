@@ -74,6 +74,7 @@ var _sons_clics := true
 var _lecteurs := {}
 var _dernier_point := Vector2.ZERO
 var _distance_cumulee := 0.0
+var _doigt := -1  # index du doigt que la coccinelle suit (-1 = aucun doigt posé)
 
 
 func _ready() -> void:
@@ -181,10 +182,11 @@ func _creer_curseur_et_effets() -> void:
 	# Mode tactile : l'appui long vaut clic droit (étoiles + carillon, selon réglages)
 	var tactile: Node = Tactile.new()
 	add_child(tactile)
+	# (au doigt, les étoiles naissent sous la pointe de la coccinelle, pas sous le doigt)
 	tactile.appui_long.connect(func(ou: Vector2) -> void:
 		_curseur.pulser()
 		if _anim_droit:
-			_animation_etoiles(ou)
+			_animation_etoiles(_curseur.position if _doigt != -1 else ou)
 		if _sons_clics:
 			_lecteurs["etoiles"].play())
 
@@ -195,31 +197,71 @@ func _input(event: InputEvent) -> void:
 		_fermer_menu()
 		get_viewport().set_input_as_handled()
 		return
+	# DOIGT (Android) — la coccinelle se pose AU TOUCHER, pas seulement au glissé.
+	# Godot ne fabrique, pour un tap, qu'un clic souris émulé : aucun mouvement. Le
+	# curseur, qui ne suivait que les mouvements, restait donc là où il était. On le
+	# pilote ici par le VRAI tactile (les ScreenTouch émulés depuis la souris du PC
+	# portent DEVICE_ID_EMULATION et sont ignorés : la souris de bureau est inchangée).
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return
+		if event is InputEventScreenTouch:
+			if event.pressed and _doigt == -1:
+				_doigt = event.index
+				_poser_au_doigt(event.position)
+			elif not event.pressed and event.index == _doigt:
+				_doigt = -1
+		elif event.index == _doigt:
+			_suivre_point(_curseur.pointe_pour_doigt(event.position, get_viewport().get_visible_rect()))
+		return
 	if event is InputEventMouseMotion:
-		_curseur.position = event.position
-		if _trainee_active:
-			_distance_cumulee += event.position.distance_to(_dernier_point)
-			if _distance_cumulee >= PAS_TRAINEE:
-				_distance_cumulee = 0.0
-				_poser_etoile(
-					event.position + Vector2(randf_range(-10, 10), randf_range(-10, 10)),
-					COULEURS_TRAINEE.pick_random(), randf_range(13, 19),
-					Vector2(0, randf_range(20, 60)), 60.0, randf_range(0.5, 0.8))
-		_dernier_point = event.position
+		# Mouvement émulé depuis un doigt : déjà suivi (avec son décalage) par ScreenDrag
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return
+		_suivre_point(event.position)
 	elif event is InputEventMouseButton and event.pressed:
+		var ou: Vector2 = event.position
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			# Clic émulé d'un doigt : il arrive AVANT son ScreenTouch (ordre du moteur) →
+			# on pose la coccinelle tout de suite, et le clic part à sa pointe (7 différences).
+			ou = _poser_au_doigt(ou)
 		# Inversion 2026-07-07 : gauche = fleurs + pop, droit = étoiles + carillon
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_curseur.pulser()
 			if _anim_gauche:
-				_animation_fleurs(event.position)
+				_animation_fleurs(ou)
 			if _sons_clics:
 				_lecteurs["fleurs"].play()  # pop joyeux — le son des fleurs
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_curseur.pulser()
 			if _anim_droit:
-				_animation_etoiles(event.position)
+				_animation_etoiles(ou)
 			if _sons_clics:
 				_lecteurs["etoiles"].play()  # carillon — le son des étoiles
+
+
+## Le curseur suit un point (souris, ou pointe d'un doigt qui glisse) + traînée d'étoiles.
+func _suivre_point(point: Vector2) -> void:
+	_curseur.position = point
+	if _trainee_active:
+		_distance_cumulee += point.distance_to(_dernier_point)
+		if _distance_cumulee >= PAS_TRAINEE:
+			_distance_cumulee = 0.0
+			_poser_etoile(
+				point + Vector2(randf_range(-10, 10), randf_range(-10, 10)),
+				COULEURS_TRAINEE.pick_random(), randf_range(13, 19),
+				Vector2(0, randf_range(20, 60)), 60.0, randf_range(0.5, 0.8))
+	_dernier_point = point
+
+
+## Doigt qui se pose : la coccinelle y saute (pas de traînée sur le saut), ancre sous
+## le doigt, pointe légèrement décalée. Rend la position de la pointe.
+func _poser_au_doigt(doigt: Vector2) -> Vector2:
+	var pointe: Vector2 = _curseur.pointe_pour_doigt(doigt, get_viewport().get_visible_rect())
+	_curseur.position = pointe
+	_dernier_point = pointe
+	_distance_cumulee = 0.0
+	return pointe
 
 
 ## Version « bureau » de l'explosion d'étoiles — plus légère que dans le jeu.

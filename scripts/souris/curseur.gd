@@ -33,6 +33,22 @@ const HOTSPOTS := {
 	"abeille": Vector2(0.128, 0.081),
 	"coccinelle": Vector2(0.127, 0.081),
 }
+## AU DOIGT (tactile) : le point de l'image qui se pose SOUS le doigt, en fractions
+## largeur/hauteur — repris tel quel du jeu des 7 différences (CURSEURS[i]["ancre"],
+## marqués par Fabrice, mêmes images au pixel près). Le point actif reste le hotspot :
+## la cible est donc légèrement décalée du doigt, qui ne la masque plus.
+const ANCRES := {
+	"main": Vector2(0.518, 0.753),
+	"abeille": Vector2(0.534, 0.585),
+	"coccinelle": Vector2(0.533, 0.594),
+}
+## Même chose pour les replis dessinés par code (pixels locaux, échelle 1) : le milieu du corps.
+const ANCRES_DESSIN := {
+	"fleche": Vector2(14, 36),
+	"main": Vector2(2, 44),
+	"abeille": Vector2(27, 31),
+	"coccinelle": Vector2(27, 31),
+}
 
 # Silhouette de flèche classique, grande (~58 px de haut à l'échelle 1)
 const POINTS_FLECHE: Array[Vector2] = [
@@ -110,6 +126,32 @@ func _draw() -> void:
 			_dessiner_insecte(Color(0.85, 0.22, 0.18), false)
 		_:
 			_dessiner_fleche()
+
+
+## Où poser le point actif pour un doigt en `doigt` : décalé pour que l'ANCRE tombe
+## sous le doigt (mécanique des 7 différences, B10/B14). Près du bord HAUT, et du
+## bord vers lequel la cible s'écarte, le décalage fond jusqu'à zéro : ces bords
+## restent atteignables (curseur alors sous le doigt).
+func pointe_pour_doigt(doigt: Vector2, zone: Rect2) -> Vector2:
+	var plein := decalage_doigt()
+	var dy := -clampf(doigt.y - zone.position.y, 0.0, maxf(0.0, -plein.y))
+	var dx: float
+	if plein.x < 0.0:
+		dx = -clampf(zone.end.x - doigt.x, 0.0, -plein.x)
+	else:
+		dx = clampf(doigt.x - zone.position.x, 0.0, plein.x)
+	return doigt + Vector2(dx, dy)
+
+
+## Vecteur doigt → point actif, à la taille réglée (sans l'écrasement du clic).
+func decalage_doigt() -> Vector2:
+	var ancre_locale: Vector2
+	if _texture != null:
+		var taille: Vector2 = _texture.get_size() * (HAUTEUR_IMAGE / _texture.get_size().y)
+		ancre_locale = ((ANCRES.get(_forme, Vector2(0.5, 0.5)) as Vector2) - (HOTSPOTS[_forme] as Vector2)) * taille
+	else:
+		ancre_locale = ANCRES_DESSIN.get(_forme, Vector2.ZERO)
+	return -ancre_locale * _echelle_base
 
 
 ## Écrasement/rebond au clic — le curseur « vit ».
