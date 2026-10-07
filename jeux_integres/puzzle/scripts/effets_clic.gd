@@ -26,6 +26,13 @@ extends Node
 # ⚠ LA ROULETTE N'EST PAS UNE FONTAINE : une molette envoie une rafale d'événements par geste. Le son `tic` suit
 #   chaque cran (comme la découverte), mais une fleur au plus tous les `ROULETTE_INTERVALLE_MS`.
 # ⚠ LES LECTEURS PASSENT PAR LE BUS DU JEU (`SonPuzzle.router`) : la barre de volume de l'accueil les règle.
+#
+# (#192, 07-10-2026) ET AU DOIGT — Fabrice, testé sur son téléphone : « Sur Android, pas de fleurs ni de son : il
+#   n'y a pas de souris. On peut faire l'effort de mettre des sons au TOUCHÉ, avec les fleurs. » Quatrième entrée
+#   `"doigt"` : un appui = la même ronde que le clic gauche + le même son (`pop_joyeux`, joué par le MÊME lecteur
+#   — pas de quatrième). Le doigt n'a qu'un geste, donc pas de droit ni de roulette.
+# ⚠ LE DOIGT N'EST PAS UNE FONTAINE NON PLUS : fleur ET son au plus tous les `DOIGT_INTERVALLE_MS` — une rafale de
+#   tapes ou plusieurs doigts posés ensemble font UNE ronde. (Le glissé n'en fait aucune : seul l'APPUI appelle.)
 # ============================================================================================================
 
 const Fleur := preload("res://jeux_integres/puzzle/scripts/fleur_clic.gd")
@@ -33,6 +40,7 @@ const Sons := preload("res://jeux_integres/puzzle/scripts/sons_clic.gd")
 
 const CALQUE := 26
 const ROULETTE_INTERVALLE_MS := 120
+const DOIGT_INTERVALLE_MS := 120
 const COULEURS_FLEURS: Array[Color] = [
 	Color(1.0, 0.45, 0.7), Color(0.8, 0.5, 0.95), Color(0.5, 0.6, 1.0), Color(1.0, 0.6, 0.85),
 ]
@@ -40,7 +48,8 @@ const COULEURS_FLEURS: Array[Color] = [
 var _calque_effets: Node2D
 var _lecteurs := {}
 var _derniere_roulette := -100000
-var compte := {"gauche": 0, "droit": 0, "roulette": 0}   # lu par la preuve
+var _dernier_doigt := -100000
+var compte := {"gauche": 0, "droit": 0, "roulette": 0, "doigt": 0}   # lu par la preuve
 
 
 func _ready() -> void:
@@ -60,8 +69,17 @@ func _ready() -> void:
 		_lecteurs[cle] = lecteur
 
 
-## `cle` : "gauche", "droit" ou "roulette" ; `ou` en coordonnées d'écran.
+## `cle` : "gauche", "droit", "roulette" ou "doigt" ; `ou` en coordonnées d'écran.
 func cliquer(cle: String, ou: Vector2) -> void:
+	if cle == "doigt":
+		var instant := Time.get_ticks_msec()
+		if instant - _dernier_doigt < DOIGT_INTERVALLE_MS:
+			return
+		_dernier_doigt = instant
+		_lecteurs["gauche"].play()            # le son du clic gauche, son lecteur : rien de dupliqué
+		compte[cle] += 1
+		_animation_fleurs(ou)
+		return
 	if not _lecteurs.has(cle):
 		return
 	_lecteurs[cle].play()
