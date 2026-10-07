@@ -85,6 +85,7 @@
 	<texte cle="interface_plein_ecran">Plein écran au lancement</texte>
 	<texte cle="interface_pin_eteindre">Protéger le bouton éteindre par le code PIN</texte>
 	<texte cle="interface_mode_tactile">Mode écran tactile (appui long = clic droit, clavier virtuel)</texte>
+	<texte cle="interface_menu_contextuel">Menu du bureau (mode tactile : appui long à côté des icônes)</texte>
 	<texte cle="interface_bouton_volume">Bouton de volume pour l'enfant (barre des tâches)</texte>
 	<texte cle="interface_bureau_telephone">📱 Choisir le bureau du téléphone (mode kiosque)…</texte>
 

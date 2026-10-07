@@ -79,6 +79,9 @@ var _lecteurs := {}
 var _dernier_point := Vector2.ZERO
 var _distance_cumulee := 0.0
 var _doigt := -1  # index du doigt que la coccinelle suit (-1 = aucun doigt posé)
+var _menu_contextuel := false  # option parent : appui long sur le bureau nu = bulle de menu
+var _bulle: Control = null  # voile plein écran portant la bulle de menu (null = fermée)
+var _appui_sur_bureau := false  # le dernier appui gauche est tombé sur le bureau nu
 
 
 func _ready() -> void:
@@ -183,22 +186,55 @@ func _creer_curseur_et_effets() -> void:
 	_dernier_point = get_viewport().get_mouse_position()
 	_curseur.position = _dernier_point
 
-	# Mode tactile : l'appui long vaut clic droit (étoiles + carillon, selon réglages)
+	# Mode tactile : l'appui long soulève l'icône touchée ; ailleurs il vaut
+	# clic droit (étoiles + carillon) — ou ouvre la bulle de menu (option parent)
+	_menu_contextuel = PinConfig.lire_option("interface", "menu_contextuel_bureau", false)
 	var tactile: Node = Tactile.new()
 	add_child(tactile)
-	# (au doigt, les étoiles naissent sous la pointe de la coccinelle, pas sous le doigt)
-	tactile.appui_long.connect(func(ou: Vector2) -> void:
-		_curseur.pulser()
-		if _anim_droit:
-			_animation_etoiles(_curseur.position if _doigt != -1 else ou)
-		if _sons_clics:
-			_lecteurs["etoiles"].play())
+	tactile.appui_long.connect(_sur_appui_long)
+
+
+## Appui long au doigt. SUR une icône du bureau : elle se soulève et suit le doigt.
+## Sur le bureau nu, avec l'option parent : la bulle de menu (à la place des
+## étoiles). Sinon : clic droit — étoiles + carillon, nés sous la pointe de la
+## coccinelle, pas sous le doigt.
+func _sur_appui_long(ou: Vector2) -> void:
+	for icone in _icones:
+		if is_instance_valid(icone) and icone.contient(ou) and icone.soulever():
+			return
+	if _menu_contextuel and _appui_sur_bureau and not _sur_une_icone(ou):
+		_ouvrir_bulle(ou)
+		return
+	_curseur.pulser()
+	if _anim_droit:
+		_animation_etoiles(_curseur.position if _doigt != -1 else ou)
+	if _sons_clics:
+		_lecteurs["etoiles"].play()
+
+
+## Le point tombe-t-il sur une icône du bureau (bouton ou libellé) ?
+func _sur_une_icone(point: Vector2) -> bool:
+	for icone in _icones:
+		if is_instance_valid(icone) and icone.get_global_rect().has_point(point):
+			return true
+	return false
+
+
+## Appui reçu par le bureau lui-même : aucun enfant (icône, fenêtre, barre) ne l'a pris.
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed:
+		_appui_sur_bureau = true
 
 
 func _input(event: InputEvent) -> void:
 	# Échap ferme la boîte à icônes si elle est ouverte (avant tout le reste)
 	if _menu != null and event.is_action_pressed("ui_cancel"):
 		_fermer_menu()
+		get_viewport().set_input_as_handled()
+		return
+	if _bulle != null and event.is_action_pressed("ui_cancel"):
+		_fermer_bulle()
 		get_viewport().set_input_as_handled()
 		return
 	# DOIGT (Android) — la coccinelle se pose AU TOUCHER, pas seulement au glissé.
@@ -224,6 +260,8 @@ func _input(event: InputEvent) -> void:
 			return
 		_suivre_point(event.position)
 	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_appui_sur_bureau = false  # _gui_input le remettra si le bureau nu le reçoit
 		var ou: Vector2 = event.position
 		if event.device == InputEvent.DEVICE_ID_EMULATION:
 			# Clic émulé d'un doigt : il arrive AVANT son ScreenTouch (ordre du moteur) →
@@ -354,8 +392,9 @@ func _creer_icones() -> void:
 		elif _places_courantes.has(icone.id):
 			icone.position = _places_courantes[icone.id]
 		icone.limite_basse = hauteur_barre
-		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
-		icone.deplacable = not Tactile.actif()
+		# Au doigt, un doigt qui dérive doit rester un tap : seul l'appui long soulève
+		icone.deplacable = true
+		icone.par_appui_long = Tactile.actif()
 		icone.lancee.connect(_lancer_appli)
 		icone.deplacee.connect(_memoriser_place_icone)
 		icone.survol.connect(_viser_dossier)
@@ -776,6 +815,9 @@ func _eteindre() -> void:
 
 const COULEUR_TITRE_MENU := Color(0.90, 0.33, 0.24)  # barre de titre de la boîte
 const COLONNES_MENU := 5
+const TAILLE_BULLE := Vector2(260, 180)  # bulle de menu du bureau (vide pour l'instant)
+const COULEUR_BULLE := Color(0.98, 0.97, 0.93)  # ivoire des fenêtres
+const COULEUR_BORD_BULLE := Color(0.13, 0.17, 0.28)  # bord sombre : la bulle se lit par la luminance
 
 ## TOUTES les applications lançables, à plat : les jeux des catégories, les
 ## applis directes, les externes cochées et les applis du téléphone — triées
@@ -866,6 +908,41 @@ func _basculer_menu() -> void:
 	_centrer_fenetre.call_deferred(fenetre)
 	if premiere != null:
 		premiere.ready.connect(premiere.focus, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+
+## Bulle de menu du bureau (option parent, appui long sur le bureau nu) : un
+## cadre VIDE pour l'instant — son contenu est un chantier à venir. Posée sur
+## un voile transparent : un tap en dehors de la bulle la referme.
+func _ouvrir_bulle(ou: Vector2) -> void:
+	_fermer_bulle()
+	var voile := Control.new()
+	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
+	voile.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_fermer_bulle())
+	add_child(voile)
+	_bulle = voile
+
+	var bulle := Panel.new()
+	bulle.size = TAILLE_BULLE
+	var style := UIStyle.creer_style(COULEUR_BULLE, 22)
+	style.set_border_width_all(4)
+	style.border_color = COULEUR_BORD_BULLE
+	bulle.add_theme_stylebox_override("panel", style)
+	# Le doigt reste au coin haut-gauche ; la bulle tient dans l'écran, au-dessus de la barre
+	var zone := get_viewport().get_visible_rect().size - Vector2(0, hauteur_barre)
+	bulle.position = Vector2(
+		clampf(ou.x, 0.0, maxf(0.0, zone.x - TAILLE_BULLE.x)),
+		clampf(ou.y, 0.0, maxf(0.0, zone.y - TAILLE_BULLE.y)))
+	voile.add_child(bulle)
+
+
+func _fermer_bulle() -> void:
+	if _bulle == null:
+		return
+	var voile := _bulle
+	_bulle = null
+	voile.queue_free()
 
 
 func _fermer_menu() -> void:

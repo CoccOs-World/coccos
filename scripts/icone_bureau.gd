@@ -8,6 +8,9 @@
 ## Sur le bureau (`deplacable`), clic gauche MAINTENU + déplacement au-delà de
 ## SEUIL_GLISSE : l'icône se soulève, suit la souris et se pose au relâché
 ## (signal `deplacee`) — sans lancer l'application.
+## Au doigt (`par_appui_long`, mode tactile) : un doigt qui dérive reste un tap ;
+## seul l'APPUI LONG posé sur l'icône la soulève (`soulever()`, appelé par le
+## bureau), puis elle suit le doigt et se pose au relâché, comme à la souris.
 ## Rangement : pendant le vol, `survol` dit où passe la souris (le bureau signale
 ## le dossier visé) ; au relâché, `lachee` dit où elle a été lâchée. Dans une
 ## fenêtre-dossier (`rangeable`), le jeu se soulève de la même façon et peut
@@ -36,6 +39,7 @@ var chemin_image := ""  # PNG hors ressources (user:// — icônes du téléphon
 
 var deplacable := false  # bureau seulement (pas les fenêtres ni la boîte à icônes)
 var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches)
+var par_appui_long := false  # mode tactile : seul l'appui long soulève l'icône
 var rangeable := false  # jeu dans une fenêtre-dossier : glissé = le ressortir
 
 var _btn: Button
@@ -199,15 +203,30 @@ func _sur_saisie_bouton(event: InputEvent) -> void:
 				deplacee.emit(id, position)
 	elif event is InputEventMouseMotion and _appui:
 		var ici := _dans_le_parent(event.global_position)
-		if not _glisse and ici.distance_to(_origine) >= SEUIL_GLISSE:
-			_glisse = true
-			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
-			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
-			z_index = 1  # passe au-dessus des autres icônes pendant le vol
+		if not _glisse and not par_appui_long and ici.distance_to(_origine) >= SEUIL_GLISSE:
+			_prendre_le_vol()
 		if _glisse:
 			position = ici - _prise
 			garder_dans_l_ecran()
 			survol.emit(id, event.global_position)
+
+
+## L'icône se soulève : elle grossit, s'éclaircit et passe au-dessus des autres.
+func _prendre_le_vol() -> void:
+	_glisse = true
+	scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+	modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+	z_index = 1  # passe au-dessus des autres icônes pendant le vol
+
+
+## Appui long au doigt posé SUR l'icône : elle se soulève sans attendre que le
+## doigt bouge. Faux si le doigt n'est pas posé sur elle (rien n'est soulevé).
+func soulever() -> bool:
+	if not deplacable or not _appui:
+		return false
+	if not _glisse:
+		_prendre_le_vol()
+	return true
 
 
 ## Jeu dans une fenêtre-dossier : maintien + déplacement = il se soulève et suit

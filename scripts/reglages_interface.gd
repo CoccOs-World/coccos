@@ -103,6 +103,18 @@ func _ready() -> void:
 		PinConfig.ecrire_option("interface", "mode_tactile", actif))
 	vbox.add_child(case_tactile)
 
+	# --- Menu du bureau : appui long au doigt sur le bureau nu = bulle de menu
+	#     (décochée par défaut : l'appui long y garde les étoiles) ---
+	var case_menu := CheckBox.new()
+	case_menu.text = " " + Lang.t("interface_menu_contextuel")
+	case_menu.add_theme_font_size_override("font_size", 28)
+	for etat in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		case_menu.add_theme_color_override(etat, Color.WHITE)
+	case_menu.button_pressed = PinConfig.lire_option("interface", "menu_contextuel_bureau", false)
+	case_menu.toggled.connect(func(actif: bool) -> void:
+		PinConfig.ecrire_option("interface", "menu_contextuel_bureau", actif))
+	vbox.add_child(case_menu)
+
 	# --- Bouton de volume enfant (barre des tâches) — cochée par défaut ---
 	var case_volume := CheckBox.new()
 	case_volume.text = " " + Lang.t("interface_bouton_volume")
