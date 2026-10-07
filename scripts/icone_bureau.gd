@@ -1,7 +1,9 @@
 ## Icône du bureau enfant : bouton carré arrondi coloré avec pictogramme,
 ## et libellé blanc en dessous — comme une icône de vrai bureau d'ordinateur.
 ## Les catégories (`est_dossier`) prennent une forme de dossier à onglet,
-## avec le pictogramme posé sur le corps du dossier.
+## avec le pictogramme posé sur le corps du dossier. Une catégorie qui a son
+## image `assets/icones/dossiers/<id>.png` garde la forme dossier, habillée en
+## coccinelle : liseré blanc, fond rouge à pois noirs, l'image au centre.
 ## Un simple clic lance l'application (adapté aux enfants : pas de double-clic).
 extends VBoxContainer
 
@@ -48,15 +50,22 @@ func _ready() -> void:
 
 		var dossier := _IconeDossier.new()
 		dossier.couleur = couleur
+		var chemin_deco := "res://assets/icones/dossiers/%s.png" % id
+		if ResourceLoader.exists(chemin_deco):
+			# Dossier coccinelle : l'image centrale remplace le pictogramme
+			dossier.image_centre = load(chemin_deco)
+			dossier.couleur = _IconeDossier.ROUGE_COCCINELLE
+			return_apres_image = true
+		var couleur_dossier := dossier.couleur
 		dossier.set_anchors_preset(Control.PRESET_FULL_RECT)
 		dossier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_btn.add_child(dossier)
 		# Survol : le dossier s'éclaircit (retour visuel du bouton transparent)
 		_btn.mouse_entered.connect(func() -> void:
-			dossier.couleur = couleur.lightened(0.15)
+			dossier.couleur = couleur_dossier.lightened(0.15)
 			dossier.queue_redraw())
 		_btn.mouse_exited.connect(func() -> void:
-			dossier.couleur = couleur
+			dossier.couleur = couleur_dossier
 			dossier.queue_redraw())
 
 		# Pictogramme plus petit, posé sur le corps du dossier
@@ -134,10 +143,26 @@ func focus() -> void:
 
 
 ## Dossier à onglet dessiné par code (couleur de la catégorie).
+## Avec `image_centre` : même forme, habillée en coccinelle (liseré blanc,
+## pois noirs, l'image posée au centre du corps).
 class _IconeDossier extends Control:
+	const ROUGE_COCCINELLE := Color8(232, 37, 37)
+	const NOIR_POIS := Color8(3, 3, 2)
+	## Pois noirs (x, y, rayon) en fractions de la largeur/hauteur, hors du centre
+	const POIS := [
+		Vector3(0.27, 0.13, 0.045), Vector3(0.63, 0.25, 0.035),
+		Vector3(0.10, 0.37, 0.045), Vector3(0.90, 0.36, 0.040),
+		Vector3(0.09, 0.62, 0.035), Vector3(0.91, 0.63, 0.045),
+		Vector3(0.14, 0.87, 0.045), Vector3(0.50, 0.905, 0.028),
+		Vector3(0.86, 0.87, 0.040),
+	]
 	var couleur := Color(0.3, 0.5, 0.8)
+	var image_centre: Texture2D = null
 
 	func _draw() -> void:
+		if image_centre != null:
+			_dessiner_coccinelle()
+			return
 		var w := size.x
 		var h := size.y
 		var ci := get_canvas_item()
@@ -158,3 +183,42 @@ class _IconeDossier extends Control:
 		rabat.corner_radius_top_left = 12
 		rabat.corner_radius_top_right = 12
 		rabat.draw(ci, Rect2(0.0, h * 0.16, w, h * 0.12))
+
+	func _dessiner_coccinelle() -> void:
+		var w := size.x
+		var h := size.y
+		var ci := get_canvas_item()
+		var l := maxf(2.0, w * 0.04)  # épaisseur du liseré blanc
+		# Silhouette blanche (onglet + corps) : elle fait le liseré
+		var onglet_blanc := StyleBoxFlat.new()
+		onglet_blanc.bg_color = Color.WHITE
+		onglet_blanc.corner_radius_top_left = 10
+		onglet_blanc.corner_radius_top_right = 10
+		onglet_blanc.draw(ci, Rect2(w * 0.05, h * 0.03, w * 0.44, h * 0.22))
+		var corps_blanc := StyleBoxFlat.new()
+		corps_blanc.bg_color = Color.WHITE
+		corps_blanc.set_corner_radius_all(12)
+		corps_blanc.draw(ci, Rect2(0.0, h * 0.16, w, h * 0.84))
+		# Même silhouette en rouge, rentrée de l'épaisseur du liseré
+		var onglet := StyleBoxFlat.new()
+		onglet.bg_color = couleur.darkened(0.18)
+		onglet.corner_radius_top_left = int(10 - l / 2)
+		onglet.corner_radius_top_right = int(10 - l / 2)
+		onglet.draw(ci, Rect2(w * 0.05 + l, h * 0.03 + l, w * 0.44 - 2 * l, h * 0.22))
+		var corps := StyleBoxFlat.new()
+		corps.bg_color = couleur
+		corps.set_corner_radius_all(int(12 - l / 2))
+		corps.draw(ci, Rect2(l, h * 0.16 + l, w - 2 * l, h * 0.84 - 2 * l))
+		var rabat := StyleBoxFlat.new()
+		rabat.bg_color = couleur.lightened(0.12)
+		rabat.corner_radius_top_left = int(12 - l / 2)
+		rabat.corner_radius_top_right = int(12 - l / 2)
+		rabat.draw(ci, Rect2(l, h * 0.16 + l, w - 2 * l, h * 0.12))
+		for p: Vector3 in POIS:
+			draw_circle(Vector2(w * p.x, h * p.y), w * p.z, NOIR_POIS, true, -1.0, true)
+		# Image au centre du corps, proportions gardées
+		var cadre := Rect2(w * 0.17, h * 0.31, w * 0.66, h * 0.58)
+		var t := image_centre.get_size()
+		var echelle := minf(cadre.size.x / t.x, cadre.size.y / t.y)
+		var taille := t * echelle
+		draw_texture_rect(image_centre, Rect2(cadre.get_center() - taille / 2.0, taille), false)
