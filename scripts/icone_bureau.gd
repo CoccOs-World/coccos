@@ -1,11 +1,28 @@
 ## Icône du bureau enfant : bouton carré arrondi coloré avec pictogramme,
 ## et libellé blanc en dessous — comme une icône de vrai bureau d'ordinateur.
 ## Les catégories (`est_dossier`) prennent une forme de dossier à onglet,
-## avec le pictogramme posé sur le corps du dossier.
+## avec le pictogramme posé sur le corps du dossier. Une catégorie qui a son
+## image `assets/icones/dossiers/<id>.png` garde la forme dossier, habillée en
+## coccinelle : liseré blanc, fond rouge à pois noirs, l'image au centre.
 ## Un simple clic lance l'application (adapté aux enfants : pas de double-clic).
+## Sur le bureau (`deplacable`), clic gauche MAINTENU + déplacement au-delà de
+## SEUIL_GLISSE : l'icône se soulève, suit la souris et se pose au relâché
+## (signal `deplacee`) — sans lancer l'application.
+## Rangement : pendant le vol, `survol` dit où passe la souris (le bureau signale
+## le dossier visé) ; au relâché, `lachee` dit où elle a été lâchée. Dans une
+## fenêtre-dossier (`rangeable`), le jeu se soulève de la même façon et peut
+## être lâché HORS de la fenêtre pour le ressortir sur le bureau.
 extends VBoxContainer
 
 signal lancee(id: String)
+signal deplacee(id: String, position: Vector2)
+signal survol(id: String, point: Vector2)
+signal lachee(id: String, point: Vector2, coin: Vector2)
+
+const SEUIL_GLISSE := 10.0  # px : en deçà, c'est un clic (mains tremblantes)
+const ECHELLE_SOULEVEE := 1.12  # l'icône « soulevée » grossit…
+const OPACITE_SOULEVEE := 0.85  # … et s'éclaircit un peu (pas la couleur seule)
+const ECHELLE_CIBLE := 1.15  # dossier visé par un glissé : il grossit ET s'éclaircit
 
 const UIStyle := preload("res://scripts/ui_style.gd")
 const Pictogramme := preload("res://scripts/pictogramme.gd")
@@ -17,8 +34,20 @@ var est_dossier := false  # true = catégorie : dessinée comme un dossier à on
 var picto := ""  # pictogramme à dessiner si différent de l'id (applis externes)
 var chemin_image := ""  # PNG hors ressources (user:// — icônes du téléphone)
 
+var deplacable := false  # bureau seulement (pas les fenêtres ni la boîte à icônes)
+var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches)
+var rangeable := false  # jeu dans une fenêtre-dossier : glissé = le ressortir
+
 var _btn: Button
+var _appui := false  # clic gauche maintenu sur le bouton
+var _origine := Vector2.ZERO  # point d'appui (coordonnées du parent)
+var _prise := Vector2.ZERO  # écart curseur ↔ coin de l'icône au moment de l'appui
+var _glisse := false  # le maintien est devenu un déplacement
+var _a_glisse := false  # le dernier relâché terminait un déplacement : pas de lancement
 var return_apres_image := false  # une icône-image remplace le pictogramme
+var _dossier: Control = null  # le dessin du dossier (catégorie) — éclairci quand visé
+var _visee := false  # dossier actuellement visé par un jeu en vol
+var _couleur_dossier := Color.WHITE  # teinte de repos du dossier (rouge coccinelle s'il est décoré)
 
 
 func _ready() -> void:
@@ -48,16 +77,26 @@ func _ready() -> void:
 
 		var dossier := _IconeDossier.new()
 		dossier.couleur = couleur
+		var chemin_deco := "res://assets/icones/dossiers/%s.png" % id
+		if ResourceLoader.exists(chemin_deco):
+			# Dossier coccinelle : l'image centrale remplace le pictogramme
+			dossier.image_centre = load(chemin_deco)
+			dossier.couleur = _IconeDossier.ROUGE_COCCINELLE
+			return_apres_image = true
+		var couleur_dossier := dossier.couleur
+		_couleur_dossier = couleur_dossier
 		dossier.set_anchors_preset(Control.PRESET_FULL_RECT)
 		dossier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_btn.add_child(dossier)
+		_dossier = dossier
 		# Survol : le dossier s'éclaircit (retour visuel du bouton transparent)
 		_btn.mouse_entered.connect(func() -> void:
-			dossier.couleur = couleur.lightened(0.15)
+			dossier.couleur = couleur_dossier.lightened(0.15)
 			dossier.queue_redraw())
 		_btn.mouse_exited.connect(func() -> void:
-			dossier.couleur = couleur
-			dossier.queue_redraw())
+			if not _visee:
+				dossier.couleur = couleur_dossier
+				dossier.queue_redraw())
 
 		# Pictogramme plus petit, posé sur le corps du dossier
 		picto_ctrl.offset_left = 26
@@ -125,7 +164,115 @@ func _ready() -> void:
 	libelle.add_theme_constant_override("outline_size", 6)
 	add_child(libelle)
 
-	_btn.pressed.connect(func() -> void: lancee.emit(id))
+	_btn.pressed.connect(func() -> void:
+		if _a_glisse:
+			_a_glisse = false
+			return
+		lancee.emit(id))
+	if deplacable:
+		_btn.gui_input.connect(_sur_saisie_bouton)
+	elif rangeable:
+		_btn.gui_input.connect(_sur_saisie_fenetre)
+	pivot_offset = size / 2.0
+	resized.connect(func() -> void: pivot_offset = size / 2.0)
+
+
+## Maintien + déplacement = glisser l'icône ; simple clic = laissé au bouton.
+func _sur_saisie_bouton(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var ici := _dans_le_parent(event.global_position)
+		if event.pressed:
+			_appui = true
+			_a_glisse = false
+			_origine = ici
+			_prise = ici - position
+		elif _appui:
+			_appui = false
+			if _glisse:
+				_glisse = false
+				_a_glisse = true  # le `pressed` du bouton suit : il ne lancera rien
+				scale = Vector2.ONE
+				modulate = Color.WHITE
+				z_index = 0
+				garder_dans_l_ecran()
+				lachee.emit(id, event.global_position, position)
+				deplacee.emit(id, position)
+	elif event is InputEventMouseMotion and _appui:
+		var ici := _dans_le_parent(event.global_position)
+		if not _glisse and ici.distance_to(_origine) >= SEUIL_GLISSE:
+			_glisse = true
+			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+			z_index = 1  # passe au-dessus des autres icônes pendant le vol
+		if _glisse:
+			position = ici - _prise
+			garder_dans_l_ecran()
+			survol.emit(id, event.global_position)
+
+
+## Jeu dans une fenêtre-dossier : maintien + déplacement = il se soulève et suit
+## la souris par-dessus tout (top_level, hors de la rangée) ; au relâché, le
+## bureau décide (`lachee`) — hors de la fenêtre, il ressort sur le bureau.
+## Simple clic = laissé au bouton (lance le jeu, comme avant).
+func _sur_saisie_fenetre(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_appui = true
+			_a_glisse = false
+			_origine = event.global_position
+			_prise = event.global_position - global_position
+		elif _appui:
+			_appui = false
+			if _glisse:
+				_glisse = false
+				_a_glisse = true  # le `pressed` du bouton suit : il ne lancera rien
+				scale = Vector2.ONE
+				modulate = Color.WHITE
+				z_index = 0
+				var coin := global_position
+				top_level = false  # reprend sa place dans la rangée…
+				if get_parent() is Container:
+					(get_parent() as Container).queue_sort()
+				lachee.emit(id, event.global_position, coin)  # … sauf si le bureau le ressort
+	elif event is InputEventMouseMotion and _appui:
+		if not _glisse and event.global_position.distance_to(_origine) >= SEUIL_GLISSE:
+			_glisse = true
+			var ici := global_position
+			top_level = true  # quitte la rangée : libre de sortir de la fenêtre
+			global_position = ici
+			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+			z_index = 1
+		if _glisse:
+			global_position = event.global_position - _prise
+
+
+## Dossier visé (ou plus) par un jeu en vol : il grossit et s'éclaircit —
+## la taille porte l'information autant que la teinte (daltonisme).
+func signaler_cible(oui: bool) -> void:
+	if _dossier == null or oui == _visee:
+		return
+	_visee = oui
+	_dossier.couleur = _couleur_dossier.lightened(0.3) if oui else _couleur_dossier
+	_dossier.queue_redraw()
+	scale = Vector2(ECHELLE_CIBLE, ECHELLE_CIBLE) if oui else Vector2.ONE
+
+
+## Le point (viewport) tombe-t-il sur le bouton de l'icône ?
+func contient(point: Vector2) -> bool:
+	return _btn != null and _btn.get_global_rect().has_point(point)
+
+
+## Point du viewport ramené dans le repère du parent (le bureau).
+func _dans_le_parent(point: Vector2) -> Vector2:
+	return get_parent_control().get_global_transform().affine_inverse() * point
+
+
+## L'icône reste entière dans l'écran, au-dessus de la barre des tâches.
+func garder_dans_l_ecran() -> void:
+	var zone: Vector2 = get_parent_area_size()
+	position.x = clampf(position.x, 0.0, maxf(0.0, zone.x - size.x))
+	position.y = clampf(position.y, 0.0, maxf(0.0, zone.y - limite_basse - size.y))
 
 
 ## Donne le focus clavier au bouton de l'icône (accessibilité).
@@ -134,10 +281,26 @@ func focus() -> void:
 
 
 ## Dossier à onglet dessiné par code (couleur de la catégorie).
+## Avec `image_centre` : même forme, habillée en coccinelle (liseré blanc,
+## pois noirs, l'image posée au centre du corps).
 class _IconeDossier extends Control:
+	const ROUGE_COCCINELLE := Color8(232, 37, 37)
+	const NOIR_POIS := Color8(3, 3, 2)
+	## Pois noirs (x, y, rayon) en fractions de la largeur/hauteur, hors du centre
+	const POIS := [
+		Vector3(0.27, 0.13, 0.045), Vector3(0.63, 0.25, 0.035),
+		Vector3(0.10, 0.37, 0.045), Vector3(0.90, 0.36, 0.040),
+		Vector3(0.09, 0.62, 0.035), Vector3(0.91, 0.63, 0.045),
+		Vector3(0.14, 0.87, 0.045), Vector3(0.50, 0.905, 0.028),
+		Vector3(0.86, 0.87, 0.040),
+	]
 	var couleur := Color(0.3, 0.5, 0.8)
+	var image_centre: Texture2D = null
 
 	func _draw() -> void:
+		if image_centre != null:
+			_dessiner_coccinelle()
+			return
 		var w := size.x
 		var h := size.y
 		var ci := get_canvas_item()
@@ -158,3 +321,42 @@ class _IconeDossier extends Control:
 		rabat.corner_radius_top_left = 12
 		rabat.corner_radius_top_right = 12
 		rabat.draw(ci, Rect2(0.0, h * 0.16, w, h * 0.12))
+
+	func _dessiner_coccinelle() -> void:
+		var w := size.x
+		var h := size.y
+		var ci := get_canvas_item()
+		var l := maxf(2.0, w * 0.04)  # épaisseur du liseré blanc
+		# Silhouette blanche (onglet + corps) : elle fait le liseré
+		var onglet_blanc := StyleBoxFlat.new()
+		onglet_blanc.bg_color = Color.WHITE
+		onglet_blanc.corner_radius_top_left = 10
+		onglet_blanc.corner_radius_top_right = 10
+		onglet_blanc.draw(ci, Rect2(w * 0.05, h * 0.03, w * 0.44, h * 0.22))
+		var corps_blanc := StyleBoxFlat.new()
+		corps_blanc.bg_color = Color.WHITE
+		corps_blanc.set_corner_radius_all(12)
+		corps_blanc.draw(ci, Rect2(0.0, h * 0.16, w, h * 0.84))
+		# Même silhouette en rouge, rentrée de l'épaisseur du liseré
+		var onglet := StyleBoxFlat.new()
+		onglet.bg_color = couleur.darkened(0.18)
+		onglet.corner_radius_top_left = int(10 - l / 2)
+		onglet.corner_radius_top_right = int(10 - l / 2)
+		onglet.draw(ci, Rect2(w * 0.05 + l, h * 0.03 + l, w * 0.44 - 2 * l, h * 0.22))
+		var corps := StyleBoxFlat.new()
+		corps.bg_color = couleur
+		corps.set_corner_radius_all(int(12 - l / 2))
+		corps.draw(ci, Rect2(l, h * 0.16 + l, w - 2 * l, h * 0.84 - 2 * l))
+		var rabat := StyleBoxFlat.new()
+		rabat.bg_color = couleur.lightened(0.12)
+		rabat.corner_radius_top_left = int(12 - l / 2)
+		rabat.corner_radius_top_right = int(12 - l / 2)
+		rabat.draw(ci, Rect2(l, h * 0.16 + l, w - 2 * l, h * 0.12))
+		for p: Vector3 in POIS:
+			draw_circle(Vector2(w * p.x, h * p.y), w * p.z, NOIR_POIS, true, -1.0, true)
+		# Image au centre du corps, proportions gardées
+		var cadre := Rect2(w * 0.17, h * 0.31, w * 0.66, h * 0.58)
+		var t := image_centre.get_size()
+		var echelle := minf(cadre.size.x / t.x, cadre.size.y / t.y)
+		var taille := t * echelle
+		draw_texture_rect(image_centre, Rect2(cadre.get_center() - taille / 2.0, taille), false)

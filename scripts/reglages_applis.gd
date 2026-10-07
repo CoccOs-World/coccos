@@ -155,6 +155,13 @@ func _construire_liste() -> void:
 	titre.add_theme_color_override("font_color", Color.WHITE)
 	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	entete.add_child(titre)
+	# Geste adulte : annule les rangements de l'enfant (confirmation en 2 temps)
+	var btn_rangement := Button.new()
+	btn_rangement.text = Lang.t("logitheque_reinit_rangement")
+	btn_rangement.add_theme_font_size_override("font_size", 22)
+	UIStyle.styliser(btn_rangement, Color(0.55, 0.40, 0.20), 12)
+	btn_rangement.pressed.connect(_reinitialiser_rangement.bind(btn_rangement))
+	entete.add_child(btn_rangement)
 	var btn_retour := Button.new()
 	btn_retour.text = Lang.t("reglages_retour")
 	btn_retour.add_theme_font_size_override("font_size", 22)
@@ -608,6 +615,18 @@ func _installer(catalogue: Dictionary, statut: Label, btn: Button) -> void:
 		statut.text = Lang.t("applis_statut_echec")
 		statut.add_theme_color_override("font_color", Color(1.0, 0.6, 0.45))
 		btn.disabled = false
+
+
+## « Remettre le rangement par défaut » : 1er clic = « Confirmer ? », 2e clic =
+## chaque jeu retourne dans son dossier du manifeste ([bureau_rangement] effacée,
+## rien d'autre). Le bureau relit ce choix à sa prochaine ouverture.
+func _reinitialiser_rangement(btn: Button) -> void:
+	if btn.text.ends_with(Lang.t("classeur_btn_confirmer")):
+		Registre.reinitialiser_rangement()
+		btn.text = Lang.t("logitheque_reinit_fait")
+		btn.disabled = true
+	else:
+		btn.text = Lang.t("logitheque_reinit_rangement") + "  —  " + Lang.t("classeur_btn_confirmer")
 
 
 func _retour_reglages() -> void:

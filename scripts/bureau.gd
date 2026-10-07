@@ -60,6 +60,10 @@ var _menu: Control = null  # voile plein écran portant la boîte à icônes (nu
 var _horloge: Label
 var _panneau_volume: PanelContainer = null
 var _fenetres_ouvertes := {}  # id catégorie → instance de Fenetre
+var _icones := []  # icônes du bureau (reconstruites quand l'enfant range un jeu)
+var _index_icones := -1  # leur rang parmi les enfants (sous fenêtres et barre)
+var _icone_rangee := ""  # jeu qui vient d'entrer dans un dossier : sa place n'est pas retenue
+var _places_courantes := {}  # id → position avant reconstruction (les autres icônes ne sautent pas)
 
 var _curseur: Node2D
 var _calque_effets: Node2D
@@ -283,6 +287,10 @@ func _creer_icones() -> void:
 	var par_colonne := 3
 	var premiere: Control = null
 	var applis := _applis_bureau()
+	var reconstruction := _index_icones >= 0
+	if not reconstruction:
+		_index_icones = get_child_count()
+	var ranges: Dictionary = PinConfig.lire_option("bureau", "places_icones", {})
 	for i in applis.size():
 		var appli: Dictionary = applis[i]
 		var icone: Control = IconeBureau.new()
@@ -294,13 +302,113 @@ func _creer_icones() -> void:
 		icone.est_dossier = appli.has("fenetre")  # catégorie = icône dossier
 		@warning_ignore("integer_division")
 		icone.position = Vector2(30 + (i / par_colonne) * 180, 26 + (i % par_colonne) * 178)
+		# Place choisie par l'enfant (glisser-déposer) — sinon disposition par défaut
+		if ranges.has(icone.id):
+			icone.position = ranges[icone.id]
+		elif _places_courantes.has(icone.id):
+			icone.position = _places_courantes[icone.id]
+		icone.limite_basse = HAUTEUR_BARRE
+		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
+		icone.deplacable = not Tactile.actif()
 		icone.lancee.connect(_lancer_appli)
+		icone.deplacee.connect(_memoriser_place_icone)
+		icone.survol.connect(_viser_dossier)
+		icone.lachee.connect(_ranger_dans_dossier)
 		add_child(icone)
+		if reconstruction:
+			move_child(icone, _index_icones + i)  # reste sous les fenêtres et la barre
+		_icones.append(icone)
+		if ranges.has(icone.id):
+			icone.garder_dans_l_ecran.call_deferred()  # écran plus petit qu'au rangement
 		if premiere == null:
 			premiere = icone
 	# Focus clavier initial sur la première icône (accessibilité)
-	if premiere != null:
+	if premiere != null and not reconstruction:
 		premiere.ready.connect(premiere.focus, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+
+## L'enfant a posé une icône : sa place est retenue (user://config.cfg, qui
+## voyage avec l'espace famille) et resservie au prochain lancement.
+func _memoriser_place_icone(id: String, ou: Vector2) -> void:
+	if id == _icone_rangee:
+		return  # lâchée sur un dossier : elle quitte le bureau
+	var ranges: Dictionary = PinConfig.lire_option("bureau", "places_icones", {})
+	ranges[id] = ou
+	PinConfig.ecrire_option("bureau", "places_icones", ranges)
+
+
+# --- Ranger un jeu dans un dossier / l'en ressortir (glissé souris) -----------
+# Seules les applications du registre se rangent (pas les dossiers eux-mêmes,
+# ni les applis externes ou du téléphone). Choix retenu par enfant :
+# Registre.ranger() → user://config.cfg [bureau_rangement].
+
+## Le dossier du bureau sous ce point (null si aucun, ou si une fenêtre le couvre).
+func _dossier_sous(point: Vector2) -> Control:
+	for fenetre in _fenetres_ouvertes.values():
+		if is_instance_valid(fenetre) and fenetre.get_global_rect().has_point(point):
+			return null
+	for icone in _icones:
+		if is_instance_valid(icone) and icone.est_dossier and icone.contient(point):
+			return icone
+	return null
+
+
+## Pendant le vol d'un jeu : le dossier survolé se signale comme cible.
+func _viser_dossier(id: String, point: Vector2) -> void:
+	var cible: Control = _dossier_sous(point) if not Registre.appli(id).is_empty() else null
+	for icone in _icones:
+		if is_instance_valid(icone) and icone.est_dossier:
+			icone.signaler_cible(icone == cible)
+
+
+## Jeu du bureau lâché : sur un dossier, il y entre (et quitte le bureau).
+func _ranger_dans_dossier(id: String, point: Vector2, _coin: Vector2) -> void:
+	var cible: Control = _dossier_sous(point) if not Registre.appli(id).is_empty() else null
+	for icone in _icones:
+		if is_instance_valid(icone) and icone.est_dossier:
+			icone.signaler_cible(false)
+	if cible == null:
+		return
+	Registre.ranger(id, cible.id)
+	_icone_rangee = id
+	_reconstruire_bureau.call_deferred(cible.id)
+
+
+## Jeu lâché depuis une fenêtre-dossier : hors de la fenêtre, il ressort sur le
+## bureau, posé là où l'enfant l'a lâché ; dans la fenêtre, il reprend sa place.
+func _ressortir_du_dossier(id: String, point: Vector2, coin: Vector2, categorie: String) -> void:
+	var fenetre: Control = _fenetres_ouvertes.get(categorie)
+	if fenetre == null or not is_instance_valid(fenetre) or fenetre.get_global_rect().has_point(point):
+		return
+	Registre.ranger(id, "")
+	_memoriser_place_icone(id, get_global_transform().affine_inverse() * coin)
+	_reconstruire_bureau.call_deferred(categorie)
+
+
+## Après un rangement : icônes du bureau refaites, fenêtre du dossier remise à jour
+## (vidée, elle reste ouverte : le dossier reste sur le bureau — fermée seulement
+## si le dossier a quitté le bureau).
+func _reconstruire_bureau(categorie: String) -> void:
+	_icone_rangee = ""
+	_places_courantes.clear()
+	for icone in _icones:
+		if is_instance_valid(icone):
+			_places_courantes[icone.id] = icone.position
+			remove_child(icone)
+			icone.queue_free()
+	_icones.clear()
+	_creer_icones()
+	var fenetre: Control = _fenetres_ouvertes.get(categorie)
+	if fenetre == null or not is_instance_valid(fenetre):
+		return
+	for ancienne in fenetre.contenu.get_children():
+		fenetre.contenu.remove_child(ancienne)
+		ancienne.queue_free()
+	if not Registre.categories_visibles().any(func(c: Dictionary) -> bool: return c["id"] == categorie):
+		fenetre.queue_free()
+		_fenetres_ouvertes.erase(categorie)
+	else:
+		_remplir_fenetre(fenetre, categorie)
 
 
 func _lancer_appli(id: String) -> void:
@@ -361,17 +469,32 @@ func _ouvrir_fenetre(id: String, titre: String, couleur: Color) -> void:
 	add_child(fenetre)  # dernier enfant = dessiné au-dessus du reste
 	_fenetres_ouvertes[id] = fenetre
 
+	_remplir_fenetre(fenetre, id)
+
+	# Centrage différé : la taille n'est connue qu'après le premier calcul de layout
+	fenetre.position = Vector2.ZERO
+	_centrer_fenetre.call_deferred(fenetre)
+
+
+## Les icônes des jeux d'une catégorie dans sa fenêtre (glissables hors d'elle) ;
+## dossier vidé par l'enfant = une phrase douce à la place des icônes.
+func _remplir_fenetre(fenetre: Control, id: String) -> void:
+	if Registre.jeux_de(id).is_empty():
+		var vide := Label.new()
+		vide.text = Lang.t("bureau_dossier_vide")
+		vide.add_theme_font_size_override("font_size", 26)
+		vide.add_theme_color_override("font_color", Color(0.30, 0.30, 0.30))
+		fenetre.contenu.add_child(vide)
 	for jeu in Registre.jeux_de(id):
 		var icone: Control = IconeBureau.new()
 		icone.id = jeu["id"]
 		icone.nom = Lang.t(jeu["nom_cle"])
 		icone.couleur = jeu["couleur"]
+		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
+		icone.rangeable = not Tactile.actif()
 		icone.lancee.connect(_lancer_jeu)
+		icone.lachee.connect(_ressortir_du_dossier.bind(id))
 		fenetre.contenu.add_child(icone)
-
-	# Centrage différé : la taille n'est connue qu'après le premier calcul de layout
-	fenetre.position = Vector2.ZERO
-	_centrer_fenetre.call_deferred(fenetre)
 
 
 func _centrer_fenetre(fenetre: Control) -> void:

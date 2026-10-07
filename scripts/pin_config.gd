@@ -56,3 +56,13 @@ static func effacer_option(section: String, cle: String) -> void:
 	if cfg.has_section_key(section, cle):
 		cfg.erase_section_key(section, cle)
 		cfg.save(CHEMIN)
+
+
+## Efface toute une section (retour aux défauts du programme pour chacune de ses clés).
+static func effacer_section(section: String) -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(CHEMIN) != OK:
+		return
+	if cfg.has_section(section):
+		cfg.erase_section(section)
+		cfg.save(CHEMIN)

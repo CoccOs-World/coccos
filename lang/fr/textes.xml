@@ -10,6 +10,7 @@
 	<texte cle="bureau_menu_titre">Toutes les applications</texte>
 	<texte cle="bureau_categorie_souris">La souris</texte>
 	<texte cle="bureau_categorie_clavier">Le clavier</texte>
+	<texte cle="bureau_dossier_vide">Ce dossier est vide.</texte>
 	<texte cle="bureau_jeu_decouverte">Découverte</texte>
 	<texte cle="bureau_jeu_ballons">Les ballons</texte>
 	<texte cle="bureau_jeu_lettres">Les lettres</texte>
@@ -108,6 +109,8 @@
 	<texte cle="logitheque_type_telephone">Application du téléphone</texte>
 	<texte cle="logitheque_galerie">Galerie — les captures arriveront ici</texte>
 	<texte cle="logitheque_aucun_resultat">Aucune application ne correspond.</texte>
+	<texte cle="logitheque_reinit_rangement">Remettre le rangement par défaut</texte>
+	<texte cle="logitheque_reinit_fait">✔ Rangement par défaut remis</texte>
 
 	<!-- ═══ Réglages — Langue (sélecteur + éditeur de traduction) ═══ -->
 	<texte cle="reglages_langue">Langue de CoccOs</texte>

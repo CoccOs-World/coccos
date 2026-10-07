@@ -41,10 +41,11 @@ const APPLIS := [
 	# (LOGITHÈQUE, 01-10) Le jeu des puzzles — sous-projet frère intégré : il vit entier dans
 	# res://jeux_integres/puzzle/ (ses propres copies des images, sons, planches et curseurs), et sa
 	# couleur est le rouge MESURÉ sur sa plaque livrée (assets/icones/puzzle.png, teinte dominante).
-	# "categorie" vide = icône directe sur le bureau, donc « déjà installé » à l'ouverture.
+	# (07-10, décision de Fabrice) Il se joue presque uniquement à la souris : rangé par défaut
+	# dans le dossier « souris » — l'enfant peut l'en RESSORTIR par glissé (rangement par enfant).
 	{"id": "puzzle", "nom_cle": "bureau_jeu_puzzle", "description_cle": "logitheque_desc_puzzle",
 		"couleur": Color(0.82, 0.13, 0.13), "scene": "res://jeux_integres/puzzle/scenes/accueil.tscn",
-		"categorie": "", "etiquettes": ["souris", "logique", "images"]},
+		"categorie": "souris", "etiquettes": ["souris", "logique", "images"]},
 	{"id": "classeur", "nom_cle": "bureau_app_classeur", "description_cle": "logitheque_desc_classeur",
 		"couleur": Color(0.90, 0.40, 0.45), "scene": "res://scenes/classeur.tscn", "categorie": "",
 		"etiquettes": ["communication"]},
@@ -70,23 +71,55 @@ static func existe_ici(appli: Dictionary) -> bool:
 	return true
 
 
+# --- Rangement par l'enfant (glisser un jeu DANS un dossier / l'en RESSORTIR) ---
+# Le manifeste donne le dossier par défaut ; l'enfant peut le changer par glissé
+# sur le bureau. Son choix vit dans user://config.cfg, section [bureau_rangement],
+# clé = id, valeur = id de catégorie ("" = icône directe). Pas de choix = manifeste.
+
+## Le dossier où se trouve VRAIMENT l'application (choix de l'enfant, sinon manifeste).
+static func categorie_de(appli: Dictionary) -> String:
+	var choix: Variant = PinConfig.lire_option("bureau_rangement", appli["id"], null)
+	if choix is String and (choix == "" or CATEGORIES.has(choix)):
+		return choix
+	return appli["categorie"]
+
+
+## Range l'application dans un dossier ("" = la ressortir sur le bureau).
+static func ranger(id: String, categorie: String) -> void:
+	PinConfig.ecrire_option("bureau_rangement", id, categorie)
+
+
 ## Les applications à icône directe sur le bureau (actives, de cette plateforme).
 static func actives_directes() -> Array:
 	return APPLIS.filter(func(appli: Dictionary) -> bool:
-		return appli["categorie"] == "" and existe_ici(appli) and est_active(appli["id"]))
+		return categorie_de(appli) == "" and existe_ici(appli) and est_active(appli["id"]))
 
 
 ## Les jeux actifs d'une catégorie (le contenu de sa fenêtre).
 static func jeux_de(categorie: String) -> Array:
 	return APPLIS.filter(func(appli: Dictionary) -> bool:
+		return categorie_de(appli) == categorie and existe_ici(appli) and est_active(appli["id"]))
+
+
+## Remet chaque jeu dans son dossier par défaut (le manifeste) : geste adulte
+## de la logithèque — efface tous les choix de l'enfant, et seulement eux.
+static func reinitialiser_rangement() -> void:
+	PinConfig.effacer_section("bureau_rangement")
+
+
+## Un jeu actif appartient-il à ce dossier par DÉFAUT (manifeste) ?
+static func a_jeux_par_defaut(categorie: String) -> bool:
+	return APPLIS.any(func(appli: Dictionary) -> bool:
 		return appli["categorie"] == categorie and existe_ici(appli) and est_active(appli["id"]))
 
 
-## Les catégories du bureau : seulement celles qui ont au moins un jeu actif.
+## Les catégories du bureau : celles qui ont au moins un jeu actif, ou dont un
+## jeu actif leur revient par défaut — un dossier vidé par l'enfant reste donc
+## là (cible pour y reglisser un jeu). Sans aucun des deux : caché (pas de fantôme).
 static func categories_visibles() -> Array:
 	var liste := []
 	for id in CATEGORIES:
-		if not jeux_de(id).is_empty():
+		if not jeux_de(id).is_empty() or a_jeux_par_defaut(id):
 			var categorie: Dictionary = CATEGORIES[id].duplicate()
 			categorie["id"] = id
 			liste.append(categorie)
