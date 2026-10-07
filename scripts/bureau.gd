@@ -39,7 +39,7 @@ const Android := preload("res://scripts/android.gd")
 const Registre := preload("res://scripts/registre_jeux.gd")
 
 const HAUTEUR_BARRE := 76  # barre des tâches sur PC (Linux/Windows)
-const AGRANDI_BARRE_ANDROID := 1.3  # +30 % d'épaisseur au doigt (décision Fabrice 07-10)
+const AGRANDI_BARRE_ANDROID := 1.495  # +30 % puis encore +15 % (1,30 × 1,15) au doigt (décisions Fabrice 07-10)
 const COULEUR_BARRE := Color(0.13, 0.17, 0.28, 0.92)
 const COULEUR_MENU := Color(0.95, 0.72, 0.15)  # bouton Menu jaune soleil
 const COULEUR_ENGRENAGE := Color(0.45, 0.45, 0.50)
@@ -57,7 +57,7 @@ const COULEURS_FLEURS: Array[Color] = [
 	Color(1.0, 0.45, 0.7), Color(0.8, 0.5, 0.95), Color(0.5, 0.6, 1.0), Color(1.0, 0.6, 0.85),
 ]
 
-## Épaisseur EFFECTIVE de la barre (76 sur PC, 99 sur Android) — tout ce qui
+## Épaisseur EFFECTIVE de la barre (76 sur PC, 114 sur Android) — tout ce qui
 ## réserve le bas de l'écran la lit (fenêtres, icônes, centrage, volume).
 var hauteur_barre: int = hauteur_barre_pour(OS.has_feature("android"))
 var _menu: Control = null  # voile plein écran portant la boîte à icônes (null = fermé)

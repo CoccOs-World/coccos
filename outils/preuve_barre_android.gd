@@ -1,13 +1,13 @@
-# Preuve : la barre des taches du bureau fait +30 % d'epaisseur sur ANDROID, rien ne change sur PC
-# (REQ_261007 android barre taches +30).
+# Preuve : la barre des taches du bureau fait +30 % puis +15 % d'epaisseur (x 1,495) sur ANDROID, rien ne change sur PC
+# (REQ_261007 android barre taches +30, puis REQ_261007 android barre +15).
 # Monte le VRAI bureau (scenes/bureau.tscn) dans root, deux fois :
 #   ① PC (plateforme du run)      = barre de 76 px, boutons 60x60, marges 8 — valeurs d'origine ;
 #   ② Android (hauteur forcee par hauteur_barre_pour(true) AVANT _ready, la feature
-#      « android » ne pouvant pas etre simulee sur PC) = barre de 99 px ;
+#      « android » ne pouvant pas etre simulee sur PC) = barre de 114 px ;
 # et, dans chaque cas : contenu de la barre DEDANS et centre verticalement, pictos centres
 # dans leur bouton, fenetre-categorie / boite a icones / icones / glissiere de volume
 # bornees AU-DESSUS de la barre (aucune fenetre sous la barre, meme poussee tout en bas).
-# Les attendus 76 et 99 sont ecrits ICI (76 x 1,30 = 98,8 -> 99), pas relus dans le code teste.
+# Les attendus 76 et 114 sont ecrits ICI (76 x 1,30 x 1,15 = 113,62 -> 114), pas relus dans le code teste.
 # Imprime aussi une SIGNATURE de la barre PC (rect de chaque noeud) : la meme preuve
 # rejouee sur la branche d'origine doit sortir la meme signature (desktop inchange).
 # Lancement (user:// ISOLE) :
@@ -16,7 +16,7 @@
 extends SceneTree
 
 const BARRE_PC := 76
-const BARRE_ANDROID := 99
+const BARRE_ANDROID := 114
 const TOL := 1.0
 
 var _echecs := 0
@@ -80,7 +80,7 @@ func _contenu_barre(nom: String, bureau: Control, barre: Control, attendu: int) 
 	_verifier("%s : barre collee au bas" % nom, absf(rb.end.y - bureau.size.y) < 0.01,
 		"bas %.1f / ecran %.1f" % [rb.end.y, bureau.size.y])
 	var ligne: Control = barre.get_child(0).get_child(0)
-	var cote_attendu := 60.0 if attendu == BARRE_PC else 79.0  # hauteur - 2 marges (8 -> 10)
+	var cote_attendu := 60.0 if attendu == BARRE_PC else 90.0  # hauteur - 2 marges (8 -> 12)
 	for c in ligne.get_children():
 		var r: Rect2 = c.get_global_rect()
 		if r.size.x <= 0.0:
@@ -164,7 +164,7 @@ func _derouler() -> void:
 	var calcule := Bureau.has_method("hauteur_barre_pour")
 	_verifier("hauteur_barre_pour existe", calcule)
 	if calcule:
-		_verifier("Android = %d px (76 x 1,30)" % BARRE_ANDROID, Bureau.hauteur_barre_pour(true) == BARRE_ANDROID,
+		_verifier("Android = %d px (76 x 1,30 x 1,15)" % BARRE_ANDROID, Bureau.hauteur_barre_pour(true) == BARRE_ANDROID,
 			str(Bureau.hauteur_barre_pour(true)))
 		_verifier("PC = %d px" % BARRE_PC, Bureau.hauteur_barre_pour(false) == BARRE_PC, str(Bureau.hauteur_barre_pour(false)))
 	_verifier("ce run tourne sur PC (feature android absente)", not OS.has_feature("android"))
@@ -188,7 +188,7 @@ func _derouler() -> void:
 		barre = _barre(bureau)
 		_verifier("② Android : barre trouvee", barre != null)
 		if barre != null:
-			_verifier("② Android : hauteur effective = 99", bureau.hauteur_barre == BARRE_ANDROID, str(bureau.hauteur_barre))
+			_verifier("② Android : hauteur effective = 114", bureau.hauteur_barre == BARRE_ANDROID, str(bureau.hauteur_barre))
 			_contenu_barre("② Android", bureau, barre, BARRE_ANDROID)
 			await _bornes("② Android", bureau, BARRE_ANDROID)
 		bureau.queue_free()
