@@ -38,7 +38,8 @@ const Android := preload("res://scripts/android.gd")
 ## l'adulte dans la logithèque — plus de liste en dur ici.
 const Registre := preload("res://scripts/registre_jeux.gd")
 
-const HAUTEUR_BARRE := 76
+const HAUTEUR_BARRE := 76  # barre des tâches sur PC (Linux/Windows)
+const AGRANDI_BARRE_ANDROID := 1.3  # +30 % d'épaisseur au doigt (décision Fabrice 07-10)
 const COULEUR_BARRE := Color(0.13, 0.17, 0.28, 0.92)
 const COULEUR_MENU := Color(0.95, 0.72, 0.15)  # bouton Menu jaune soleil
 const COULEUR_ENGRENAGE := Color(0.45, 0.45, 0.50)
@@ -56,6 +57,9 @@ const COULEURS_FLEURS: Array[Color] = [
 	Color(1.0, 0.45, 0.7), Color(0.8, 0.5, 0.95), Color(0.5, 0.6, 1.0), Color(1.0, 0.6, 0.85),
 ]
 
+## Épaisseur EFFECTIVE de la barre (76 sur PC, 99 sur Android) — tout ce qui
+## réserve le bas de l'écran la lit (fenêtres, icônes, centrage, volume).
+var hauteur_barre: int = hauteur_barre_pour(OS.has_feature("android"))
 var _menu: Control = null  # voile plein écran portant la boîte à icônes (null = fermé)
 var _horloge: Label
 var _panneau_volume: PanelContainer = null
@@ -349,7 +353,7 @@ func _creer_icones() -> void:
 			icone.position = ranges[icone.id]
 		elif _places_courantes.has(icone.id):
 			icone.position = _places_courantes[icone.id]
-		icone.limite_basse = HAUTEUR_BARRE
+		icone.limite_basse = hauteur_barre
 		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
 		icone.deplacable = not Tactile.actif()
 		icone.lancee.connect(_lancer_appli)
@@ -505,7 +509,7 @@ func _ouvrir_fenetre(id: String, titre: String, couleur: Color) -> void:
 	var fenetre: PanelContainer = Fenetre.new()
 	fenetre.titre = titre
 	fenetre.couleur = couleur
-	fenetre.limite_basse = HAUTEUR_BARRE
+	fenetre.limite_basse = hauteur_barre
 	# Réglage adulte : fenêtres fixes par défaut, déplaçables si l'option est cochée
 	fenetre.deplacable = PinConfig.lire_option("bureau", "fenetres_deplacables", false)
 	add_child(fenetre)  # dernier enfant = dessiné au-dessus du reste
@@ -540,25 +544,38 @@ func _remplir_fenetre(fenetre: Control, id: String) -> void:
 
 
 func _centrer_fenetre(fenetre: Control) -> void:
-	fenetre.position = ((size - Vector2(0, HAUTEUR_BARRE)) - fenetre.size) / 2.0
+	fenetre.position = ((size - Vector2(0, hauteur_barre)) - fenetre.size) / 2.0
 
 
 # --- Barre des tâches -------------------------------------------------------
 
+static func hauteur_barre_pour(android: bool) -> int:
+	return roundi(HAUTEUR_BARRE * AGRANDI_BARRE_ANDROID) if android else HAUTEUR_BARRE
+
+
+## Cote de la barre à l'échelle de son épaisseur : identique sur PC, pictos et
+## boutons proportionnés sur Android (le texte garde sa taille).
+func _cote_barre(px: float) -> float:
+	return roundf(px * hauteur_barre / float(HAUTEUR_BARRE))
+
+
 func _creer_barre_taches() -> void:
 	var barre := PanelContainer.new()
 	barre.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	barre.offset_top = -HAUTEUR_BARRE
+	barre.offset_top = -hauteur_barre
 	var style := StyleBoxFlat.new()
 	style.bg_color = COULEUR_BARRE
 	barre.add_theme_stylebox_override("panel", style)
 	add_child(barre)
 
 	var marge := MarginContainer.new()
-	marge.add_theme_constant_override("margin_left", 12)
-	marge.add_theme_constant_override("margin_right", 12)
-	marge.add_theme_constant_override("margin_top", 8)
-	marge.add_theme_constant_override("margin_bottom", 8)
+	var marge_haut_bas := int(_cote_barre(8))
+	marge.add_theme_constant_override("margin_left", int(_cote_barre(12)))
+	marge.add_theme_constant_override("margin_right", int(_cote_barre(12)))
+	marge.add_theme_constant_override("margin_top", marge_haut_bas)
+	marge.add_theme_constant_override("margin_bottom", marge_haut_bas)
+	# Boutons ronds carrés, de toute la hauteur utile (60 sur PC, 79 sur Android)
+	var cote := hauteur_barre - 2 * marge_haut_bas
 	barre.add_child(marge)
 
 	var ligne := HBoxContainer.new()
@@ -568,19 +585,19 @@ func _creer_barre_taches() -> void:
 	# Bouton Menu (étoile + texte), à gauche comme un vrai bureau
 	var btn_menu := Button.new()
 	btn_menu.text = Lang.t("bureau_menu")
-	btn_menu.custom_minimum_size = Vector2(180, 0)
+	btn_menu.custom_minimum_size = Vector2(_cote_barre(180), 0)
 	btn_menu.add_theme_font_size_override("font_size", 30)
 	UIStyle.styliser(btn_menu, COULEUR_MENU, 18)
 	for etat in ["normal", "hover", "focus", "pressed"]:
 		var s: StyleBoxFlat = btn_menu.get_theme_stylebox(etat)
-		s.content_margin_left = 62.0
+		s.content_margin_left = _cote_barre(62.0)
 	var picto_menu: Control = Pictogramme.new()
 	picto_menu.id = "etoile"
 	picto_menu.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	picto_menu.offset_left = 10
-	picto_menu.offset_right = 54
-	picto_menu.offset_top = 8
-	picto_menu.offset_bottom = -8
+	picto_menu.offset_left = _cote_barre(10)
+	picto_menu.offset_right = _cote_barre(54)
+	picto_menu.offset_top = _cote_barre(8)
+	picto_menu.offset_bottom = -_cote_barre(8)
 	btn_menu.add_child(picto_menu)
 	btn_menu.pressed.connect(_basculer_menu)
 	ligne.add_child(btn_menu)
@@ -594,6 +611,8 @@ func _creer_barre_taches() -> void:
 	_horloge = Label.new()
 	_horloge.add_theme_font_size_override("font_size", 34)
 	_horloge.add_theme_color_override("font_color", Color.WHITE)
+	if hauteur_barre != HAUTEUR_BARRE:
+		_horloge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER  # centrée dans la barre épaissie
 	ligne.add_child(_horloge)
 	var minuterie := Timer.new()
 	minuterie.wait_time = 1.0
@@ -606,15 +625,15 @@ func _creer_barre_taches() -> void:
 	# sur le bouton éteindre. Masquable dans Réglages → Interface.
 	if PinConfig.lire_option("interface", "bouton_volume", true):
 		var btn_volume := Button.new()
-		btn_volume.custom_minimum_size = Vector2(60, 60)
+		btn_volume.custom_minimum_size = Vector2(cote, cote)
 		UIStyle.styliser(btn_volume, COULEUR_VOLUME, 30)
 		var picto_volume: Control = Pictogramme.new()
 		picto_volume.id = "haut_parleur"
 		picto_volume.set_anchors_preset(Control.PRESET_FULL_RECT)
-		picto_volume.offset_left = 12
-		picto_volume.offset_top = 12
-		picto_volume.offset_right = -12
-		picto_volume.offset_bottom = -12
+		picto_volume.offset_left = _cote_barre(12)
+		picto_volume.offset_top = _cote_barre(12)
+		picto_volume.offset_right = -_cote_barre(12)
+		picto_volume.offset_bottom = -_cote_barre(12)
 		picto_volume.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn_volume.add_child(picto_volume)
 		btn_volume.pressed.connect(_basculer_volume)
@@ -622,31 +641,31 @@ func _creer_barre_taches() -> void:
 
 	# Roue crantée (réglages adulte) — reprend le parcours PIN existant
 	var btn_reglages := Button.new()
-	btn_reglages.custom_minimum_size = Vector2(60, 60)
+	btn_reglages.custom_minimum_size = Vector2(cote, cote)
 	UIStyle.styliser(btn_reglages, COULEUR_ENGRENAGE, 30)
 	var picto_reglages: Control = Pictogramme.new()
 	picto_reglages.id = "engrenage"
 	picto_reglages.couleur_creux = COULEUR_ENGRENAGE
 	picto_reglages.set_anchors_preset(Control.PRESET_FULL_RECT)
-	picto_reglages.offset_left = 10
-	picto_reglages.offset_top = 10
-	picto_reglages.offset_right = -10
-	picto_reglages.offset_bottom = -10
+	picto_reglages.offset_left = _cote_barre(10)
+	picto_reglages.offset_top = _cote_barre(10)
+	picto_reglages.offset_right = -_cote_barre(10)
+	picto_reglages.offset_bottom = -_cote_barre(10)
 	btn_reglages.add_child(picto_reglages)
 	btn_reglages.pressed.connect(_aller_reglages)
 	ligne.add_child(btn_reglages)
 
 	# Bouton éteindre (quitte l'OS) — symbole marche/arrêt, tout à droite
 	var btn_eteindre := Button.new()
-	btn_eteindre.custom_minimum_size = Vector2(60, 60)
+	btn_eteindre.custom_minimum_size = Vector2(cote, cote)
 	UIStyle.styliser(btn_eteindre, Color(0.75, 0.25, 0.22), 30)
 	var picto_eteindre: Control = Pictogramme.new()
 	picto_eteindre.id = "eteindre"
 	picto_eteindre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	picto_eteindre.offset_left = 14
-	picto_eteindre.offset_top = 14
-	picto_eteindre.offset_right = -14
-	picto_eteindre.offset_bottom = -14
+	picto_eteindre.offset_left = _cote_barre(14)
+	picto_eteindre.offset_top = _cote_barre(14)
+	picto_eteindre.offset_right = -_cote_barre(14)
+	picto_eteindre.offset_bottom = -_cote_barre(14)
 	btn_eteindre.add_child(picto_eteindre)
 	btn_eteindre.pressed.connect(_eteindre)
 	ligne.add_child(btn_eteindre)
@@ -713,7 +732,7 @@ func _basculer_volume() -> void:
 	if _panneau_volume != panneau:
 		return
 	panneau.position = Vector2(size.x - panneau.size.x - 16.0,
-		size.y - HAUTEUR_BARRE - panneau.size.y - 12.0)
+		size.y - hauteur_barre - panneau.size.y - 12.0)
 
 
 ## Le volume choisi pilote le bus audio maître (sons ET voix enregistrées) ;
@@ -815,7 +834,7 @@ func _basculer_menu() -> void:
 	var fenetre: PanelContainer = Fenetre.new()
 	fenetre.titre = Lang.t("bureau_menu_titre")
 	fenetre.couleur = COULEUR_TITRE_MENU
-	fenetre.limite_basse = HAUTEUR_BARRE
+	fenetre.limite_basse = hauteur_barre
 	voile.add_child(fenetre)
 	# La croix de la fenêtre la libère elle-même (comportement Fenetre) : le
 	# voile doit suivre — sans double libération quand c'est nous qui fermons
