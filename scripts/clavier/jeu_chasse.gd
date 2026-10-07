@@ -9,13 +9,15 @@
 ## Une bulle qui s'échappe par le haut disparaît sans bruit : aucun échec.
 ## Boutons du tableau : flèche = effacer une lettre, croix = tout effacer.
 ##
+## Sur Android, AUCUN clavier dessiné (décision Fabrice 07-10, comme sous Linux) :
+## c'est un jeu SOURIS, les bulles s'attrapent à la pointe du curseur.
+##
 ## Sortie : bouton croix (haut droit) ou Échap.
 ## Activité AUTO-CONTENUE (briques chargées depuis le dossier de CE script).
 extends Control
 
 const Fond := preload("res://scripts/fond.gd")
 const Voix := preload("res://scripts/voix.gd")
-const Tactile := preload("res://scripts/tactile.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
 const ViseePointe := preload("res://scripts/visee_pointe.gd")
@@ -39,11 +41,7 @@ const COULEURS_TRAINEE: Array[Color] = [
 var _Etoile: GDScript
 var _Anneau: GDScript
 var _Sons: GDScript
-var _Clavier: GDScript
 
-var _clavier: Control = null
-var _decal_clavier := 0.0  # place prise par le clavier dessiné, remontée comprise (0 hors mode tactile)
-var _conteneur_tableau: Control
 var _pioche := []  # lettres proposées (tirées des mots à apprendre)
 var _mot := ""
 var _label_mot: Label
@@ -59,8 +57,6 @@ func _ready() -> void:
 	_charger_briques()
 	Fond.appliquer(self)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
-	if Tactile.actif():
-		_decal_clavier = _Clavier.HAUTEUR
 
 	_calque_bulles = Node2D.new()
 	add_child(_calque_bulles)
@@ -79,12 +75,6 @@ func _ready() -> void:
 
 	_creer_lecteurs()
 	Voix.amorcer()  # natif : voix prête tout de suite ; web : résolue à la volée
-	if Tactile.actif():
-		_clavier = _Clavier.new()  # clavier CoccOs dessiné (remplace celui du système)
-		_clavier.curseur = _curseur  # touches remontées à portée de la POINTE
-		_clavier.encombrement_change.connect(_ajuster_au_clavier)
-		add_child(_clavier)
-		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
 	_construire_pioche()
 
 	var minuterie := Timer.new()
@@ -96,24 +86,11 @@ func _ready() -> void:
 		get_tree().create_timer(0.3 + 0.6 * float(i)).timeout.connect(_lacher_bulle)
 
 
-## Le clavier dessiné (remonté à portée de la pointe) prend `hauteur` en bas : le
-## tableau se pousse au-dessus, et les bulles naissent toujours derrière les touches.
-func _ajuster_au_clavier(hauteur: float) -> void:
-	_decal_clavier = hauteur
-	_placer_tableau()
-
-
-func _placer_tableau() -> void:
-	_conteneur_tableau.offset_top = -128.0 - _decal_clavier  # au-dessus du clavier dessiné
-	_conteneur_tableau.offset_bottom = -20.0 - _decal_clavier
-
-
 func _charger_briques() -> void:
 	var dossier: String = (get_script() as GDScript).resource_path.get_base_dir()
 	_Etoile = load(dossier + "/etoile.gd")
 	_Anneau = load(dossier + "/anneau.gd")
 	_Sons = load(dossier + "/sons.gd")
-	_Clavier = load(dossier + "/clavier_virtuel.gd")
 
 
 func _creer_lecteurs() -> void:
@@ -149,9 +126,7 @@ func _lacher_bulle() -> void:
 	bulle.vitesse = randf_range(35.0, 65.0)
 	bulle.amplitude = randf_range(14.0, 30.0)
 	bulle.frequence = randf_range(0.6, 1.1)
-	# En mode tactile, la bulle naît derrière le clavier dessiné et émerge de
-	# son bord haut — le terrain de jeu reste entier au-dessus de la bande.
-	bulle.position = Vector2(randf_range(90.0, taille.x - 90.0), taille.y - _decal_clavier + 60.0)
+	bulle.position = Vector2(randf_range(90.0, taille.x - 90.0), taille.y + 60.0)
 	_calque_bulles.add_child(bulle)
 
 
@@ -171,7 +146,7 @@ func _attraper(bulle: Node2D) -> void:
 	bulle.queue_free()
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (bulles, touches du clavier dessiné, croix) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (bulles, boutons du tableau, croix) — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur
@@ -199,8 +174,6 @@ func _input(event: InputEvent) -> void:
 			_curseur.position = event.position
 			_dernier_point = event.position
 		_curseur.pulser()
-		if _clavier and _clavier.contient(event.position):
-			return  # le tap appartient au clavier dessiné : la touche fera le travail
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_curseur.zoomer(1)
 			return
@@ -239,8 +212,7 @@ func _input(event: InputEvent) -> void:
 ## la touche (rangée du haut + pavé numérique) : sur un AZERTY physique, la
 ## rangée des chiffres envoie & é " ' ( … sans Maj — par le caractère seul, un
 ## enfant ne peut jamais attraper un chiffre (retour du test d'Isabella,
-## 2026-07-09). Le clavier dessiné tactile injecte un unicode déjà correct et
-## passe par le repli.
+## 2026-07-09).
 static func _caractere_de(event: InputEventKey) -> String:
 	if event.physical_keycode >= KEY_0 and event.physical_keycode <= KEY_9:
 		return String.chr(event.physical_keycode)  # KEY_0..KEY_9 = codes ASCII
@@ -256,8 +228,8 @@ static func _caractere_de(event: InputEventKey) -> String:
 func _creer_tableau() -> void:
 	var conteneur := CenterContainer.new()
 	conteneur.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_conteneur_tableau = conteneur
-	_placer_tableau()
+	conteneur.offset_top = -128.0
+	conteneur.offset_bottom = -20.0
 	add_child(conteneur)
 
 	var ligne := HBoxContainer.new()

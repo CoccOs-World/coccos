@@ -17,17 +17,11 @@ const Voix := preload("res://scripts/voix.gd")
 const Tactile := preload("res://scripts/tactile.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
-const ViseePointe := preload("res://scripts/visee_pointe.gd")
 const CHEMIN_CONFIG := "user://config.cfg"
 
 const MOTS_DEFAUT := ["ISABELLA", "PAPA", "MAMAN"]
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
 const PAS_TRAINEE := 26.0
-## Mode tactile : rangée des tuiles posée juste au-dessus du clavier dessiné.
-const HAUTEUR_TUILE := 112.0   # = custom_minimum_size.y des tuiles
-const MARGE_TUILES := 16.0
-const PICTO_COTE := 220.0      # image du mot (vignette du classeur)
-const PICTO_COTE_MIN := 100.0
 const COULEURS_LETTRES: Array[Color] = [
 	Color(0.90, 0.30, 0.40), Color(0.95, 0.55, 0.15), Color(0.80, 0.65, 0.10),
 	Color(0.25, 0.65, 0.35), Color(0.20, 0.60, 0.90), Color(0.45, 0.40, 0.85),
@@ -49,7 +43,6 @@ var _Sons: GDScript
 var _Clavier: GDScript
 
 var _clavier: Control = null
-var _centre: CenterContainer  # la rangée des tuiles
 var _mots := []
 var _mot_cible := ""
 var _position := 0
@@ -74,15 +67,10 @@ func _ready() -> void:
 	add_child(_calque_effets)
 
 	var centre := CenterContainer.new()
+	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	if Tactile.actif():
-		# Les tuiles se posent JUSTE au-dessus du clavier dessiné (remonté à portée de la
-		# pointe) : la place au-dessus reste à l'image du mot — cf. _ajuster_au_clavier.
-		centre.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-		_ajuster_tuiles(centre, _Clavier.HAUTEUR)
-	else:
-		centre.set_anchors_preset(Control.PRESET_FULL_RECT)
+		centre.offset_bottom = -_Clavier.HAUTEUR  # les tuiles remontent au-dessus du clavier
 	add_child(centre)
-	_centre = centre
 	_ligne_tuiles = HBoxContainer.new()
 	_ligne_tuiles.add_theme_constant_override("separation", 14)
 	centre.add_child(_ligne_tuiles)
@@ -93,28 +81,15 @@ func _ready() -> void:
 	add_child(_curseur)
 	_curseur.position = get_viewport().get_mouse_position()
 	_dernier_point = _curseur.position
-	_brancher_visee()
 
 	_creer_lecteurs()
 	Voix.amorcer()  # natif : voix prête tout de suite ; web : résolue à la volée
 	if Tactile.actif():
 		_clavier = _Clavier.new()  # clavier CoccOs dessiné (remplace celui du système)
-		_clavier.curseur = _curseur  # touches remontées à portée de la POINTE
-		_clavier.encombrement_change.connect(_ajuster_au_clavier)
 		add_child(_clavier)
 		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
 	_charger_mots()
 	_nouveau_mot()
-
-
-## Le clavier dessiné prend `hauteur` en bas : les tuiles se posent juste au-dessus.
-func _ajuster_au_clavier(hauteur: float) -> void:
-	_ajuster_tuiles(_centre, hauteur)
-
-
-func _ajuster_tuiles(centre: Control, hauteur: float) -> void:
-	centre.offset_bottom = -hauteur - MARGE_TUILES
-	centre.offset_top = centre.offset_bottom - HAUTEUR_TUILE
 
 
 func _charger_briques() -> void:
@@ -235,13 +210,6 @@ func _maj_tuiles() -> void:
 				Color(0.35, 0.42, 0.52) if i == _position else Color(0.65, 0.70, 0.75))
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (touches du clavier dessiné, croix) — cf. visee_pointe.gd.
-func _brancher_visee() -> void:
-	var visee: Node = ViseePointe.new()
-	visee.curseur = _curseur
-	add_child(visee)
-
-
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_quitter()
@@ -258,10 +226,6 @@ func _input(event: InputEvent) -> void:
 				Vector2(0, randf_range(20, 60)), 60.0, randf_range(0.5, 0.8))
 		return
 	if event is InputEventMouseButton and event.pressed:
-		if event.device == InputEvent.DEVICE_ID_EMULATION:
-			# Tap Android : aucun mouvement émulé, seul ce clic (déjà ramené à la pointe) → le curseur s'y pose
-			_curseur.position = event.position
-			_dernier_point = event.position
 		_curseur.pulser()
 		if _clavier and _clavier.contient(event.position):
 			return  # le tap appartient au clavier dessiné : la touche fera le travail
@@ -337,16 +301,9 @@ func _montrer_picto_du_mot() -> void:
 		_picto_mot.texture = texture
 		_picto_mot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_picto_mot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		var cote := PICTO_COTE
-		var haut := get_viewport_rect().size.y / 2.0 - 340.0
-		if _clavier:
-			# Au-dessus des tuiles, dans la place que le clavier remonté laisse
-			var bas: float = get_viewport_rect().size.y + _centre.offset_top - MARGE_TUILES
-			cote = clampf(bas - MARGE_TUILES, PICTO_COTE_MIN, PICTO_COTE)
-			haut = bas - cote
-		_picto_mot.size = Vector2(cote, cote)
-		_picto_mot.position = Vector2(get_viewport_rect().size.x / 2.0 - cote / 2.0, haut)
-		_picto_mot.pivot_offset = Vector2(cote, cote) / 2.0
+		_picto_mot.size = Vector2(220, 220)
+		_picto_mot.position = get_viewport_rect().size / 2.0 - Vector2(110, 340)
+		_picto_mot.pivot_offset = Vector2(110, 110)
 		_picto_mot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_picto_mot)
 		_picto_mot.scale = Vector2.ZERO

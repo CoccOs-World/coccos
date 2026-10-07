@@ -9,10 +9,11 @@
 #   S  souris    fleurs du clic nees a la pointe ; croix : pointe dessus / doigt dehors → quitte,
 #                doigt dessus / pointe dehors → reste ;
 #   L  lettres   touche sous la POINTE tapee (≠ touche sous le doigt), lettre affichee ; curseur x2 ;
-#   M  mots      pointe sur la bonne lettre / doigt sur une autre → avance ; l'inverse → n'avance pas ;
-#   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non ; touche a la pointe ;
+#   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non (jeu SOURIS, sans clavier) ;
+#   Mots : PLUS de visee a la pointe (decision Fabrice 07-10, retour a l'origine) — sa preuve, avec
+#   Chasse sans clavier : outils/preuve_chasse_mots_android.gd ;
 #   P  souris PC INCHANGEE (ballons, lettres) : clic et curseur au pointeur, aucun decalage.
-#   R  (clavier) PORTEE : chaque touche du clavier dessine doit etre atteignable par la pointe
+#   R  (lettres) PORTEE : chaque touche du clavier dessine doit etre atteignable par la pointe
 #      sur au moins la moitie de sa hauteur. Vert depuis la REMONTEE du clavier (decision Fabrice,
 #      REQ_261007_android_clavier_remonte) ; portee stricte et 4 cibles : outils/preuve_clavier_remonte.gd.
 # Lancement :
@@ -349,40 +350,6 @@ func _lettres() -> void:
 	await _demonter()
 
 
-# --- Mots -------------------------------------------------------------------------
-
-func _mots() -> void:
-	print("--- MOTS ---")
-	await _monter("res://scenes/mots.tscn", true)
-	_mesurer_decalage("mots")
-	await _cas_tap("mots", Vector2(400, 200))
-	_cas_portee("mots")
-	var tapees := _espionner_touches()
-	var cible: String = String(_jeu.get("_mot_cible"))[0]
-	print("  mot a ecrire « %s », 1re lettre « %s »" % [_jeu.get("_mot_cible"), cible])
-	var clavier: Control = _jeu.get("_clavier")
-	# Ma : doigt sur la BONNE lettre, pointe sur une autre → n'avance pas
-	var p := _chercher(clavier.get_global_rect().get_center(),
-		func(q: Vector2) -> bool: return _est_lettre(q) and not _est_lettre(q, cible),
-		func(q: Vector2) -> bool: return _est_lettre(q, cible), clavier.size.x / 2.0)
-	if p == Vector2.INF:
-		_verifier("Ma mise en place : doigt sur « %s », pointe sur une autre lettre" % cible, false)
-	else:
-		var d := _doigt_pour(p)
-		tapees.clear()
-		await _tap_doigt(d)
-		await _trames(2)
-		_verifier("Ma doigt sur « %s », pointe sur « %s » → n'AVANCE PAS" % [cible, _touche_sous(p).text],
-			int(_jeu.get("_position")) == 0 and tapees == [_touche_sous(p).text], "position %d, tapees %s" % [int(_jeu.get("_position")), tapees])
-	# Mb : pointe sur la bonne lettre, doigt sur une autre → avance
-	var paire := await _cas_touche("mots", tapees, cible)
-	await _trames(2)
-	if not paire.is_empty():
-		_verifier("Mb pointe sur « %s », doigt sur « %s » → AVANCE" % paire, int(_jeu.get("_position")) == 1 or bool(_jeu.get("_en_transition")),
-			"position %d" % int(_jeu.get("_position")))
-	await _demonter()
-
-
 # --- Chasse -----------------------------------------------------------------------
 
 func _chasse() -> void:
@@ -396,7 +363,6 @@ func _chasse() -> void:
 	for b in calque.get_children():
 		b.free()
 	await _cas_tap("chasse", Vector2(400, 200))
-	_cas_portee("chasse")
 	_jeu.call("_lacher_bulle")
 	var bulle: Node2D = calque.get_child(calque.get_child_count() - 1)
 	bulle.vitesse = 0.0
@@ -417,9 +383,6 @@ func _chasse() -> void:
 	await _tap_doigt(d)
 	_verifier("Cb pointe sur la bulle « %s », doigt dehors → ATTRAPEE" % lettre,
 		not is_instance_valid(bulle) or bulle.is_queued_for_deletion(), "doigt %s, pointe %s, mot « %s »" % [d, p, _jeu.get("_mot")])
-	await _trames(2)
-	var tapees := _espionner_touches()
-	await _cas_touche("chasse", tapees)
 	await _demonter()
 
 
@@ -430,7 +393,6 @@ func _derouler() -> void:
 	await _ballons()
 	await _souris()
 	await _lettres()
-	await _mots()
 	await _chasse()
 	_fin()
 

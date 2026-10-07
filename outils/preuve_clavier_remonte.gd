@@ -1,12 +1,14 @@
 # Preuve du CLAVIER REMONTE (REQ_261007 android_clavier_remonte, decision Fabrice : « remonter le
 # clavier, suffisamment pour qu'on puisse atteindre les lettres ; pas de zoom de bord » ).
-# Monte les VRAIS jeux Lettres, Mots, Chasse en mode tactile (user:// isole), curseur a la gamme
-# Android (x2), sur les 4 cibles (fenetre redimensionnee : le headless l'accepte) et les 3 tailles.
+# Monte le VRAI jeu Lettres en mode tactile (user:// isole), curseur a la gamme Android (x2), sur les
+# 4 cibles (fenetre redimensionnee : le headless l'accepte) et les 3 tailles. Mots et Chasse ne sont plus
+# remontes (decision Fabrice 07-10 : Mots revient a l'origine, Chasse n'a pas de clavier) — leur preuve :
+# outils/preuve_chasse_mots_android.gd ; ils restent dans la signature desktop D.
 #   R  PORTEE : chaque touche ENTIERE est visable par la pointe avec le doigt a GARDE_DOIGT px
 #      au-dessus du bord bas (on ne demande jamais le dernier pixel : bande des gestes Android) ;
 #   K  rangee du bas TAPEE A LA POINTE (doigt moteur) : W, N et ⌫ — la touche tapee est celle de
 #      la pointe, le doigt est plus bas (sur la bande de remontee ou une autre touche) ;
-#   E  ⌫ efface reellement (Lettres : mot raccourci ; Mots : la frappe arrive au jeu) ;
+#   E  ⌫ efface reellement (Lettres : mot raccourci) ;
 #   G  mise en page : rien ne deborde de l'ecran, rien ne chevauche le clavier ni la croix ;
 #   D  desktop (mode tactile decoche) : pas de clavier, signature de mise en page imprimee
 #      (a comparer a la meme preuve rejouee sur le commit d'origine).
@@ -28,6 +30,10 @@ const CIBLES := {
 	"iOS 19,5:9": Vector2i(2532, 1170),
 }
 const JEUX := {
+	"lettres": "res://scenes/lettres.tscn",
+}
+## Desktop : les trois jeux du dossier clavier (signature de mise en page inchangee)
+const JEUX_DESKTOP := {
 	"lettres": "res://scenes/lettres.tscn",
 	"mots": "res://scenes/mots.tscn",
 	"chasse": "res://scenes/chasse.tscn",
@@ -208,33 +214,6 @@ func _elements_lettres() -> Dictionary:
 	return els
 
 
-func _elements_mots() -> Dictionary:
-	var els := {"tuiles": _rect(_jeu.get("_ligne_tuiles"))}
-	# Image du mot : banque factice d'une vignette portant le mot en cours
-	var faux := _BanqueFactice.new()
-	faux.mot_porte = String(_jeu.get("_mot_cible"))
-	_jeu.set("_banque", faux)
-	_jeu.call("_montrer_picto_du_mot")
-	var picto: TextureRect = _jeu.get("_picto_mot")
-	if picto != null:
-		els["image du mot"] = Rect2(picto.position, picto.size)  # repere = le jeu (plein ecran)
-	return els
-
-
-func _elements_chasse() -> Dictionary:
-	return {"tableau": _rect(_jeu.get("_conteneur_tableau"))}
-
-
-class _BanqueFactice extends RefCounted:
-	var mot_porte := ""
-	func ids_vignettes() -> Array:
-		return ["x"]
-	func mot(_id: String) -> String:
-		return mot_porte
-	func texture(_id: String) -> ImageTexture:
-		return ImageTexture.create_from_image(Image.create(64, 64, false, Image.FORMAT_RGBA8))
-
-
 func _jouer(nom: String, cible: String) -> void:
 	var etiquette := "%s · %s" % [nom, cible]
 	_portee(etiquette)
@@ -255,19 +234,10 @@ func _bas_de_clavier(nom: String) -> void:
 		var apres := String(_jeu.get("_mot"))
 		_verifier("E[lettres] ⌫ a la pointe EFFACE (« %s » → « %s »)" % [avant, apres],
 			avant == "WN" and apres == "W")
-	elif nom == "mots":
-		await _taper_a_la_pointe(nom, "W", tapees)
-		await _taper_a_la_pointe(nom, "", tapees)
-	else:
-		for n in _jeu.get_children():
-			if n is Timer:
-				(n as Timer).stop()
-		await _taper_a_la_pointe(nom, "B", tapees)
-		await _taper_a_la_pointe(nom, "", tapees)
 
 
 func _derouler() -> void:
-	print("=== PREUVE CLAVIER REMONTE — Lettres, Mots, Chasse (doigt Android) ===")
+	print("=== PREUVE CLAVIER REMONTE — Lettres (doigt Android) ===")
 	print("  user:// = %s" % OS.get_user_data_dir())
 	PinConfig.ecrire_option("interface", "mode_tactile", true)
 	if OS.get_environment("SEULEMENT_DESKTOP") == "":
@@ -310,9 +280,9 @@ func _desktop() -> void:
 	PinConfig.ecrire_option("interface", "mode_tactile", false)
 	await _fenetre(CIBLES["portable 16:9"])
 	print("--- desktop (mode tactile decoche, 16:9) ---")
-	for nom in JEUX:
+	for nom in JEUX_DESKTOP:
 		seed(7)  # le mot tire par Mots fixe le nombre de tuiles
-		await _monter(JEUX[nom], false)
+		await _monter(JEUX_DESKTOP[nom], false)
 		_verifier("D[%s] desktop : pas de clavier dessine" % nom, _jeu.get("_clavier") == null)
 		var sig := []
 		for c in _jeu.find_children("*", "Control", true, false):
