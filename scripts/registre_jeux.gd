@@ -101,11 +101,25 @@ static func jeux_de(categorie: String) -> Array:
 		return categorie_de(appli) == categorie and existe_ici(appli) and est_active(appli["id"]))
 
 
-## Les catégories du bureau : seulement celles qui ont au moins un jeu actif.
+## Remet chaque jeu dans son dossier par défaut (le manifeste) : geste adulte
+## de la logithèque — efface tous les choix de l'enfant, et seulement eux.
+static func reinitialiser_rangement() -> void:
+	PinConfig.effacer_section("bureau_rangement")
+
+
+## Un jeu actif appartient-il à ce dossier par DÉFAUT (manifeste) ?
+static func a_jeux_par_defaut(categorie: String) -> bool:
+	return APPLIS.any(func(appli: Dictionary) -> bool:
+		return appli["categorie"] == categorie and existe_ici(appli) and est_active(appli["id"]))
+
+
+## Les catégories du bureau : celles qui ont au moins un jeu actif, ou dont un
+## jeu actif leur revient par défaut — un dossier vidé par l'enfant reste donc
+## là (cible pour y reglisser un jeu). Sans aucun des deux : caché (pas de fantôme).
 static func categories_visibles() -> Array:
 	var liste := []
 	for id in CATEGORIES:
-		if not jeux_de(id).is_empty():
+		if not jeux_de(id).is_empty() or a_jeux_par_defaut(id):
 			var categorie: Dictionary = CATEGORIES[id].duplicate()
 			categorie["id"] = id
 			liste.append(categorie)

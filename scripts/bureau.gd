@@ -386,7 +386,8 @@ func _ressortir_du_dossier(id: String, point: Vector2, coin: Vector2, categorie:
 
 
 ## Après un rangement : icônes du bureau refaites, fenêtre du dossier remise à jour
-## (fermée si le dossier n'a plus de jeu — il disparaît alors du bureau).
+## (vidée, elle reste ouverte : le dossier reste sur le bureau — fermée seulement
+## si le dossier a quitté le bureau).
 func _reconstruire_bureau(categorie: String) -> void:
 	_icone_rangee = ""
 	_places_courantes.clear()
@@ -403,7 +404,7 @@ func _reconstruire_bureau(categorie: String) -> void:
 	for ancienne in fenetre.contenu.get_children():
 		fenetre.contenu.remove_child(ancienne)
 		ancienne.queue_free()
-	if Registre.jeux_de(categorie).is_empty():
+	if not Registre.categories_visibles().any(func(c: Dictionary) -> bool: return c["id"] == categorie):
 		fenetre.queue_free()
 		_fenetres_ouvertes.erase(categorie)
 	else:
@@ -475,8 +476,15 @@ func _ouvrir_fenetre(id: String, titre: String, couleur: Color) -> void:
 	_centrer_fenetre.call_deferred(fenetre)
 
 
-## Les icônes des jeux d'une catégorie dans sa fenêtre (glissables hors d'elle).
+## Les icônes des jeux d'une catégorie dans sa fenêtre (glissables hors d'elle) ;
+## dossier vidé par l'enfant = une phrase douce à la place des icônes.
 func _remplir_fenetre(fenetre: Control, id: String) -> void:
+	if Registre.jeux_de(id).is_empty():
+		var vide := Label.new()
+		vide.text = Lang.t("bureau_dossier_vide")
+		vide.add_theme_font_size_override("font_size", 26)
+		vide.add_theme_color_override("font_color", Color(0.30, 0.30, 0.30))
+		fenetre.contenu.add_child(vide)
 	for jeu in Registre.jeux_de(id):
 		var icone: Control = IconeBureau.new()
 		icone.id = jeu["id"]

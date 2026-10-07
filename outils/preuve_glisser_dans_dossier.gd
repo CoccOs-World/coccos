@@ -10,7 +10,7 @@
 #      le jeu quitte le bureau, entre dans la fenetre, [bureau_rangement] ecrit ;
 #   ⑤ relance : toujours dans le dossier ;
 #   ⑥ logitheque : un jeu range mais DESACTIVE n'apparait nulle part ;
-#   ⑦ cas limite : ressortir le DERNIER jeu d'un dossier (constat, a trancher par Fabrice) ;
+#   ⑦ cas limite : ressortir le DERNIER jeu d'un dossier → le dossier RESTE (decision Fabrice 07-10) ;
 #   ⑧ clic simple sur un jeu de la fenetre = il se lance (scene changee).
 # Lancement (user:// ISOLE — la sauvegarde de Fabrice n'est jamais touchee) :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_glisser_dans_dossier.gd
@@ -258,13 +258,11 @@ func _derouler() -> void:
 		await _glisser(_centre_bouton(jeu), ou)
 		if is_instance_valid(fenetre):
 			await _fermer_fenetres(bureau)
-	_verifier("⑦ constat : dossier « souris » vide → disparu du bureau", _icone(bureau, "souris") == null,
-		"(cas a trancher par Fabrice)")
-	_verifier("⑦ constat : ses %d jeux sont sur le bureau" % ids.size(),
+	_verifier("⑦ dossier « souris » vide → RESTE sur le bureau", _icone(bureau, "souris") != null,
+		"(decision Fabrice 07-10)")
+	_verifier("⑦ ses %d jeux sont sur le bureau" % ids.size(),
 		ids.all(func(id: String) -> bool: return _icone(bureau, id) != null), str(ids))
-	_verifier("⑦ fenetre du dossier vide refermee", not bureau._fenetres_ouvertes.has("souris"))
-	# Le dossier n'existant plus, on ne peut plus y reglisser ses jeux : remise a zero pour la
-	# suite en effacant les choix de l'enfant (= defauts du manifeste)
+	# Remise a zero pour la suite en effacant les choix de l'enfant (= defauts du manifeste)
 	for id in ids:
 		PinConfig.effacer_option("bureau_rangement", id)
 	await _demonter(bureau)
