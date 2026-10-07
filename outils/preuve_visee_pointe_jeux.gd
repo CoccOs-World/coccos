@@ -12,6 +12,9 @@
 #   M  mots      pointe sur la bonne lettre / doigt sur une autre → avance ; l'inverse → n'avance pas ;
 #   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non ; touche a la pointe ;
 #   P  souris PC INCHANGEE (ballons, lettres) : clic et curseur au pointeur, aucun decalage.
+#   R  (clavier) PORTEE : chaque touche du clavier dessine doit etre atteignable par la pointe
+#      sur au moins la moitie de sa hauteur. ROUGE PAR CONCEPTION tant que Fabrice n'a pas
+#      tranche (la pointe ne descend pas sous bord bas − decalage) — cf. RES_261007_android_visee_pointe_JEUX.
 # Lancement :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_visee_pointe_jeux.gd
 # Code de sortie 0 = tout vert, 1 = au moins un echec.
@@ -170,6 +173,23 @@ func _cas_touche(nom: String, tapees: Array, cible := "") -> Array:
 	return [visee, sous_doigt]
 
 
+## R : part de chaque rangee du clavier que la pointe peut viser (doigt au plus bas = bord de l'ecran).
+func _cas_portee(nom: String) -> void:
+	var bas_max: float = _pointe_pour(Vector2(_zone().get_center().x, _zone().end.y)).y
+	var rangees := {}
+	for t in _touches():
+		var r: Rect2 = (t as Button).get_global_rect()
+		var cle := int(r.position.y)
+		if not rangees.has(cle):
+			rangees[cle] = [r, []]
+		rangees[cle][1].append((t as Button).text if (t as Button).text != "" else "⌫")
+	for cle in rangees:
+		var r: Rect2 = rangees[cle][0]
+		var part := clampf((bas_max - r.position.y) / r.size.y, 0.0, 1.0)
+		_verifier("R[%s] rangee %s visable par la pointe (%.0f %% de sa hauteur)" % [nom, "".join(rangees[cle][1]), part * 100.0],
+			part >= 0.5, "pointe la plus basse y=%.0f, rangee y %.0f→%.0f" % [bas_max, r.position.y, r.end.y])
+
+
 # --- Ballons --------------------------------------------------------------------
 
 func _ballons() -> void:
@@ -299,6 +319,7 @@ func _lettres() -> void:
 	_mesurer_decalage("lettres x2")
 	_verifier("L curseur x2 garde (facteur %.1f)" % float(_curseur.get("facteur")), float(_curseur.get("facteur")) == 2.0)
 	await _cas_tap("lettres", Vector2(400, 200))
+	_cas_portee("lettres")
 	var tapees := _espionner_touches()
 	var paire := await _cas_touche("lettres", tapees)
 	if not paire.is_empty():
@@ -332,6 +353,7 @@ func _mots() -> void:
 	await _monter("res://scenes/mots.tscn", true)
 	_mesurer_decalage("mots")
 	await _cas_tap("mots", Vector2(400, 200))
+	_cas_portee("mots")
 	var tapees := _espionner_touches()
 	var cible: String = String(_jeu.get("_mot_cible"))[0]
 	print("  mot a ecrire « %s », 1re lettre « %s »" % [_jeu.get("_mot_cible"), cible])
@@ -371,6 +393,7 @@ func _chasse() -> void:
 	for b in calque.get_children():
 		b.free()
 	await _cas_tap("chasse", Vector2(400, 200))
+	_cas_portee("chasse")
 	_jeu.call("_lacher_bulle")
 	var bulle: Node2D = calque.get_child(calque.get_child_count() - 1)
 	bulle.vitesse = 0.0
@@ -403,8 +426,9 @@ func _derouler() -> void:
 	PinConfig.ecrire_option("interface", "mode_tactile", true)
 	await _ballons()
 	await _souris()
-	# Jeux a clavier (lettres, mots, chasse) : branche android-visee-pointe-jeux-clavier
-	# (la rangee du bas du clavier dessine sort de portee de la pointe — a trancher).
+	await _lettres()
+	await _mots()
+	await _chasse()
 	_fin()
 
 

@@ -17,6 +17,7 @@ const Voix := preload("res://scripts/voix.gd")
 const Tactile := preload("res://scripts/tactile.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
+const ViseePointe := preload("res://scripts/visee_pointe.gd")
 const CHEMIN_CONFIG := "user://config.cfg"
 
 const MOTS_DEFAUT := ["ISABELLA", "PAPA", "MAMAN"]
@@ -81,6 +82,7 @@ func _ready() -> void:
 	add_child(_curseur)
 	_curseur.position = get_viewport().get_mouse_position()
 	_dernier_point = _curseur.position
+	_brancher_visee()
 
 	_creer_lecteurs()
 	Voix.amorcer()  # natif : voix prête tout de suite ; web : résolue à la volée
@@ -210,6 +212,13 @@ func _maj_tuiles() -> void:
 				Color(0.35, 0.42, 0.52) if i == _position else Color(0.65, 0.70, 0.75))
 
 
+## Android : le doigt déplace le curseur, la POINTE vise (touches du clavier dessiné, croix) — cf. visee_pointe.gd.
+func _brancher_visee() -> void:
+	var visee: Node = ViseePointe.new()
+	visee.curseur = _curseur
+	add_child(visee)
+
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_quitter()
@@ -226,6 +235,10 @@ func _input(event: InputEvent) -> void:
 				Vector2(0, randf_range(20, 60)), 60.0, randf_range(0.5, 0.8))
 		return
 	if event is InputEventMouseButton and event.pressed:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			# Tap Android : aucun mouvement émulé, seul ce clic (déjà ramené à la pointe) → le curseur s'y pose
+			_curseur.position = event.position
+			_dernier_point = event.position
 		_curseur.pulser()
 		if _clavier and _clavier.contient(event.position):
 			return  # le tap appartient au clavier dessiné : la touche fera le travail
