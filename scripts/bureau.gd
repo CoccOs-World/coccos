@@ -231,6 +231,45 @@ func _gui_input(event: InputEvent) -> void:
 		_appui_sur_bureau = true
 
 
+## Visée À LA POINTE (Android, décision Fabrice 07-10) : le doigt du joueur déplace la
+## coccinelle, mais c'est le doigt DU CURSEUR qui vise et clique. Le moteur livre chaque
+## doigt deux fois, sous le doigt : en clic souris émulé (`emulate_mouse_from_touch`) et en
+## ScreenTouch/ScreenDrag — et en 4.7 les boutons réagissent AUX DEUX. On déplace les deux à
+## la pointe AVANT que quiconque les lise (signal `window_input` de la fenêtre racine, émis
+## avant `_input` et l'interface) → icônes, barre, fenêtres, bulle, glissés reçoivent la
+## pointe. La vraie souris du PC (déjà la pointe) et le tactile qu'elle émule sont inchangés.
+func _enter_tree() -> void:
+	get_tree().root.window_input.connect(_viser_a_la_pointe)
+
+
+func _exit_tree() -> void:
+	get_tree().root.window_input.disconnect(_viser_a_la_pointe)
+
+
+func _viser_a_la_pointe(event: InputEvent) -> void:
+	if _curseur == null:
+		return
+	var souris_du_doigt: bool = (event is InputEventMouseButton or event is InputEventMouseMotion) \
+			and event.device == InputEvent.DEVICE_ID_EMULATION
+	var vrai_doigt: bool = (event is InputEventScreenTouch or event is InputEventScreenDrag) \
+			and event.device != InputEvent.DEVICE_ID_EMULATION
+	if not (souris_du_doigt or vrai_doigt):
+		return
+	var pointe: Vector2 = _pointe_fenetre(event.position)
+	if event is InputEventMouseMotion or event is InputEventScreenDrag:
+		event.relative = pointe - _pointe_fenetre(event.position - event.relative)
+	event.position = pointe
+	if event is InputEventMouse:
+		event.global_position = pointe
+
+
+## Pointe pour un doigt, en coordonnées de la FENÊTRE (l'étirement vers le viewport vient après).
+func _pointe_fenetre(doigt: Vector2) -> Vector2:
+	var vers_fenetre: Transform2D = get_tree().root.get_final_transform()
+	var dans_viewport: Vector2 = vers_fenetre.affine_inverse() * doigt
+	return vers_fenetre * _curseur.pointe_pour_doigt(dans_viewport, get_viewport().get_visible_rect())
+
+
 func _input(event: InputEvent) -> void:
 	# Échap ferme la boîte à icônes si elle est ouverte (avant tout le reste)
 	if _menu != null and event.is_action_pressed("ui_cancel"):
@@ -249,14 +288,15 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch or event is InputEventScreenDrag:
 		if event.device == InputEvent.DEVICE_ID_EMULATION:
 			return
+		# (positions déjà ramenées à la pointe par _viser_a_la_pointe)
 		if event is InputEventScreenTouch:
 			if event.pressed and _doigt == -1:
 				_doigt = event.index
-				_poser_au_doigt(event.position)
+				_poser_pointe(event.position)
 			elif not event.pressed and event.index == _doigt:
 				_doigt = -1
 		elif event.index == _doigt:
-			_suivre_point(_curseur.pointe_pour_doigt(event.position, get_viewport().get_visible_rect()))
+			_suivre_point(event.position)
 		return
 	if event is InputEventMouseMotion:
 		# Mouvement émulé depuis un doigt : déjà suivi (avec son décalage) par ScreenDrag
@@ -268,9 +308,9 @@ func _input(event: InputEvent) -> void:
 			_appui_sur_bureau = false  # _gui_input le remettra si le bureau nu le reçoit
 		var ou: Vector2 = event.position
 		if event.device == InputEvent.DEVICE_ID_EMULATION:
-			# Clic émulé d'un doigt : il arrive AVANT son ScreenTouch (ordre du moteur) →
-			# on pose la coccinelle tout de suite, et le clic part à sa pointe (7 différences).
-			ou = _poser_au_doigt(ou)
+			# Clic émulé d'un doigt, déjà remappé à la pointe (_viser_a_la_pointe) : il arrive
+			# AVANT son ScreenTouch (ordre du moteur) → la coccinelle s'y pose tout de suite.
+			_poser_pointe(ou)
 		# Inversion 2026-07-07 : gauche = fleurs + pop, droit = étoiles + carillon
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_curseur.pulser()
@@ -300,14 +340,12 @@ func _suivre_point(point: Vector2) -> void:
 	_dernier_point = point
 
 
-## Doigt qui se pose : la coccinelle y saute (pas de traînée sur le saut), ancre sous
-## le doigt, pointe légèrement décalée. Rend la position de la pointe.
-func _poser_au_doigt(doigt: Vector2) -> Vector2:
-	var pointe: Vector2 = _curseur.pointe_pour_doigt(doigt, get_viewport().get_visible_rect())
+## Doigt qui se pose : la coccinelle saute à la pointe reçue (pas de traînée sur le
+## saut) — son ancre tombe ainsi sous le doigt.
+func _poser_pointe(pointe: Vector2) -> void:
 	_curseur.position = pointe
 	_dernier_point = pointe
 	_distance_cumulee = 0.0
-	return pointe
 
 
 ## Version « bureau » de l'explosion d'étoiles — plus légère que dans le jeu.

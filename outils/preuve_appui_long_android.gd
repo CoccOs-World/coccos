@@ -1,7 +1,7 @@
 # Preuve de l'APPUI LONG au doigt sur le bureau (REQ_261007 android_appui_long_icone_menu).
 # Monte le VRAI bureau (scenes/bureau.tscn) en MODE TACTILE (config isolee) et lui injecte
-# des evenements de doigt tels qu'Android les livre : clic souris EMULE (DEVICE_ID_EMULATION)
-# puis ScreenTouch / ScreenDrag — aucun appel direct aux fonctions du bureau :
+# des doigts par le vrai chemin du moteur (ScreenTouch/ScreenDrag → clic souris EMULE par Godot),
+# chaque point vise etant celui de la POINTE du curseur — aucun appel direct au bureau :
 #   A0 doigt qui derive SANS appui long = l'icone ne bouge pas (un tap reste un tap) ;
 #   A1 appui long SUR une icone = elle se souleve, suit le doigt, se pose, place retenue,
 #      sans lancement ni etoiles ;
@@ -19,8 +19,10 @@ extends SceneTree
 const PinConfig := preload("res://scripts/pin_config.gd")
 const Registre := preload("res://scripts/registre_jeux.gd")
 const Anneau := preload("res://scripts/effets/anneau.gd")
+const Doigt := preload("res://outils/doigt_moteur.gd")
 
 var _echecs := 0
+var _doigt_precedent := Vector2.ZERO
 
 
 func _verifier(libelle: String, vrai: bool, detail: String = "") -> void:
@@ -38,28 +40,17 @@ func _trames(n: int) -> void:
 		await process_frame
 
 
-## Un geste de doigt comme sur Android : l'evenement souris emule d'abord, puis le tactile.
+## Un geste de doigt comme sur Android, par le VRAI chemin du moteur (outils/doigt_moteur.gd :
+## ScreenTouch → clic emule fabrique par Godot). `ou` = la cible de la POINTE (visee a la
+## pointe, REQ_261007 android_visee_a_la_pointe) : le doigt est pose la ou il faut pour l'y amener.
 func _doigt(type: String, ou: Vector2) -> void:
-	var souris: InputEvent
-	var tactile: InputEvent
+	var curseur: Node2D = current_scene.get("_curseur")
+	var doigt := Doigt.doigt_pour_pointe(curseur, ou, root.get_visible_rect())
 	if type == "glisse":
-		souris = InputEventMouseMotion.new()
-		souris.button_mask = MOUSE_BUTTON_MASK_LEFT
-		tactile = InputEventScreenDrag.new()
+		Doigt.glisser(root, _doigt_precedent, doigt)
 	else:
-		souris = InputEventMouseButton.new()
-		souris.button_index = MOUSE_BUTTON_LEFT
-		souris.pressed = type == "pose"
-		souris.button_mask = MOUSE_BUTTON_MASK_LEFT if souris.pressed else 0
-		tactile = InputEventScreenTouch.new()
-		tactile.pressed = type == "pose"
-	souris.device = InputEvent.DEVICE_ID_EMULATION
-	souris.position = ou
-	souris.global_position = ou
-	tactile.index = 0
-	tactile.position = ou
-	root.push_input(souris, true)  # coordonnees du viewport (le headless a une fenetre 64x64)
-	root.push_input(tactile, true)
+		Doigt.toucher(root, doigt, type == "pose")
+	_doigt_precedent = doigt
 	await _trames(2)
 
 
@@ -178,7 +169,7 @@ func _derouler() -> void:
 		await _doigt("glisse", p.lerp(cible, i / 8.0))
 	await _doigt("leve", cible)
 	var attendu := avant + (cible - p)
-	_verifier("A1 posee sous le doigt au releve", jeu.position.distance_to(attendu) < 1.5,
+	_verifier("A1 posee sous la pointe au releve", jeu.position.distance_to(attendu) < 1.5,
 		"avant %s → apres %s (attendu %s)" % [avant, jeu.position, attendu])
 	_verifier("A1 : AUCUN lancement", lancements.is_empty(), str(lancements))
 	_verifier("A1 : retombee (echelle 1, opaque)", jeu.scale == Vector2.ONE and jeu.modulate.a == 1.0)
@@ -239,10 +230,10 @@ func _derouler() -> void:
 	# la bulle s'ouvre au doigt (coin haut-gauche, ramenee dans l'ecran pres d'un bord) ;
 	# les etoiles naissent sous la pointe de la coccinelle, posee sous ce meme doigt
 	var pointe: Vector2 = bureau.get("_curseur").position
-	_verifier("B1 : etoiles et bulle nees au meme point (le doigt)",
+	_verifier("B1 : etoiles et bulle nees au meme point (la pointe)",
 		bulle != null and bulle.get_global_rect().grow(1.0).has_point(libre)
-		and pointe.distance_to(libre) < 60.0,
-		"doigt %s, coin bulle %s, pointe etoiles %s" % [libre, bulle.get_global_rect().position if bulle else "?", pointe])
+		and pointe.distance_to(libre) < 1.0,
+		"pointe visee %s, coin bulle %s, pointe etoiles %s" % [libre, bulle.get_global_rect().position if bulle else "?", pointe])
 	await _doigt("leve", libre)
 	await _tap(bulle.get_global_rect().get_center())
 	_verifier("B1 tap DANS la bulle : elle reste", bureau.get("_bulle") == voile)

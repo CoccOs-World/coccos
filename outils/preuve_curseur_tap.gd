@@ -1,7 +1,7 @@
 # Preuve : au DOIGT, un TAP pose la coccinelle du bureau (REQ_261007 android curseur tap).
-# Monte le VRAI bureau (scenes/bureau.tscn) dans root et rejoue, par Viewport.push_input,
-# la suite d'evenements EXACTE que Godot 4.7.2 livre pour un doigt (core/input/input.cpp :
-# le clic souris emule — device DEVICE_ID_EMULATION — part AVANT le ScreenTouch reel) :
+# Monte le VRAI bureau (scenes/bureau.tscn) dans root et pose des doigts par le VRAI chemin du
+# moteur (outils/doigt_moteur.gd : Input.parse_input_event(ScreenTouch) → Godot 4.7.2 fabrique
+# lui-meme le clic souris emule — DEVICE_ID_EMULATION — et le livre AVANT le ScreenTouch reel) :
 #   ① tap sur la verdure     = la coccinelle saute au doigt, pointe decalee comme aux
 #                              7 differences (ancre sous le doigt), fleurs a la pointe ;
 #   ② glisse au doigt        = elle suit, toujours decalee ;
@@ -15,6 +15,8 @@
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_curseur_tap.gd
 # Code de sortie 0 = tout vert, 1 = au moins un echec.
 extends SceneTree
+
+const Doigt := preload("res://outils/doigt_moteur.gd")
 
 # Coccinelle (taille « moyen ») : image 401x470 affichee a 72 px de haut.
 const HOTSPOT := Vector2(0.127, 0.081)   # scripts/effets/curseur.gd HOTSPOTS
@@ -40,37 +42,11 @@ func _trames(n: int) -> void:
 		await process_frame
 
 
-func _pousser(ev: InputEvent) -> void:
-	root.push_input(ev, true)  # coordonnees du viewport (le headless a une fenetre 64x64)
-
-
-func _clic(ou: Vector2, appui: bool, device: int) -> InputEventMouseButton:
-	var ev := InputEventMouseButton.new()
-	ev.device = device
-	ev.button_index = MOUSE_BUTTON_LEFT
-	ev.pressed = appui
-	ev.button_mask = MOUSE_BUTTON_MASK_LEFT if appui else 0
-	ev.position = ou
-	ev.global_position = ou
-	return ev
-
-
-func _toucher(ou: Vector2, appui: bool, device := 0) -> InputEventScreenTouch:
-	var ev := InputEventScreenTouch.new()
-	ev.device = device
-	ev.index = 0
-	ev.pressed = appui
-	ev.position = ou
-	return ev
-
-
-## Un tap au doigt tel que le moteur le livre : clic emule puis ScreenTouch, a l'appui et au relache.
+## Un tap au doigt, a l'appui et au relache.
 func _tap(ou: Vector2) -> void:
-	_pousser(_clic(ou, true, InputEvent.DEVICE_ID_EMULATION))
-	_pousser(_toucher(ou, true))
+	Doigt.toucher(root, ou, true)
 	await _trames(2)
-	_pousser(_clic(ou, false, InputEvent.DEVICE_ID_EMULATION))
-	_pousser(_toucher(ou, false))
+	Doigt.toucher(root, ou, false)
 	await _trames(2)
 
 
@@ -116,29 +92,16 @@ func _derouler() -> void:
 	_verifier("① tap : fleurs autour de la pointe", nouvelles.size() > 0 and _centre(nouvelles).distance_to(vise) < 30.0,
 		"%d fleurs, centre %s" % [nouvelles.size(), _centre(nouvelles)])
 
-	# ② GLISSE au doigt : ScreenDrag reel + mouvement souris emule (ignore pour le curseur)
-	_pousser(_clic(p, true, InputEvent.DEVICE_ID_EMULATION))
-	_pousser(_toucher(p, true))
+	# ② GLISSE au doigt : ScreenDrag reel (+ mouvement souris emule par le moteur)
+	Doigt.toucher(root, p, true)
 	var q := p
 	for i in 6:
+		Doigt.glisser(root, q, q + Vector2(-30, 12))
 		q += Vector2(-30, 12)
-		var drag := InputEventScreenDrag.new()
-		drag.index = 0
-		drag.position = q
-		drag.relative = Vector2(-30, 12)
-		_pousser(drag)
-		var mm := InputEventMouseMotion.new()
-		mm.device = InputEvent.DEVICE_ID_EMULATION
-		mm.position = q
-		mm.global_position = q
-		mm.relative = Vector2(-30, 12)
-		mm.button_mask = MOUSE_BUTTON_MASK_LEFT
-		_pousser(mm)
 		await _trames(1)
 	_verifier("② glisse : la coccinelle suit, decalee", curseur.position.distance_to(_attendu(q, zone)) < TOL,
 		"doigt %s → pointe %s (attendu %s)" % [q, curseur.position, _attendu(q, zone)])
-	_pousser(_clic(q, false, InputEvent.DEVICE_ID_EMULATION))
-	_pousser(_toucher(q, false))
+	Doigt.toucher(root, q, false)
 	await _trames(2)
 
 	# ③ TAP au ras du bord haut, puis du bord droit : le decalage fond, la pointe reste dans l'ecran
@@ -153,19 +116,13 @@ func _derouler() -> void:
 
 	# ④ SOURIS DE BUREAU : inchangee
 	var r := Vector2(zone.size.x * 0.7, zone.size.y * 0.4)
-	var mv := InputEventMouseMotion.new()
-	mv.position = r
-	mv.global_position = r
-	mv.relative = Vector2(5, 5)
-	_pousser(mv)
+	Doigt.souris_mouvement(root, r - Vector2(5, 5), r)
 	await _trames(2)
 	_verifier("④ souris : le curseur est SUR le pointeur (aucun decalage)", curseur.position.distance_to(r) < 0.01, "%s" % curseur.position)
 	avant = _fleurs(bureau).size()
-	_pousser(_clic(r, true, 0))
-	_pousser(_toucher(r, true, InputEvent.DEVICE_ID_EMULATION))  # ce que le moteur emule depuis la souris
+	Doigt.souris_bouton(root, r, true)  # le moteur en emule lui-meme le ScreenTouch
 	await _trames(2)
-	_pousser(_clic(r, false, 0))
-	_pousser(_toucher(r, false, InputEvent.DEVICE_ID_EMULATION))
+	Doigt.souris_bouton(root, r, false)
 	await _trames(2)
 	nouvelles = _fleurs(bureau).slice(avant)
 	_verifier("④ souris : clic = curseur immobile, fleurs au pointeur", curseur.position.distance_to(r) < 0.01 and nouvelles.size() > 0 and _centre(nouvelles).distance_to(r) < 30.0,
