@@ -7,7 +7,11 @@
 ## (« espace », « point », « virgule »… — ce que GCompris ne fait pas).
 ## Un petit trait bleu clignote dans le tableau, là où la prochaine lettre
 ## arrivera — le repère des champs de texte, visible même tableau vide.
-## Retour arrière = efface le dernier caractère · bouton croix = efface tout.
+## Ce trait (le caret) se déplace dans le mot : flèches gauche/droite, ou clic
+## (tap sur Android) entre deux lettres. La lettre tapée s'INSÈRE au caret,
+## retour arrière retire la lettre à sa gauche — une lettre oubliée se corrige
+## sans tout effacer. Par défaut le caret reste en fin de mot (écrire à la suite).
+## Retour arrière = efface le caractère avant le caret · bouton croix = efface tout.
 ## À gauche du tableau, le bouton au visage jaune qui parle : il prononce le
 ## mot écrit (rien si le tableau est vide).
 ## Majuscules partout, lettres accentuées et chiffres acceptés.
@@ -44,6 +48,7 @@ const CLES_SPECIAUX := {
 ## Ce que la bulle affiche pour certains caractères peu visibles.
 const AFFICHAGES_SPECIAUX := {" ": "_"}
 const LONGUEUR_MAX_MOT := 14  # au-delà, la ligne « glisse » (les plus anciennes sortent)
+const FACTEUR_CURSEUR := 2.0  # le curseur de ce jeu, deux fois plus gros (demande Fabrice 2026-10-07)
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
 const COULEUR_BOUTON_DIRE := Color(0.30, 0.62, 0.45)   # vert doux : le bouton « dire le mot »
 const COULEUR_PACMAN := Color(1.0, 0.85, 0.25)          # jaune : le visage qui parle
@@ -83,6 +88,7 @@ var _style_bulle: StyleBoxFlat
 var _label_lettre: Label
 var _label_mot: Label
 var _mot := ""
+var _caret := 0                     # position d'écriture dans _mot (0 = avant la 1re lettre)
 var _trait_ecriture: Control        # le curseur clignotant du tableau blanc
 var _curseur: Node2D                # le gros curseur de souris (tout autre chose)
 var _calque_effets: Node2D
@@ -143,6 +149,7 @@ func _creer_lecteurs() -> void:
 func _creer_curseur() -> void:
 	var dossier: String = (get_script() as GDScript).resource_path.get_base_dir()
 	_curseur = (load(dossier + "/curseur.gd") as GDScript).new()
+	_curseur.facteur = FACTEUR_CURSEUR  # taille ×2, pointe toujours en (0, 0)
 	add_child(_curseur)
 	_curseur.position = get_viewport().get_mouse_position()
 	_dernier_point = _curseur.position
@@ -290,6 +297,7 @@ func _input(event: InputEvent) -> void:
 			return  # le tap appartient au clavier dessiné : la touche fera le travail
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
+				_placer_caret_au_point(event.position)
 				_clic_gauche(event.position)
 			MOUSE_BUTTON_RIGHT:
 				_clic_droit(event.position)
@@ -306,6 +314,12 @@ func _input(event: InputEvent) -> void:
 		return
 	if event.keycode == KEY_BACKSPACE:
 		_effacer_derniere()
+		return
+	if event.keycode == KEY_LEFT:
+		_deplacer_caret(_caret - 1)
+		return
+	if event.keycode == KEY_RIGHT:
+		_deplacer_caret(_caret + 1)
 		return
 	if event.unicode == 0:
 		return  # touche sans caractère (Maj, Ctrl, F1…) → ignorée en douceur
@@ -400,27 +414,52 @@ func _afficher_lettre(caractere: String) -> void:
 	_prononcer(caractere)
 
 
+## Insère le caractère au caret (en fin de mot par défaut : écrire à la suite).
 func _ajouter_au_mot(caractere: String) -> void:
-	_mot += caractere
+	_mot = _mot.insert(_caret, caractere)
+	_caret += 1
 	if _mot.length() > LONGUEUR_MAX_MOT:
-		_mot = _mot.substr(_mot.length() - LONGUEUR_MAX_MOT)
-	_label_mot.text = _mot
-	_trait_ecriture.reveiller()
+		var surplus := _mot.length() - LONGUEUR_MAX_MOT
+		_mot = _mot.substr(surplus)
+		_caret = maxi(_caret - surplus, 0)
+	_rafraichir_mot()
 
 
+## Retire le caractère juste avant le caret (rien si le caret est au début).
 func _effacer_derniere() -> void:
-	if _mot.is_empty():
+	if _caret == 0:
 		return
-	_mot = _mot.substr(0, _mot.length() - 1)
-	_label_mot.text = _mot
-	_trait_ecriture.reveiller()
+	_mot = _mot.erase(_caret - 1, 1)
+	_caret -= 1
+	_rafraichir_mot()
 
 
 ## Efface tout le tableau (bouton croix) — ardoise propre, bulle comprise.
 func _effacer_tout() -> void:
 	_mot = ""
-	_label_mot.text = ""
+	_caret = 0
 	_label_lettre.text = ""
+	_rafraichir_mot()
+
+
+## Déplace le caret (flèches), borné entre le début et la fin du mot.
+func _deplacer_caret(position_voulue: int) -> void:
+	_caret = clampi(position_voulue, 0, _mot.length())
+	_rafraichir_mot()
+
+
+## Clic (ou tap) sur le tableau : le caret saute entre les deux lettres les plus
+## proches du point. Hors du tableau, rien ne change.
+func _placer_caret_au_point(point: Vector2) -> void:
+	if not _label_mot.get_global_rect().has_point(point):
+		return
+	var x_local: float = (_label_mot.get_global_transform().affine_inverse() * point).x
+	_deplacer_caret(_trait_ecriture.index_le_plus_proche(x_local))
+
+
+func _rafraichir_mot() -> void:
+	_label_mot.text = _mot
+	_trait_ecriture.caret = _caret
 	_trait_ecriture.reveiller()
 
 
@@ -496,6 +535,7 @@ class _TraitEcriture extends Control:
 	const OPACITE_BASSE := 0.12
 	const COULEUR := Color(0.16, 0.22, 0.34)  # le bleu feutre du mot
 
+	var caret := 0  # index d'écriture dans le texte du Label (posé par le jeu)
 	var _label: Label
 	var _battement: Tween
 
@@ -525,16 +565,43 @@ class _TraitEcriture extends Control:
 		_battement.tween_property(self, "modulate:a", 1.0, DEMI_PERIODE) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+	## Abscisse (repère du Label) de la frontière avant la lettre d'indice i :
+	## le Label centre le mot, la frontière est au début du mot + le préfixe.
+	func _frontiere(i: int) -> float:
+		var police: Font = _label.get_theme_font("font")
+		var taille: int = _label.get_theme_font_size("font_size")
+		var largeur_mot: float = police.get_string_size(
+			_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+		var largeur_prefixe: float = police.get_string_size(
+			_label.text.substr(0, i), HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+		return _label.size.x / 2.0 - largeur_mot / 2.0 + largeur_prefixe
+
+	## Indice de la frontière entre lettres la plus proche d'une abscisse.
+	func index_le_plus_proche(x: float) -> int:
+		if _label.get_theme_font("font") == null:
+			return _label.text.length()
+		var meilleur := 0
+		for i in range(_label.text.length() + 1):
+			if absf(_frontiere(i) - x) < absf(_frontiere(meilleur) - x):
+				meilleur = i
+		return meilleur
+
 	func _draw() -> void:
 		var police: Font = _label.get_theme_font("font")
 		if police == null:
 			return
 		var taille: int = _label.get_theme_font_size("font_size")
-		var largeur_mot: float = police.get_string_size(
-			_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
-		# Le Label centre le mot : son bout droit est à mi-largeur du mot du centre
 		var cadre := _label.size
-		var x := cadre.x / 2.0 + largeur_mot / 2.0 + ECART + LARGEUR / 2.0
+		var n := _label.text.length()
+		var index := clampi(caret, 0, n)
+		var x := _frontiere(index)
+		# En fin de mot, petit blanc après la dernière lettre (comme avant) ;
+		# au début d'un mot non vide, même blanc avant la première ; entre deux
+		# lettres, le trait se pose pile sur la frontière.
+		if index == n:
+			x += ECART + LARGEUR / 2.0
+		elif index == 0:
+			x -= ECART + LARGEUR / 2.0
 		x = clampf(x, LARGEUR, maxf(cadre.x - LARGEUR, LARGEUR))
 		var demi_hauteur := float(taille) * 0.46
 		var milieu := cadre.y / 2.0
