@@ -7,7 +7,8 @@
 #      sans lancement ni etoiles ;
 #   A2 appui long SUR un jeu puis depose sur un dossier = il y entre ;
 #   B0 option parent DECOCHEE (defaut) : appui long a cote = etoiles (inchange), pas de bulle ;
-#   B1 option COCHEE : appui long a cote = bulle de menu VIDE (sans etoiles) ; tap dedans = elle
+#   B1 option COCHEE : appui long a cote = etoiles + carillon ET bulle de menu VIDE (bulle au-dessus
+#      des etoiles) ; tap dedans = elle
 #      reste ; tap en dehors = elle disparait ; appui long sur la barre = etoiles ; sur une icone = soulevee ;
 #   A3 tap court sur une appli directe = la scene change (lancement intact).
 # Lancement (user:// ISOLE — la sauvegarde de Fabrice n'est jamais touchee) :
@@ -188,9 +189,12 @@ func _derouler() -> void:
 	# B0 option decochee (defaut) : appui long a cote = etoiles, pas de bulle
 	libre = _point_libre(bureau)
 	anneaux_avant = _anneaux(bureau)
+	var carillon: AudioStreamPlayer = bureau.get("_lecteurs")["etoiles"]
+	carillon.stop()
 	await _appui_long(libre)
 	_verifier("B0 option decochee : appui long a cote = etoiles (inchange)",
 		_anneaux(bureau) > anneaux_avant, "point %s" % libre)
+	_verifier("B0 : carillon joue", carillon.playing)
 	_verifier("B0 : aucune bulle", bureau.get("_bulle") == null)
 	await _doigt("leve", libre)
 
@@ -215,6 +219,8 @@ func _derouler() -> void:
 	bureau = await _monter_bureau()
 	libre = _point_libre(bureau)
 	anneaux_avant = _anneaux(bureau)
+	carillon = bureau.get("_lecteurs")["etoiles"]
+	carillon.stop()
 	await _appui_long(libre)
 	var voile: Control = bureau.get("_bulle")
 	_verifier("B1 option cochee : appui long a cote = bulle de menu ouverte", voile != null)
@@ -222,7 +228,21 @@ func _derouler() -> void:
 	_verifier("B1 : bulle visible a l'ecran", bulle != null and bulle.is_visible_in_tree()
 		and bulle.get_global_rect().size.x > 100.0, "%s" % (bulle.get_global_rect() if bulle else "?"))
 	_verifier("B1 : bulle VIDE (aucun element dedans)", bulle != null and bulle.get_child_count() == 0)
-	_verifier("B1 : la bulle REMPLACE les etoiles (aucun anneau)", _anneaux(bureau) == anneaux_avant)
+	_verifier("B1 : etoiles PRESENTES en plus de la bulle", _anneaux(bureau) > anneaux_avant,
+		"%d -> %d anneau(x)" % [anneaux_avant, _anneaux(bureau)])
+	_verifier("B1 : carillon joue en plus de la bulle", carillon.playing)
+	var couche_bulle: CanvasLayer = voile.get_parent() if voile != null else null
+	var couche_effets: CanvasLayer = bureau.get("_calque_effets").get_parent()
+	_verifier("B1 : la bulle est AU-DESSUS des etoiles", couche_bulle != null
+		and couche_bulle.layer > couche_effets.layer,
+		"couche bulle %s / effets %d" % [couche_bulle.layer if couche_bulle else "?", couche_effets.layer])
+	# la bulle s'ouvre au doigt (coin haut-gauche, ramenee dans l'ecran pres d'un bord) ;
+	# les etoiles naissent sous la pointe de la coccinelle, posee sous ce meme doigt
+	var pointe: Vector2 = bureau.get("_curseur").position
+	_verifier("B1 : etoiles et bulle nees au meme point (le doigt)",
+		bulle != null and bulle.get_global_rect().grow(1.0).has_point(libre)
+		and pointe.distance_to(libre) < 60.0,
+		"doigt %s, coin bulle %s, pointe etoiles %s" % [libre, bulle.get_global_rect().position if bulle else "?", pointe])
 	await _doigt("leve", libre)
 	await _tap(bulle.get_global_rect().get_center())
 	_verifier("B1 tap DANS la bulle : elle reste", bureau.get("_bulle") == voile)
@@ -235,6 +255,11 @@ func _derouler() -> void:
 	# appui long sur la barre des taches : pas de bulle (elle est reservee au bureau nu)
 	var ecran: Vector2 = bureau.get_viewport().get_visible_rect().size
 	var sur_barre := Vector2(ecran.x * 0.5, ecran.y - bureau.hauteur_barre * 0.5)
+	# les etoiles de B1 doivent etre passees : sinon leur fin masquerait les nouvelles
+	for i in 30:
+		if _anneaux(bureau) == 0:
+			break
+		await create_timer(0.1).timeout
 	anneaux_avant = _anneaux(bureau)
 	await _appui_long(sur_barre)
 	_verifier("B1 appui long sur la barre : etoiles, pas de bulle",

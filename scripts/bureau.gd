@@ -81,6 +81,7 @@ var _distance_cumulee := 0.0
 var _doigt := -1  # index du doigt que la coccinelle suit (-1 = aucun doigt posé)
 var _menu_contextuel := false  # option parent : appui long sur le bureau nu = bulle de menu
 var _bulle: Control = null  # voile plein écran portant la bulle de menu (null = fermée)
+var _couche_bulle: CanvasLayer  # au-dessus des effets (5), sous le curseur (10)
 var _appui_sur_bureau := false  # le dernier appui gauche est tombé sur le bureau nu
 
 
@@ -176,6 +177,10 @@ func _creer_curseur_et_effets() -> void:
 	_calque_effets = Node2D.new()
 	couche_effets.add_child(_calque_effets)
 
+	_couche_bulle = CanvasLayer.new()
+	_couche_bulle.layer = 6
+	add_child(_couche_bulle)
+
 	var couche_curseur := CanvasLayer.new()
 	couche_curseur.layer = 10
 	add_child(couche_curseur)
@@ -187,7 +192,7 @@ func _creer_curseur_et_effets() -> void:
 	_curseur.position = _dernier_point
 
 	# Mode tactile : l'appui long soulève l'icône touchée ; ailleurs il vaut
-	# clic droit (étoiles + carillon) — ou ouvre la bulle de menu (option parent)
+	# clic droit (étoiles + carillon) — plus la bulle de menu (option parent)
 	_menu_contextuel = PinConfig.lire_option("interface", "menu_contextuel_bureau", false)
 	var tactile: Node = Tactile.new()
 	add_child(tactile)
@@ -195,21 +200,20 @@ func _creer_curseur_et_effets() -> void:
 
 
 ## Appui long au doigt. SUR une icône du bureau : elle se soulève et suit le doigt.
-## Sur le bureau nu, avec l'option parent : la bulle de menu (à la place des
-## étoiles). Sinon : clic droit — étoiles + carillon, nés sous la pointe de la
-## coccinelle, pas sous le doigt.
+## Ailleurs : clic droit — étoiles + carillon, nés sous la pointe de la
+## coccinelle, pas sous le doigt ; sur le bureau nu, avec l'option parent, la
+## bulle de menu s'ouvre EN PLUS, au-dessus des étoiles.
 func _sur_appui_long(ou: Vector2) -> void:
 	for icone in _icones:
 		if is_instance_valid(icone) and icone.contient(ou) and icone.soulever():
 			return
-	if _menu_contextuel and _appui_sur_bureau and not _sur_une_icone(ou):
-		_ouvrir_bulle(ou)
-		return
 	_curseur.pulser()
 	if _anim_droit:
 		_animation_etoiles(_curseur.position if _doigt != -1 else ou)
 	if _sons_clics:
 		_lecteurs["etoiles"].play()
+	if _menu_contextuel and _appui_sur_bureau and not _sur_une_icone(ou):
+		_ouvrir_bulle(ou)
 
 
 ## Le point tombe-t-il sur une icône du bureau (bouton ou libellé) ?
@@ -912,7 +916,8 @@ func _basculer_menu() -> void:
 
 ## Bulle de menu du bureau (option parent, appui long sur le bureau nu) : un
 ## cadre VIDE pour l'instant — son contenu est un chantier à venir. Posée sur
-## un voile transparent : un tap en dehors de la bulle la referme.
+## un voile transparent : un tap en dehors de la bulle la referme. Sa couche
+## passe au-dessus des étoiles, qui ne sont qu'un effet passager.
 func _ouvrir_bulle(ou: Vector2) -> void:
 	_fermer_bulle()
 	var voile := Control.new()
@@ -920,7 +925,7 @@ func _ouvrir_bulle(ou: Vector2) -> void:
 	voile.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed:
 			_fermer_bulle())
-	add_child(voile)
+	_couche_bulle.add_child(voile)
 	_bulle = voile
 
 	var bulle := Panel.new()
