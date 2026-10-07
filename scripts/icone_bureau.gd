@@ -6,14 +6,21 @@
 ## Sur le bureau (`deplacable`), clic gauche MAINTENU + déplacement au-delà de
 ## SEUIL_GLISSE : l'icône se soulève, suit la souris et se pose au relâché
 ## (signal `deplacee`) — sans lancer l'application.
+## Rangement : pendant le vol, `survol` dit où passe la souris (le bureau signale
+## le dossier visé) ; au relâché, `lachee` dit où elle a été lâchée. Dans une
+## fenêtre-dossier (`rangeable`), le jeu se soulève de la même façon et peut
+## être lâché HORS de la fenêtre pour le ressortir sur le bureau.
 extends VBoxContainer
 
 signal lancee(id: String)
 signal deplacee(id: String, position: Vector2)
+signal survol(id: String, point: Vector2)
+signal lachee(id: String, point: Vector2, coin: Vector2)
 
 const SEUIL_GLISSE := 10.0  # px : en deçà, c'est un clic (mains tremblantes)
 const ECHELLE_SOULEVEE := 1.12  # l'icône « soulevée » grossit…
 const OPACITE_SOULEVEE := 0.85  # … et s'éclaircit un peu (pas la couleur seule)
+const ECHELLE_CIBLE := 1.15  # dossier visé par un glissé : il grossit ET s'éclaircit
 
 const UIStyle := preload("res://scripts/ui_style.gd")
 const Pictogramme := preload("res://scripts/pictogramme.gd")
@@ -27,6 +34,7 @@ var chemin_image := ""  # PNG hors ressources (user:// — icônes du téléphon
 
 var deplacable := false  # bureau seulement (pas les fenêtres ni la boîte à icônes)
 var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches)
+var rangeable := false  # jeu dans une fenêtre-dossier : glissé = le ressortir
 
 var _btn: Button
 var _appui := false  # clic gauche maintenu sur le bouton
@@ -35,6 +43,8 @@ var _prise := Vector2.ZERO  # écart curseur ↔ coin de l'icône au moment de l
 var _glisse := false  # le maintien est devenu un déplacement
 var _a_glisse := false  # le dernier relâché terminait un déplacement : pas de lancement
 var return_apres_image := false  # une icône-image remplace le pictogramme
+var _dossier: Control = null  # le dessin du dossier (catégorie) — éclairci quand visé
+var _visee := false  # dossier actuellement visé par un jeu en vol
 
 
 func _ready() -> void:
@@ -67,13 +77,15 @@ func _ready() -> void:
 		dossier.set_anchors_preset(Control.PRESET_FULL_RECT)
 		dossier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_btn.add_child(dossier)
+		_dossier = dossier
 		# Survol : le dossier s'éclaircit (retour visuel du bouton transparent)
 		_btn.mouse_entered.connect(func() -> void:
 			dossier.couleur = couleur.lightened(0.15)
 			dossier.queue_redraw())
 		_btn.mouse_exited.connect(func() -> void:
-			dossier.couleur = couleur
-			dossier.queue_redraw())
+			if not _visee:
+				dossier.couleur = couleur
+				dossier.queue_redraw())
 
 		# Pictogramme plus petit, posé sur le corps du dossier
 		picto_ctrl.offset_left = 26
@@ -148,8 +160,10 @@ func _ready() -> void:
 		lancee.emit(id))
 	if deplacable:
 		_btn.gui_input.connect(_sur_saisie_bouton)
-		pivot_offset = size / 2.0
-		resized.connect(func() -> void: pivot_offset = size / 2.0)
+	elif rangeable:
+		_btn.gui_input.connect(_sur_saisie_fenetre)
+	pivot_offset = size / 2.0
+	resized.connect(func() -> void: pivot_offset = size / 2.0)
 
 
 ## Maintien + déplacement = glisser l'icône ; simple clic = laissé au bouton.
@@ -170,6 +184,7 @@ func _sur_saisie_bouton(event: InputEvent) -> void:
 				modulate = Color.WHITE
 				z_index = 0
 				garder_dans_l_ecran()
+				lachee.emit(id, event.global_position, position)
 				deplacee.emit(id, position)
 	elif event is InputEventMouseMotion and _appui:
 		var ici := _dans_le_parent(event.global_position)
@@ -181,6 +196,60 @@ func _sur_saisie_bouton(event: InputEvent) -> void:
 		if _glisse:
 			position = ici - _prise
 			garder_dans_l_ecran()
+			survol.emit(id, event.global_position)
+
+
+## Jeu dans une fenêtre-dossier : maintien + déplacement = il se soulève et suit
+## la souris par-dessus tout (top_level, hors de la rangée) ; au relâché, le
+## bureau décide (`lachee`) — hors de la fenêtre, il ressort sur le bureau.
+## Simple clic = laissé au bouton (lance le jeu, comme avant).
+func _sur_saisie_fenetre(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_appui = true
+			_a_glisse = false
+			_origine = event.global_position
+			_prise = event.global_position - global_position
+		elif _appui:
+			_appui = false
+			if _glisse:
+				_glisse = false
+				_a_glisse = true  # le `pressed` du bouton suit : il ne lancera rien
+				scale = Vector2.ONE
+				modulate = Color.WHITE
+				z_index = 0
+				var coin := global_position
+				top_level = false  # reprend sa place dans la rangée…
+				if get_parent() is Container:
+					(get_parent() as Container).queue_sort()
+				lachee.emit(id, event.global_position, coin)  # … sauf si le bureau le ressort
+	elif event is InputEventMouseMotion and _appui:
+		if not _glisse and event.global_position.distance_to(_origine) >= SEUIL_GLISSE:
+			_glisse = true
+			var ici := global_position
+			top_level = true  # quitte la rangée : libre de sortir de la fenêtre
+			global_position = ici
+			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+			z_index = 1
+		if _glisse:
+			global_position = event.global_position - _prise
+
+
+## Dossier visé (ou plus) par un jeu en vol : il grossit et s'éclaircit —
+## la taille porte l'information autant que la teinte (daltonisme).
+func signaler_cible(oui: bool) -> void:
+	if _dossier == null or oui == _visee:
+		return
+	_visee = oui
+	_dossier.couleur = couleur.lightened(0.3) if oui else couleur
+	_dossier.queue_redraw()
+	scale = Vector2(ECHELLE_CIBLE, ECHELLE_CIBLE) if oui else Vector2.ONE
+
+
+## Le point (viewport) tombe-t-il sur le bouton de l'icône ?
+func contient(point: Vector2) -> bool:
+	return _btn != null and _btn.get_global_rect().has_point(point)
 
 
 ## Point du viewport ramené dans le repère du parent (le bureau).

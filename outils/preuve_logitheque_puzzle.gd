@@ -2,7 +2,7 @@
 # Ne mesure pas « le code compile » (scan_scenes.gd le fait deja) mais les QUATRE
 # faits qui font qu'une icone apparait VRAIMENT sur le bureau de l'enfant :
 #   ① l'entree existe dans le registre et elle est ACTIVE (= « deja installe ») ;
-#   ② sa categorie est vide, donc elle est une ICONE DIRECTE du bureau ;
+#   ② il est range par defaut dans le dossier « souris » (decision de Fabrice, 07-10) ;
 #   ③ sa scene se charge et s'instancie ;
 #   ④ sa plaque PNG existe, donc l'icone est l'IMAGE livree et non un pictogramme dessine.
 # Lancement :
@@ -34,10 +34,10 @@ func _initialize() -> void:
 		return
 
 	_verifier("① activee par defaut (deja installe)", Registre.est_active(ID))
-	_verifier("② icone DIRECTE du bureau", fiche["categorie"] == "",
+	_verifier("② range par defaut dans « souris »", fiche["categorie"] == "souris",
 		"categorie = « %s »" % fiche["categorie"])
-	_verifier("② presente dans actives_directes()",
-		Registre.actives_directes().any(func(a: Dictionary) -> bool: return a["id"] == ID))
+	_verifier("② present dans jeux_de(\"souris\")",
+		Registre.jeux_de("souris").any(func(a: Dictionary) -> bool: return a["id"] == ID))
 
 	var chemin: String = fiche["scene"]
 	_verifier("③ scene sous jeux_integres/", chemin.begins_with("res://jeux_integres/%s/" % ID), chemin)
