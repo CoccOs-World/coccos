@@ -16,10 +16,12 @@
 # Code de sortie 0 = tout vert, 1 = au moins un echec.
 extends SceneTree
 
-# Coccinelle (taille « moyen ») : image 401x470 affichee a 72 px de haut.
+# Coccinelle (taille « moyen ») : image 401x470 affichee a 72 px de haut, a l'echelle
+# « moyen » = 2.0 (gamme x2, REQ_261007 curseur tailles x2 : ancien 1.0 x 2).
 const HOTSPOT := Vector2(0.127, 0.081)   # scripts/effets/curseur.gd HOTSPOTS
 const ANCRE := Vector2(0.533, 0.594)     # sept_differences.gd CURSEURS « Coccinelle » ancre
-const TAILLE := Vector2(72.0 * 401.0 / 470.0, 72.0)
+const ECHELLE_MOYEN := 2.0
+const TAILLE := Vector2(72.0 * 401.0 / 470.0, 72.0) * ECHELLE_MOYEN
 const TOL := 0.6
 
 var _echecs := 0

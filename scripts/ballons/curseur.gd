@@ -15,9 +15,9 @@
 extends Node2D
 
 const CHEMIN_CONFIG := "user://config.cfg"
-const ECHELLES_TAILLE := {"petit": 0.55, "moyen": 1.0, "grand": 1.45}
-const ECHELLE_MIN := 0.55
-const ECHELLE_MAX := 1.8
+const ECHELLES_TAILLE := {"petit": 1.10, "moyen": 2.0, "grand": 2.90}
+const ECHELLE_MIN := 1.10
+const ECHELLE_MAX := 3.6
 const CONTOUR := Color(0.15, 0.15, 0.25)
 
 const HAUTEUR_IMAGE := 72.0  # hauteur affichée des curseurs-images à l'échelle 1
@@ -58,7 +58,7 @@ const POINTS_FLECHE: Array[Vector2] = [
 
 var forme_forcee := ""  # pour les aperçus des réglages (prime sur la config)
 
-var _echelle_base := 1.0
+var _echelle_base: float = ECHELLES_TAILLE["moyen"]  # sans réglage = « moyen »
 var _forme := "coccinelle"  # la mascotte de CoccOs est le curseur par défaut
 var _texture: Texture2D = null
 var _vitesse := 1.0
@@ -70,7 +70,7 @@ func _ready() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(CHEMIN_CONFIG) == OK:
 		var taille: String = cfg.get_value("souris", "taille_curseur", "moyen")
-		_echelle_base = ECHELLES_TAILLE.get(taille, 1.0)
+		_echelle_base = ECHELLES_TAILLE.get(taille, ECHELLES_TAILLE["moyen"])
 		_forme = cfg.get_value("souris", "forme_curseur", "coccinelle")
 		_vitesse = float(cfg.get_value("souris", "vitesse_curseur", 1.0))
 	if forme_forcee != "":
