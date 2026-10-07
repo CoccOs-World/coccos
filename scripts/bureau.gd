@@ -283,6 +283,7 @@ func _creer_icones() -> void:
 	var par_colonne := 3
 	var premiere: Control = null
 	var applis := _applis_bureau()
+	var ranges: Dictionary = PinConfig.lire_option("bureau", "places_icones", {})
 	for i in applis.size():
 		var appli: Dictionary = applis[i]
 		var icone: Control = IconeBureau.new()
@@ -294,13 +295,30 @@ func _creer_icones() -> void:
 		icone.est_dossier = appli.has("fenetre")  # catégorie = icône dossier
 		@warning_ignore("integer_division")
 		icone.position = Vector2(30 + (i / par_colonne) * 180, 26 + (i % par_colonne) * 178)
+		# Place choisie par l'enfant (glisser-déposer) — sinon disposition par défaut
+		if ranges.has(icone.id):
+			icone.position = ranges[icone.id]
+		icone.limite_basse = HAUTEUR_BARRE
+		# Souris seulement : en mode tactile, un doigt qui dérive doit rester un tap
+		icone.deplacable = not Tactile.actif()
 		icone.lancee.connect(_lancer_appli)
+		icone.deplacee.connect(_memoriser_place_icone)
 		add_child(icone)
+		if ranges.has(icone.id):
+			icone.garder_dans_l_ecran.call_deferred()  # écran plus petit qu'au rangement
 		if premiere == null:
 			premiere = icone
 	# Focus clavier initial sur la première icône (accessibilité)
 	if premiere != null:
 		premiere.ready.connect(premiere.focus, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+
+## L'enfant a posé une icône : sa place est retenue (user://config.cfg, qui
+## voyage avec l'espace famille) et resservie au prochain lancement.
+func _memoriser_place_icone(id: String, ou: Vector2) -> void:
+	var ranges: Dictionary = PinConfig.lire_option("bureau", "places_icones", {})
+	ranges[id] = ou
+	PinConfig.ecrire_option("bureau", "places_icones", ranges)
 
 
 func _lancer_appli(id: String) -> void:

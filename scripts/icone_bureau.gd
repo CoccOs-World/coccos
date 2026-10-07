@@ -3,9 +3,17 @@
 ## Les catégories (`est_dossier`) prennent une forme de dossier à onglet,
 ## avec le pictogramme posé sur le corps du dossier.
 ## Un simple clic lance l'application (adapté aux enfants : pas de double-clic).
+## Sur le bureau (`deplacable`), clic gauche MAINTENU + déplacement au-delà de
+## SEUIL_GLISSE : l'icône se soulève, suit la souris et se pose au relâché
+## (signal `deplacee`) — sans lancer l'application.
 extends VBoxContainer
 
 signal lancee(id: String)
+signal deplacee(id: String, position: Vector2)
+
+const SEUIL_GLISSE := 10.0  # px : en deçà, c'est un clic (mains tremblantes)
+const ECHELLE_SOULEVEE := 1.12  # l'icône « soulevée » grossit…
+const OPACITE_SOULEVEE := 0.85  # … et s'éclaircit un peu (pas la couleur seule)
 
 const UIStyle := preload("res://scripts/ui_style.gd")
 const Pictogramme := preload("res://scripts/pictogramme.gd")
@@ -17,7 +25,15 @@ var est_dossier := false  # true = catégorie : dessinée comme un dossier à on
 var picto := ""  # pictogramme à dessiner si différent de l'id (applis externes)
 var chemin_image := ""  # PNG hors ressources (user:// — icônes du téléphone)
 
+var deplacable := false  # bureau seulement (pas les fenêtres ni la boîte à icônes)
+var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches)
+
 var _btn: Button
+var _appui := false  # clic gauche maintenu sur le bouton
+var _origine := Vector2.ZERO  # point d'appui (coordonnées du parent)
+var _prise := Vector2.ZERO  # écart curseur ↔ coin de l'icône au moment de l'appui
+var _glisse := false  # le maintien est devenu un déplacement
+var _a_glisse := false  # le dernier relâché terminait un déplacement : pas de lancement
 var return_apres_image := false  # une icône-image remplace le pictogramme
 
 
@@ -125,7 +141,58 @@ func _ready() -> void:
 	libelle.add_theme_constant_override("outline_size", 6)
 	add_child(libelle)
 
-	_btn.pressed.connect(func() -> void: lancee.emit(id))
+	_btn.pressed.connect(func() -> void:
+		if _a_glisse:
+			_a_glisse = false
+			return
+		lancee.emit(id))
+	if deplacable:
+		_btn.gui_input.connect(_sur_saisie_bouton)
+		pivot_offset = size / 2.0
+		resized.connect(func() -> void: pivot_offset = size / 2.0)
+
+
+## Maintien + déplacement = glisser l'icône ; simple clic = laissé au bouton.
+func _sur_saisie_bouton(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var ici := _dans_le_parent(event.global_position)
+		if event.pressed:
+			_appui = true
+			_a_glisse = false
+			_origine = ici
+			_prise = ici - position
+		elif _appui:
+			_appui = false
+			if _glisse:
+				_glisse = false
+				_a_glisse = true  # le `pressed` du bouton suit : il ne lancera rien
+				scale = Vector2.ONE
+				modulate = Color.WHITE
+				z_index = 0
+				garder_dans_l_ecran()
+				deplacee.emit(id, position)
+	elif event is InputEventMouseMotion and _appui:
+		var ici := _dans_le_parent(event.global_position)
+		if not _glisse and ici.distance_to(_origine) >= SEUIL_GLISSE:
+			_glisse = true
+			scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
+			modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
+			z_index = 1  # passe au-dessus des autres icônes pendant le vol
+		if _glisse:
+			position = ici - _prise
+			garder_dans_l_ecran()
+
+
+## Point du viewport ramené dans le repère du parent (le bureau).
+func _dans_le_parent(point: Vector2) -> Vector2:
+	return get_parent_control().get_global_transform().affine_inverse() * point
+
+
+## L'icône reste entière dans l'écran, au-dessus de la barre des tâches.
+func garder_dans_l_ecran() -> void:
+	var zone: Vector2 = get_parent_area_size()
+	position.x = clampf(position.x, 0.0, maxf(0.0, zone.x - size.x))
+	position.y = clampf(position.y, 0.0, maxf(0.0, zone.y - limite_basse - size.y))
 
 
 ## Donne le focus clavier au bouton de l'icône (accessibilité).
