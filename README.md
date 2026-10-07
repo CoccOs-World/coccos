@@ -58,6 +58,13 @@ godot --headless --path . --export-release "Web" sortie/index.html # exporter
 Les presets d'export (`export_presets.cfg`) ne sont pas versionnés (fichier
 propre à chaque machine) : créez les vôtres dans l'éditeur (Linux, Windows,
 Web, Android). Textures Android : `import_etc2_astc=true` est déjà réglé.
+⚠ **Filtre d'export à poser dans CHAQUE preset** (onglet Ressources →
+« Filtres pour exporter des fichiers non-ressources ») :
+`lang/*/textes.xml, classeur/*.tlab` (+ `voix_android/*` pour Android).
+Ce ne sont pas des ressources Godot : sans ce filtre, ils manquent du paquet
+sans aucune erreur à l'export — l'interface perd ses textes et « Mon classeur »
+s'ouvre vide (les 6 planches par défaut ne sont pas semées). Vérifier un
+paquet : `outils/preuve_classeur_paquet.gd`.
 La conversion vidéo de « Ma télé » utilise `ffmpeg` (paquet système sur
 Linux ; à placer à côté de `coccos.exe` sur Windows).
 
