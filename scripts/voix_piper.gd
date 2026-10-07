@@ -52,6 +52,20 @@ const NOMS_LETTRES := {
 	"X": "ixe", "Y": "ie grec", "Z": "zède",
 }
 
+## Mots que siwis ÉCORCHE dit tels quels (oreille de Fabrice, classeur, 07-10-2026) :
+## l'entrée du moteur est remplacée par une graphie qui se prononce bien.
+## Clé = le terme en minuscules (« papa », « PAPA », « Papa » sont tous servis).
+## Chaque entrée est MESURÉE (banc_voix_classeur_261007 : 10 tirages, deux juges
+## ASR) : « papa » perdait son P (« apa »), « aide » sortait « i / et », « pinceau »
+## finissait en « pinça ». SOURCE UNIQUE : outils/generer_voix_bureau.py lit
+## cette table ici même — n'en faire aucune copie.
+## « tu » et « couteau » n'y sont PAS : aucune graphie essayée ne les rend juste.
+const EXCEPTIONS_TTS := {
+	"papa": "Papa !",
+	"aide": "Aide.",
+	"pinceau": "Pin-ceau !",
+}
+
 enum Etat { INCONNU, PRET, INDISPONIBLE }
 
 static var _etat := Etat.INCONNU
@@ -90,13 +104,14 @@ static func flux(terme: String, categorie: String) -> AudioStream:
 
 
 ## Le texte à PHONÉMISER pour un terme : une lettre seule devient son nom écrit
-## (NOMS_LETTRES), tout le reste passe inchangé. Le terme BRUT reste la clé du
+## (NOMS_LETTRES), un mot écorché prend sa graphie corrigée (EXCEPTIONS_TTS),
+## tout le reste passe inchangé. Le terme BRUT reste la clé du
 ## cache et le nom des clips pré-rendus — seule l'entrée du moteur change.
 ## La mise en minuscules des mots tout en capitales est faite ensuite par
 ## PiperTTS::texte_pour_tts, côté extension.
 static func texte_pour_tts(terme: String) -> String:
 	if terme.length() != 1:
-		return terme
+		return EXCEPTIONS_TTS.get(terme.to_lower(), terme)
 	return NOMS_LETTRES.get(terme.to_upper(), terme)
 
 
@@ -212,7 +227,12 @@ static func _trouver_modele() -> String:
 
 ## Nom de fichier sûr : le terme lisible, plus une empreinte qui distingue deux
 ## termes que l'assainissement rendrait identiques (« a/b » et « a_b »).
+## Un mot de EXCEPTIONS_TTS a sa graphie corrigée DANS l'empreinte : le rendu
+## écorché déjà en cache (tablette, poste) est ignoré et refait une fois.
 static func _chemin_cache(terme: String, categorie: String) -> String:
 	var lisible := terme.validate_filename().substr(0, 32)
-	var empreinte := terme.sha256_text().substr(0, 8)
+	var cle := terme
+	if EXCEPTIONS_TTS.has(terme.to_lower()):
+		cle += "\n" + EXCEPTIONS_TTS[terme.to_lower()]
+	var empreinte := cle.sha256_text().substr(0, 8)
 	return "%s/%s/%s_%s.wav" % [CACHE, categorie, lisible, empreinte]

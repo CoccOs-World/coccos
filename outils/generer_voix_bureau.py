@@ -65,11 +65,23 @@ NOMS_LETTRES = {
 }
 
 
+def exceptions_tts():
+    """Mots que siwis écorche → graphie qui se prononce bien. SOURCE UNIQUE :
+    la table EXCEPTIONS_TTS de scripts/voix_piper.gd, lue ici (aucune copie),
+    pour qu'un re-rendu (VOIX_FORCE=1) garde les corrections du jeu."""
+    src = _source("scripts", "voix_piper.gd")
+    bloc = re.search(r"const EXCEPTIONS_TTS := \{(.*?)\n\}", src, re.S).group(1)
+    return dict(re.findall(r'"([^"]+)": "([^"]+)"', bloc))
+
+
 def texte_pour_tts(texte):
     """Texte LISIBLE pour le phonémiseur : une lettre SEULE devient son nom
-    écrit ; un mot tout en capitales est LU, pas épelé."""
+    écrit ; un mot écorché prend sa graphie corrigée (EXCEPTIONS_TTS) ; un mot
+    tout en capitales est LU, pas épelé."""
     if len(texte) == 1:
         return NOMS_LETTRES.get(texte.upper(), texte)
+    if texte.lower() in EXCEPTIONS_TTS:
+        return EXCEPTIONS_TTS[texte.lower()]
     return _RE_CAPS.sub(lambda m: m.group(0).lower(), texte)
 
 
@@ -156,6 +168,9 @@ def enumerer_termes():
         "mots": mots,
         "phrases": libelles + [n for n in noms_caracteres_speciaux() if n not in libelles],
     }
+
+
+EXCEPTIONS_TTS = exceptions_tts()
 
 
 # --- Rendu ------------------------------------------------------------------------
