@@ -15,9 +15,10 @@
 extends Node2D
 
 const CHEMIN_CONFIG := "user://config.cfg"
-const ECHELLES_TAILLE := {"petit": 1.10, "moyen": 2.0, "grand": 2.90}
-const ECHELLE_MIN := 1.10
-const ECHELLE_MAX := 3.6
+const ECHELLES_TAILLE := {"petit": 0.55, "moyen": 1.0, "grand": 1.45}
+const ECHELLE_MIN := 0.55
+const ECHELLE_MAX := 1.8
+const AGRANDI_TAILLE_ANDROID := 2.0  # Android : toute la gamme (et la molette) x2, PC inchangé
 const CONTOUR := Color(0.15, 0.15, 0.25)
 
 const HAUTEUR_IMAGE := 72.0  # hauteur affichée des curseurs-images à l'échelle 1
@@ -58,7 +59,9 @@ const POINTS_FLECHE: Array[Vector2] = [
 
 var forme_forcee := ""  # pour les aperçus des réglages (prime sur la config)
 
-var _echelle_base: float = ECHELLES_TAILLE["moyen"]  # sans réglage = « moyen »
+var gamme := gamme_pour(OS.has_feature("android"))  # multiplicateur de la gamme, posé avant add_child
+
+var _echelle_base := 1.0
 var _forme := "coccinelle"  # la mascotte de CoccOs est le curseur par défaut
 var _texture: Texture2D = null
 var _vitesse := 1.0
@@ -67,10 +70,11 @@ var _warp_attendu := false
 
 
 func _ready() -> void:
+	_echelle_base = ECHELLES_TAILLE["moyen"] * gamme  # sans réglage = « moyen »
 	var cfg := ConfigFile.new()
 	if cfg.load(CHEMIN_CONFIG) == OK:
 		var taille: String = cfg.get_value("souris", "taille_curseur", "moyen")
-		_echelle_base = ECHELLES_TAILLE.get(taille, ECHELLES_TAILLE["moyen"])
+		_echelle_base = ECHELLES_TAILLE.get(taille, ECHELLES_TAILLE["moyen"]) * gamme
 		_forme = cfg.get_value("souris", "forme_curseur", "coccinelle")
 		_vitesse = float(cfg.get_value("souris", "vitesse_curseur", 1.0))
 	if forme_forcee != "":
@@ -162,9 +166,14 @@ func pulser() -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## Gamme des tailles : x2 sur Android, inchangée sur PC (même test que la barre).
+static func gamme_pour(android: bool) -> float:
+	return AGRANDI_TAILLE_ANDROID if android else 1.0
+
+
 ## Molette : +1 = grossit, -1 = rétrécit (dans les bornes).
 func zoomer(direction: int) -> void:
-	_echelle_base = clampf(_echelle_base + 0.12 * float(direction), ECHELLE_MIN, ECHELLE_MAX)
+	_echelle_base = clampf(_echelle_base + 0.12 * float(direction), ECHELLE_MIN * gamme, ECHELLE_MAX * gamme)
 	var animation := create_tween()
 	animation.tween_property(self, "scale", Vector2.ONE * _echelle_base, 0.15) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
