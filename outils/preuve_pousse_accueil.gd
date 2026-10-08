@@ -1,4 +1,7 @@
-# Preuve : ACCUEIL de Pousse-Pollen nettoyé (REQ_261008 pousse accueil nettoyage).
+# Preuve : ACCUEIL de Pousse-Pollen nettoyé (REQ_261008 pousse accueil nettoyage) — MODE TACTILE (Android).
+# (08-10, REQ curseur desktop) Le choix de curseur est rétabli sur PC seulement : cette preuve FORCE le mode tactile
+# (user://config.cfg [interface] mode_tactile = true, le réglage qu'Android coche par défaut) et vérifie qu'en
+# tactile rien n'a changé depuis ab66be9. Le pendant PC : outils/preuve_pousse_curseur_pc.gd.
 # Monte le VRAI jeu (scenes/pousse_pollen.tscn) dans root et vérifie, par mesure :
 #   ① plus de choix de CURSEUR (titre, cases, aperçus absents) ; choix d'AVATAR présent (2 cases) ;
 #   ② avatar coccinelle/abeille MÉMORISÉ (fichier + relecture au relancement), progression PRÉSERVÉE,
@@ -67,6 +70,9 @@ func _touche(code: Key) -> void:
 func _derouler() -> void:
 	print("=== PREUVE ACCUEIL POUSSE-POLLEN (nettoyage 08-10) ===")
 	print("  user:// = %s" % OS.get_user_data_dir())
+	var reglages := ConfigFile.new()                 # mode tactile forcé = le défaut d'Android
+	reglages.set_value("interface", "mode_tactile", true)
+	reglages.save("user://config.cfg")
 	# Sauvegarde « ancienne » : progression N5 + ancien choix de curseur (abeille) à effacer.
 	var vieux := ConfigFile.new()
 	vieux.set_value("progression", "niveau_max_atteint", 4)
@@ -88,9 +94,11 @@ func _derouler() -> void:
 	_verifier("① titre « Choisis ton curseur » absent", not textes.has("Choisis ton curseur"))
 	_verifier("① libellé « Main » absent", not textes.has("Main"))
 	_verifier("① cases de choix = Coccinelle + Abeille seulement", cases == ["Coccinelle", "Abeille"], str(cases))
-	_verifier("① plus aucune méthode du choix de curseur",
-		not jeu.has_method("_choisir_curseur") and not jeu.has_method("_apercu_curseur") and jeu.get("_curseur_type") == null)
+	_verifier("① aucune surbrillance de case curseur construite",
+		(jeu.get("_surbrillance_curseur") as Array).is_empty())
 	_verifier("① titre « Choisis ton personnage » présent", textes.has("Choisis ton personnage"))
+	_verifier("① mode tactile détecté (pas de choix de curseur)", jeu.get("_curseur_pc") == false)
+	_verifier("① accueil : curseur coccinelle posé", jeu.get("curseur_pose") == "accueil")
 
 	# ③ prairie
 	var prairie: Node = accueil.get_node_or_null("Prairie")
@@ -162,6 +170,7 @@ func _derouler() -> void:
 	await _trames(2)
 	_verifier("⑤ en jeu, clic + doigt = aucune fleur", jeu.get("fleurs_accueil_posees") == compte_jeu and _fleurs_dans_arbre() == 0)
 	_verifier("⑤ en jeu, souris libre et visible (plus de confinement)", Input.mouse_mode == Input.MOUSE_MODE_VISIBLE)
+	_verifier("⑤ en jeu, AUCUN curseur CoccOs (pointeur système)", jeu.get("curseur_pose") == "systeme", str(jeu.get("curseur_pose")))
 
 	# ⑥b le jeu se joue : N1 = ← pousse la boule sur la loge
 	var av1: Vector2i = jeu.get("_avatar")

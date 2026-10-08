@@ -14,6 +14,11 @@ extends Node2D
 ## la même image que les autres accueils) par-dessus l'ex-voile brun, qui reste le bouchon à clics. (3) Un curseur
 ## COCCINELLE et des PETITES FLEURS au clic/touche (fleur.gd + ronde de bureau.gd + pop_joyeux) vivent DANS
 ## L'ACCUEIL SEULEMENT : tout est enfant de la couche d'accueil, libérée par « Jouer » ; en jeu, curseur système.
+## Pousse-Pollen — CHOIX DE CURSEUR RÉTABLI SUR PC (2026-10-08, Fabrice : « sur PC, le curseur est utile ; c'est sur
+## Android qu'il n'est pas utile ») : hors mode tactile (Tactile.actif() faux = Linux/Windows), la section « Choisis
+## ton curseur » (main/coccinelle/abeille), sa persistance choix/curseur, le curseur choisi EN JEU et le confinement
+## fenêtre reviennent (code de 079ed08). En mode tactile (Android) : rien ne change, accueil et jeu comme ci-dessus.
+## Prairie, curseur coccinelle + fleurs de l'accueil et choix d'avatar : sur les deux plateformes.
 ## Pousse-Pollen — Balle 69 (2026-07-13) : TERRE PARTOUT, fin de la verdure et du « marron vide » (décision DESIGN
 ## Fabrice, test N9/N15). Trois points, RENDU + cadrage uniquement (grilles/mécanique/victoire/preuves INTACTES) :
 ## (1) ÉCHAPPÉE VERDURE SUPPRIMÉE : plus de bande fond_prairie.png en haut — _construire_horizon, TEX_PRAIRIE,
@@ -1184,12 +1189,12 @@ const TUTO_SYMBOLES := {5: "chiffres", 6: "chiffres", 7: "lettres", 8: "impose",
 # SAUVEGARDE DE LA PROGRESSION SUR DISQUE (balle 25, retour de test Fabrice : « refaire tout le jeu pour voir un
 # niveau, insupportable »). Le plus haut niveau atteint (_niveau_max_atteint) est écrit dans user:// à chaque
 # déblocage et rechargé au démarrage → l'enfant retrouve TOUS ses niveaux débloqués sans rejouer.
-const CHEMIN_PROGRESSION := "user://pousse_pollen_progression.cfg"   # ConfigFile : { progression/niveau_max_atteint = int ; choix/avatar = int }
-# Choix d'avatar (balle 49) : MÊME fichier que la progression, section "choix" (à CÔTÉ de la progression, GDD §2.3).
+const CHEMIN_PROGRESSION := "user://pousse_pollen_progression.cfg"   # ConfigFile : { progression/niveau_max_atteint = int ; choix/avatar = int ; choix/curseur = int (PC) }
+# Choix d'avatar/curseur (balle 49 ; curseur : PC seulement depuis le 08-10) : MÊME fichier que la progression, section "choix" (à CÔTÉ de la progression, GDD §2.3).
 # Sauvegarde FUSIONNÉE (on relit le fichier avant d'écrire) → progression et choix cohabitent sans s'écraser.
 const SECTION_CHOIX := "choix"
 const CLE_AVATAR := "avatar"
-const CLE_CURSEUR_RETIREE := "curseur"    # (08-10) choix de curseur retiré : clé effacée à la prochaine sauvegarde
+const CLE_CURSEUR := "curseur"    # (08-10) PC : choix mémorisé · mode tactile (Android) : clé effacée à la prochaine sauvegarde
 # CONFORT DE TEST : déblocage total immédiat de toute la série. Deux voies (la plus simple à la main) :
 #   • poser un fichier vide `user://pousse_pollen_unlock_all` (sous Linux : ~/.local/share/godot/app_userdata/Pousse-Pollen/) ;
 #   • OU passer DEBUG_UNLOCK_ALL à true (recompilé). Aucune des deux n'écrit la sauvegarde → test non destructif.
@@ -1370,8 +1375,13 @@ const COL_TRAIT := Color(0.10, 0.08, 0.06)    # contours sombres
 # (balle 52) COL_AVATAR / COL_ABEILLE / COL_MAIN retirés : avatars/curseur rendus par les VRAIES textures ci-dessous.
 
 # AVATARS RÉELS CoccOs (balle 52) — PNG transparents importés depuis l'app CoccOs, remplacent les placeholders dessinés
-# b49. (08-10) main.png/abeille.png ne sont plus chargés : le choix de curseur est retiré, seule la coccinelle reste (accueil).
-const TEX_COCCINELLE := preload("res://scripts/pousse_pollen/textures/coccinelle.png")   # (08-10) seul curseur restant : celui de l'ACCUEIL
+# b49. Coccinelle/abeille = avatar EN JEU (choix 0/1) ; main/coccinelle/abeille = curseurs souris + aperçus d'accueil.
+# (08-10) La coccinelle est AUSSI le curseur de l'ACCUEIL (deux plateformes) ; main/abeille ne servent qu'au choix PC.
+const TEX_COCCINELLE := preload("res://scripts/pousse_pollen/textures/coccinelle.png")
+const TEX_ABEILLE := preload("res://scripts/pousse_pollen/textures/abeille.png")
+const TEX_MAIN := preload("res://scripts/pousse_pollen/textures/main.png")
+# (08-10) PC ou tactile : le même test que les autres jeux CoccOs (réglage [interface] mode_tactile, coché sur Android).
+const Tactile := preload("res://scripts/tactile.gd")
 # (08-10) Prairie de fond + petites fleurs au clic de l'ACCUEIL : les pièces PARTAGÉES de CoccOs, reprises telles quelles.
 const Fond := preload("res://scripts/fond.gd")
 const FleurAccueil := preload("res://scripts/effets/fleur.gd")
@@ -1580,15 +1590,20 @@ var _btn_niveau_suiv: Button = null
 var _niveau_vise := 0
 var _timer_nav: Timer = null
 
-# ÉCRAN D'ACCUEIL + CHOIX D'AVATAR (balle 49, GDD §2.3 l.60 ; choix de curseur l.72 RETIRÉ le 08-10). Au lancement,
-# l'enfant choisit son avatar (coccinelle/abeille) AVANT d'entrer dans le jeu. Choix
+# ÉCRAN D'ACCUEIL + CHOIX D'AVATAR / CURSEUR (balle 49, GDD §2.3 l.60 / l.72 ; curseur : PC SEULEMENT depuis le 08-10).
+# Au lancement, l'enfant choisit son avatar (coccinelle/abeille) et, sur PC, son curseur (main gantée/coccinelle/abeille)
+# AVANT d'entrer dans le jeu. Choix
 # MÉMORISÉ (user://pousse_pollen_progression.cfg, section "choix") et ré-modifiable (bouton « Accueil » en jeu). Visuels =
 # PLACEHOLDERS fonctionnels distincts, daltonien-safe (forme + luminance, pas la couleur seule) ; rendu fin = roadmap.
 var _avatar_type := 0          # 0 = coccinelle (défaut, l'avatar actuel) · 1 = abeille (placeholder jaune/noir)
+var _curseur_type := 0         # 0 = main gantée · 1 = coccinelle · 2 = abeille (PC seulement)
+var _curseur_pc := true        # (08-10) vrai hors mode tactile → choix de curseur + curseur en jeu (posé dans _ready)
+var curseur_pose := ""         # (08-10) curseur réellement posé, lu par la preuve : "accueil" · "jeu:<type>" · "systeme"
 var _en_accueil := false       # vrai tant que l'écran d'accueil est affiché → bloque l'entrée de jeu (clavier)
 var _couche_accueil: CanvasLayer = null
 var _couches_jeu: Array[CanvasLayer] = []            # couches d'UI de jeu (D-pad, Agripper, Recommencer, label, nav, Accueil) — masquées pendant l'accueil
 var _surbrillance_avatar: Array[ColorRect] = []      # liseré de sélection des 2 cases avatar (mis à jour au choix)
+var _surbrillance_curseur: Array[ColorRect] = []     # liseré de sélection des 3 cases curseur (PC)
 var _calque_fleurs_accueil: Node2D = null          # (08-10) fleurs du clic — DANS la couche d'accueil (libéré avec elle)
 var _lecteur_fleurs_accueil: AudioStreamPlayer = null
 var _dernier_appui_fleurs := -100000
@@ -1658,6 +1673,7 @@ var _boules_flot_vit: Array[float] = []    # vitesse angulaire du flotteur (pour
 @onready var _cam: Camera2D = $Camera2D
 
 func _ready() -> void:
+	_curseur_pc = not Tactile.actif()  # (08-10) choix de curseur + curseur en jeu : PC seulement (avant l'UI qui en dépend)
 	randomize()                        # graine aléatoire → étiquettes tirées au hasard varient d'une session à l'autre (balle 24)
 	_construire_lecteurs_son()         # balle 71 : un AudioStreamPlayer réutilisable par bruitage
 	_construire_fleches_ecran()
@@ -1666,9 +1682,9 @@ func _ready() -> void:
 	_construire_label_niveau()
 	_creer_bouton_quitter_coccos()
 	_construire_fleches_navigation()   # balle 34 : les 2 flèches ◄/► de navigation de niveau (haut-droite)
-	_construire_bouton_accueil()       # balle 49 : bouton « Accueil » (retour au choix d'avatar, top-centre)
+	_construire_bouton_accueil()       # balle 49 : bouton « Accueil » (retour au choix avatar/curseur, top-centre)
 	_charger_progression()             # balle 25 : recharge le plus haut niveau atteint (disque) → tout est débloqué
-	_charger_choix()                   # balle 49 : recharge l'avatar choisi (disque, même fichier)
+	_charger_choix()                   # balle 49 : recharge l'avatar + le curseur (PC) choisis (disque, même fichier)
 	# Au lancement, on charge N1 en JEU (balle 34 : plus de mode sélection). La progression rechargée ci-dessus
 	# donne accès à TOUT [N1 … max atteint] par les flèches ◄/► (plus besoin de rejouer). Le guide tutoriel N1
 	# est (re)lancé par _aller_a_niveau si c'est le N1.
@@ -2302,28 +2318,32 @@ func _charger_progression() -> void:
 		_niveau_max_atteint = clampi(v, 0, NIVEAUX.size() - 1)   # borné (robuste à un fichier trafiqué/obsolète)
 
 # Écrit le plus haut niveau atteint sur disque (appelé à chaque nouveau déblocage, _verifier_victoire).
-# Balle 49 : on RELIT d'abord le fichier (fusion) → la section "choix" (avatar) n'est pas écrasée.
+# Balle 49 : on RELIT d'abord le fichier (fusion) → la section "choix" (avatar/curseur) n'est pas écrasée.
 func _sauver_progression() -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(CHEMIN_PROGRESSION)                        # fusion : préserve la section "choix" (balle 49)
 	cfg.set_value("progression", "niveau_max_atteint", _niveau_max_atteint)
 	cfg.save(CHEMIN_PROGRESSION)
 
-# Recharge l'avatar choisi (balle 49) — même fichier que la progression, section "choix". Borné
-# (robuste à un fichier trafiqué/obsolète). Absent (1er lancement) → valeur par défaut (coccinelle).
+# Recharge l'avatar + le curseur (PC) choisis (balle 49) — même fichier que la progression, section "choix". Bornés
+# (robuste à un fichier trafiqué/obsolète). Absent (1er lancement) → valeurs par défaut (coccinelle + main gantée).
 func _charger_choix() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(CHEMIN_PROGRESSION) == OK:
 		_avatar_type = clampi(int(cfg.get_value(SECTION_CHOIX, CLE_AVATAR, 0)), 0, 1)
+		if _curseur_pc:
+			_curseur_type = clampi(int(cfg.get_value(SECTION_CHOIX, CLE_CURSEUR, 0)), 0, 2)
 
-# Écrit l'avatar choisi (balle 49). On RELIT d'abord (fusion) → la section "progression" est préservée.
-# (08-10) L'ancienne clé du choix de curseur, s'il en reste une, est effacée au passage.
+# Écrit l'avatar + le curseur (PC) choisis (balle 49). On RELIT d'abord (fusion) → la section "progression" est préservée.
+# (08-10) En mode tactile (Android), pas de choix de curseur : une clé restante est effacée au passage (comme ab66be9).
 func _sauver_choix() -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(CHEMIN_PROGRESSION)                        # fusion : préserve la section "progression"
 	cfg.set_value(SECTION_CHOIX, CLE_AVATAR, _avatar_type)
-	if cfg.has_section_key(SECTION_CHOIX, CLE_CURSEUR_RETIREE):
-		cfg.erase_section_key(SECTION_CHOIX, CLE_CURSEUR_RETIREE)
+	if _curseur_pc:
+		cfg.set_value(SECTION_CHOIX, CLE_CURSEUR, _curseur_type)
+	elif cfg.has_section_key(SECTION_CHOIX, CLE_CURSEUR):
+		cfg.erase_section_key(SECTION_CHOIX, CLE_CURSEUR)
 	cfg.save(CHEMIN_PROGRESSION)
 
 # Message de réussite simple et joyeux : Label « Bravo ! » dans un CanvasLayer,
@@ -2609,7 +2629,7 @@ func _construire_bouton_recommencer() -> void:
 	bouton.pressed.connect(_recommencer)
 	couche.add_child(bouton)
 
-# Bouton « Accueil » (balle 49, GDD §2.3) : retourne à l'écran de choix d'avatar (choix RÉ-MODIFIABLE).
+# Bouton « Accueil » (balle 49, GDD §2.3) : retourne à l'écran de choix d'avatar (et de curseur sur PC — choix RÉ-MODIFIABLE).
 # Sous le Recommencer (haut-gauche), grosse touche, libellé explicite. Un clic ré-affiche l'accueil PAR-DESSUS
 # le jeu en cours (sans perdre la progression, aucun « game over ») → l'enfant change d'avatar puis « Jouer » reprend.
 func _construire_bouton_accueil() -> void:
@@ -2620,7 +2640,7 @@ func _construire_bouton_accueil() -> void:
 	var bouton := Button.new()
 	bouton.name = "Accueil"
 	bouton.text = "Accueil"                            # libellé explicite (accessibilité) + luminance, pas la couleur seule
-	bouton.tooltip_text = "Changer d'avatar"
+	bouton.tooltip_text = "Changer d'avatar / de curseur" if _curseur_pc else "Changer d'avatar"
 	bouton.position = ACCUEIL_POS                      # moitié BASSE de la zone réservée haut-gauche (empilé sous Recommencer, balle 49)
 	bouton.size = ACCUEIL_TAILLE
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
@@ -2869,8 +2889,9 @@ func _rejouer_depuis_fin() -> void:
 # ---------------------------------------------------------------------------
 # ÉCRAN D'ACCUEIL + CHOIX D'AVATAR / CURSEUR (balle 49, GDD §2.3 l.60 / l.72)
 # ---------------------------------------------------------------------------
-# Au LANCEMENT (et à chaque clic « Accueil »), l'enfant choisit son AVATAR (coccinelle/abeille), puis « Jouer » entre
-# dans le jeu (sélecteur ◄/► existant, comportement conservé). (08-10) Plus de choix de curseur (décision Fabrice).
+# Au LANCEMENT (et à chaque clic « Accueil »), l'enfant choisit son AVATAR (coccinelle/abeille) et, sur PC, son CURSEUR
+# (main gantée/coccinelle/abeille), puis « Jouer » entre dans le jeu (sélecteur ◄/► existant, comportement conservé).
+# (08-10) Choix de curseur sur PC SEULEMENT (Fabrice) ; en mode tactile (Android), pas de section curseur.
 # Le choix est MÉMORISÉ (user://pousse_pollen_progression.cfg, section "choix") et ré-modifiable (bouton « Accueil » en jeu).
 # Overlay plein écran (bg opaque + MOUSE_FILTER_STOP) qui MASQUE l'UI de jeu (_couches_jeu) → aucun clic ni geste
 # ne passe au jeu tant qu'on choisit. (08-10) Prairie en fond, curseur coccinelle et fleurs au clic, ICI SEULEMENT.
@@ -2884,6 +2905,7 @@ func _afficher_accueil() -> void:
 	# (08-10) En accueil SEULEMENT : le curseur coccinelle, souris LIBRE.
 	_poser_curseur_accueil()
 	_surbrillance_avatar.clear()
+	_surbrillance_curseur.clear()
 	_couche_accueil = CanvasLayer.new()
 	_couche_accueil.name = "Accueil"
 	add_child(_couche_accueil)
@@ -2909,8 +2931,19 @@ func _afficher_accueil() -> void:
 	for t in 2:
 		var region := Rect2(depart_av + t * (largeur_av + 40.0), 186, largeur_av, 200)
 		var libelle: String = "Coccinelle" if t == 0 else "Abeille"
-		var liseré := _ajouter_cellule_choix(_couche_accueil, region, cell_av, t, libelle, _choisir_avatar.bind(t))
+		var liseré := _ajouter_cellule_choix(_couche_accueil, region, cell_av, true, t, libelle, _choisir_avatar.bind(t))
 		_surbrillance_avatar.append(liseré)
+	# --- Choix du CURSEUR (3 cases : main / coccinelle / abeille) — PC SEULEMENT (08-10) ---
+	if _curseur_pc:
+		_ajouter_titre_accueil(_couche_accueil, "Choisis ton curseur", 402, 44, 32, COL_TOUCHE)
+		var cell_cur := 100.0
+		var largeur_cur := 150.0
+		var depart_cur := (ECRAN.x - (3.0 * largeur_cur + 2.0 * 40.0)) * 0.5
+		for t in 3:
+			var region := Rect2(depart_cur + t * (largeur_cur + 40.0), 452, largeur_cur, 150)
+			var libelle: String = ["Main", "Coccinelle", "Abeille"][t]
+			var liseré := _ajouter_cellule_choix(_couche_accueil, region, cell_cur, false, t, libelle, _choisir_curseur.bind(t))
+			_surbrillance_curseur.append(liseré)
 	# --- Bouton « Jouer » → entre dans le jeu ---
 	var jouer := Button.new()
 	jouer.name = "Jouer"
@@ -2931,7 +2964,7 @@ func _afficher_accueil() -> void:
 	_lecteur_fleurs_accueil.volume_db = -6.0
 	_lecteur_fleurs_accueil.max_polyphony = 3
 	_couche_accueil.add_child(_lecteur_fleurs_accueil)
-	_maj_surbrillance_accueil()                        # montre le liseré doré sur le choix courant
+	_maj_surbrillance_accueil()                        # montre le liseré doré sur les choix courants
 
 # Titre / sous-titre CENTRÉ pleine largeur (accueil). Doré ou clair sur le voile brun = fort contraste de LUMINANCE.
 func _ajouter_titre_accueil(couche: CanvasLayer, texte: String, y: float, h: float, taille: int, couleur: Color) -> void:
@@ -2950,7 +2983,7 @@ func _ajouter_titre_accueil(couche: CanvasLayer, texte: String, y: float, h: flo
 
 # Une case de choix : liseré de sélection (doré, caché par défaut) + carte de fond + APERÇU dessiné (placeholder) +
 # libellé + un Button transparent couvrant toute la case (grande cible). Renvoie le liseré (surbrillance au choix).
-func _ajouter_cellule_choix(couche: CanvasLayer, region: Rect2, apercu_taille: float, type: int, libelle: String, rappel: Callable) -> ColorRect:
+func _ajouter_cellule_choix(couche: CanvasLayer, region: Rect2, apercu_taille: float, est_avatar: bool, type: int, libelle: String, rappel: Callable) -> ColorRect:
 	var centre_ap := Vector2(region.position.x + region.size.x * 0.5, region.position.y + apercu_taille * 0.5 + 8.0)
 	var marge := 9.0
 	var liseré := ColorRect.new()                      # liseré doré (luminance ↑) = sélection VISIBLE (daltonien : pas la couleur seule, c'est un CADRE)
@@ -2970,7 +3003,10 @@ func _ajouter_cellule_choix(couche: CanvasLayer, region: Rect2, apercu_taille: f
 	apercu.position = carte.position
 	apercu.size = carte.size
 	apercu.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	apercu.draw.connect(_apercu_avatar.bind(apercu, type))
+	if est_avatar:
+		apercu.draw.connect(_apercu_avatar.bind(apercu, type))
+	else:
+		apercu.draw.connect(_apercu_curseur.bind(apercu, type))
 	couche.add_child(apercu)
 	var lbl := Label.new()                             # libellé (accessibilité) sous l'aperçu
 	lbl.text = libelle
@@ -2998,10 +3034,22 @@ func _ajouter_cellule_choix(couche: CanvasLayer, region: Rect2, apercu_taille: f
 func _apercu_avatar(ctrl: Control, type: int) -> void:
 	_dessiner_texture_fit(ctrl, _texture_avatar(type), ctrl.size * 0.5, ctrl.size.y * 0.46)
 
+# Aperçu de curseur dans une case d'accueil (main/coccinelle/abeille — VRAIES images, balle 52).
+func _apercu_curseur(ctrl: Control, type: int) -> void:
+	_dessiner_texture_fit(ctrl, _texture_curseur_perso(type), ctrl.size * 0.5, ctrl.size.y * 0.46)
+
 # Texture ENTIÈRE de l'AVATAR « bras le long » (balle 59) — 0 = coccinelle (défaut), 1 = abeille. Sert à l'APERÇU
 # d'accueil et à l'AMI-récompense (b50). En JEU, _dessiner_avatar utilise les PIÈCES cutout (AV_CUTOUT), pas ceci.
 func _texture_avatar(type: int) -> Texture2D:
 	return TEX_AV_ABEILLE if type == 1 else TEX_AV_COCC
+
+# Texture du CURSEUR : 0 = main gantée, 1 = coccinelle, 2 = abeille.
+func _texture_curseur_perso(type: int) -> Texture2D:
+	if type == 1:
+		return TEX_COCCINELLE
+	if type == 2:
+		return TEX_ABEILLE
+	return TEX_MAIN
 
 # Dessine une texture CENTRÉE sur `centre`, mise à l'échelle pour tenir dans une boîte de demi-côté `demi`
 # (côté = 2·demi) — ratio PRÉSERVÉ (ajustement par la plus grande dimension → jamais de débordement).
@@ -3018,15 +3066,24 @@ func _choisir_avatar(type: int) -> void:
 	_maj_surbrillance_accueil()
 	queue_redraw()
 
-# Montre le liseré doré UNIQUEMENT sur la case choisie (avatar courant).
+# Choix du curseur (PC) : mémorise, sauve (disque), rafraîchit la surbrillance (le curseur réel est posé en quittant l'accueil).
+func _choisir_curseur(type: int) -> void:
+	_curseur_type = clampi(type, 0, 2)
+	_sauver_choix()
+	_maj_surbrillance_accueil()
+
+# Montre le liseré doré UNIQUEMENT sur les cases choisies (avatar + curseur courants).
 func _maj_surbrillance_accueil() -> void:
 	for i in _surbrillance_avatar.size():
 		if is_instance_valid(_surbrillance_avatar[i]):
 			_surbrillance_avatar[i].visible = (i == _avatar_type)
+	for i in _surbrillance_curseur.size():
+		if is_instance_valid(_surbrillance_curseur[i]):
+			_surbrillance_curseur[i].visible = (i == _curseur_type)
 
 # « Jouer » (ou reprise après un clic « Accueil » côté planche) : retire l'overlay (et avec lui les fleurs), ré-affiche
-# l'UI de jeu, RETIRE le curseur coccinelle et entre dans le jeu déjà chargé. Idempotent (sûr si l'accueil n'est pas
-# affiché → utilisé par la planche).
+# l'UI de jeu, POSE le curseur de jeu (PC : le curseur choisi ; tactile : pointeur système) et entre dans le jeu déjà
+# chargé. Idempotent (sûr si l'accueil n'est pas affiché → utilisé par la planche).
 func _quitter_accueil() -> void:
 	_en_accueil = false
 	if is_instance_valid(_couche_accueil):
@@ -3035,35 +3092,56 @@ func _quitter_accueil() -> void:
 	_calque_fleurs_accueil = null
 	_lecteur_fleurs_accueil = null
 	_surbrillance_avatar.clear()
+	_surbrillance_curseur.clear()
 	for c in _couches_jeu:
 		if is_instance_valid(c):
 			c.visible = true
-	_retirer_curseur_accueil()
+	if _curseur_pc:
+		_appliquer_curseur()
+	else:
+		_retirer_curseur_accueil()
 	queue_redraw()                                     # l'avatar en jeu prend l'apparence choisie
 
-# (08-10) Curseur COCCINELLE de l'ACCUEIL (ex-curseur au choix b49/b52, réduit au seul ami de l'accueil). Souris
-# LIBRE (le confinement à la fenêtre suivait le curseur de jeu, retiré avec lui).
+# (08-10) Curseur COCCINELLE de l'ACCUEIL (deux plateformes, quel que soit le curseur choisi pour le jeu). Souris
+# LIBRE : le confinement à la fenêtre ne suit que le curseur de jeu (PC).
 func _poser_curseur_accueil() -> void:
-	var donnees := _curseur_souris_coccinelle()
+	var donnees := _curseur_souris(1)
 	Input.set_custom_mouse_cursor(donnees["tex"], Input.CURSOR_ARROW, donnees["hotspot"])
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	curseur_pose = "accueil"
 
-# (08-10) « Dans le jeu il n'y a pas de curseur » (Fabrice) : plus aucun curseur CoccOs en jeu → pointeur système,
-# souris libre (les touches écran restent cliquables à la souris).
+# (08-10) Mode tactile (Android) : « le curseur n'est pas utile » (Fabrice) → aucun curseur CoccOs en jeu, pointeur
+# système, souris libre (les touches écran restent cliquables à la souris).
 func _retirer_curseur_accueil() -> void:
 	Input.set_custom_mouse_cursor(null)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	curseur_pose = "systeme"
 
-# CURSEUR souris = la VRAIE image coccinelle (balle 52), redimensionnée sous la limite matérielle Godot (≤ 256 px) et
-# accompagnée de son HOTSPOT = le bout du DOIGT LEVÉ, en proportions mesurées sur le PNG source (haut-gauche).
-func _curseur_souris_coccinelle() -> Dictionary:
-	var img := TEX_COCCINELLE.get_image().duplicate()   # duplicate → ne mute pas l'image partagée de la texture
+# PC (08-10, rétabli depuis 079ed08) : pose le CURSEUR choisi comme curseur souris, et confine le pointeur à la FENÊTRE
+# de jeu (GDD §2.3 « le pointeur reste confiné au tunnel »). ⚠ « au tunnel » STRICT est impossible tant que les boutons
+# (D-pad, Agripper, ◄/►) vivent HORS du tunnel : les confiner au tunnel les rendrait inatteignables → on confine à la
+# FENÊTRE (placeholder faithful), le confinement fin au couloir jouable = roadmap (à arbitrer avec le décor).
+func _appliquer_curseur() -> void:
+	var donnees := _curseur_souris(_curseur_type)
+	Input.set_custom_mouse_cursor(donnees["tex"], Input.CURSOR_ARROW, donnees["hotspot"])
+	Input.mouse_mode = Input.MOUSE_MODE_CONFINED                              # pointeur gardé dans la fenêtre (cf. note ci-dessus)
+	curseur_pose = "jeu:%d" % _curseur_type
+
+# CURSEUR souris = la VRAIE image (balle 52), redimensionnée sous la limite matérielle Godot (≤ 256 px) et
+# accompagnée de son HOTSPOT = le bout du DOIGT LEVÉ, en proportions mesurées sur les PNG sources : main = haut-centre,
+# coccinelle/abeille = haut-gauche. Ratio préservé → le clic tombe là où le doigt pointe.
+func _curseur_souris(type: int) -> Dictionary:
+	var img := _texture_curseur_perso(type).get_image().duplicate()   # duplicate → ne mute pas l'image partagée de la texture
 	var hauteur_cible := 128.0
 	var echelle: float = hauteur_cible / img.get_height()
 	var w := int(round(img.get_width() * echelle))
 	var h := int(round(img.get_height() * echelle))
 	img.resize(w, h, Image.INTERPOLATE_LANCZOS)
-	var ratio := Vector2(0.16, 0.12)          # coccinelle : bout du doigt levé (haut-gauche)
+	var ratio := Vector2(0.69, 0.05)          # main : bout du doigt (haut-centre)
+	if type == 1:
+		ratio = Vector2(0.16, 0.12)           # coccinelle : bout du doigt levé (haut-gauche)
+	elif type == 2:
+		ratio = Vector2(0.14, 0.12)           # abeille : bout du doigt levé (haut-gauche)
 	return {"tex": ImageTexture.create_from_image(img), "hotspot": Vector2(ratio.x * w, ratio.y * h)}
 
 # (08-10) Un appui dans l'ACCUEIL = la ronde de fleurs + pop joyeux. Clic de souris ET doigt, mais jamais les deux
