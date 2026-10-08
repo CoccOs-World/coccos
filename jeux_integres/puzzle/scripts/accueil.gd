@@ -1781,8 +1781,8 @@ func _quitter() -> void:
 #   l'interface ; il NE REND RIEN ET NE CONSOMME RIEN (ni `return` utile, ni `set_input_as_handled`), donc le
 #   bouton reçoit son clic exactement comme avant.
 # ⚠ « QUAND ON A UN CURSEUR » : la règle du jeu, relue sur `_curseur` — cocher « Sans curseur » coupe les fleurs
-#   au clic suivant. Et à la souris seulement, comme au jeu : un appui de doigt arrive AUSSI en clic émulé
-#   (`emulate_mouse_from_touch`), reconnaissable à `DEVICE_ID_EMULATION` — il ne fait pas de fleur.
+#   au clic suivant. Ici, la souris seulement : un appui de doigt arrive AUSSI en clic émulé
+#   (`emulate_mouse_from_touch`), reconnaissable à `DEVICE_ID_EMULATION` — c'est `_fleurs_au_doigt` qui le sert.
 # ⚠ AU CLIC SUR « JOUER », l'accueil part (`queue_free`) au RELÂCHÉ : sa ronde et son son s'éteignent avec lui ;
 #   le jeu reprend la main avec ses propres fleurs.
 const EffetsClic := preload("res://jeux_integres/puzzle/scripts/effets_clic.gd")
@@ -1800,6 +1800,18 @@ func _batir_effets_clic() -> void:
 func _input(evt: InputEvent) -> void:
 	if evt is InputEventMouseButton:
 		_fleurs_au_clic(evt as InputEventMouseButton)
+	elif evt is InputEventScreenTouch:
+		_fleurs_au_doigt(evt as InputEventScreenTouch)
+
+
+# (#192, 07-10-2026) ET AU DOIGT (Fabrice, sur son téléphone : « il n'y a pas de souris »). Un appui RÉEL : le
+#   toucher émulé depuis la souris (`emulate_touch_from_mouse`, au bureau) porte `DEVICE_ID_EMULATION` — sans ce
+#   filtre, un clic gauche ferait deux rondes. La ronde est autour du doigt (30-50 px), donc visible malgré lui.
+func _fleurs_au_doigt(t: InputEventScreenTouch) -> void:
+	if _effets_clic == null or not t.pressed or t.device == InputEvent.DEVICE_ID_EMULATION \
+			or CurseursPuzzle.sans_curseur(_curseur):
+		return
+	_effets_clic.cliquer("doigt", t.position)
 
 
 func _fleurs_au_clic(mb: InputEventMouseButton) -> void:

@@ -1983,6 +1983,7 @@ func _input(evt: InputEvent) -> void:
 				return
 			_doigt_vise = t.index                # (B13) c'est CE doigt qui tient la visée (cf. les `Drag`)
 			_poser_curseur_doigt(t.position)
+			_fleurs_au_doigt()                   # (#192) décoratif : rien n'est consommé, la prise suit comme avant
 			# LE PANNEAU N'EST PAS UNE AIRE DE JEU (règle de B6, tenue au doigt comme à la souris) : la maison, le
 			# recadrage et le modèle se pressent AU DOIGT (Godot leur envoie la souris émulée à la position du
 			# DOIGT) — on ne leur vole pas le geste en attrapant la pièce du dessous en même temps.
@@ -2062,8 +2063,8 @@ func _input(evt: InputEvent) -> void:
 
 # (#192) LES PETITES FLEURS AU CLIC + UN SON PAR ENTRÉE — reprises du bureau et de la découverte de la souris.
 # ⚠ « QUAND ON A UN CURSEUR » (Fabrice) : la Main, la Coccinelle ou l'Abeille. « Sans curseur », rien — c'est le
-#   pointeur du système, le bureau CoccOs n'y est pas. Et à la souris seulement : au doigt, `_input` est déjà
-#   sorti plus haut (`_tactile`), le geste reste celui de B23.
+#   pointeur du système, le bureau CoccOs n'y est pas. Ici, la souris seulement : au doigt, `_input` est déjà
+#   sorti plus haut (`_tactile`) — le doigt a sa propre entrée, `_fleurs_au_doigt`.
 # ⚠ CETTE FONCTION NE REND RIEN ET NE CONSOMME RIEN : la prise (gauche), le déplacement de la vue (droit) et le
 #   zoom (roulette) sont joués juste après, exactement comme avant. Tout le détail vit dans `effets_clic.gd`.
 const EffetsClic := preload("res://jeux_integres/puzzle/scripts/effets_clic.gd")
@@ -2076,6 +2077,15 @@ func _batir_effets_clic() -> void:
 	_effets_clic = EffetsClic.new()
 	_effets_clic.name = "EffetsClic"
 	add_child(_effets_clic)
+
+
+# (#192, 07-10-2026) ET AU DOIGT : un appui = une ronde + `pop_joyeux` (entrée `"doigt"`, cadence bornée dans
+#   `effets_clic.gd`). Posée à la POINTE du curseur dessiné (`_curseur_vise`), là où la pièce se prend — sous la
+#   pulpe, le doigt la cacherait. Appelée après le filtre `_pincement` : le second doigt d'un zoom n'en fait pas.
+func _fleurs_au_doigt() -> void:
+	if _effets_clic == null or sans_curseur():
+		return
+	_effets_clic.cliquer("doigt", _curseur_vise)
 
 
 func _fleurs_au_clic(mb: InputEventMouseButton) -> void:
