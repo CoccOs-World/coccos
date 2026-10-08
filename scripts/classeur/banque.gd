@@ -38,6 +38,9 @@ static func charger() -> RefCounted:
 	var banque = load("res://scripts/classeur/banque.gd").new()
 	DirAccess.make_dir_recursive_absolute(DOSSIER_PICTOS)
 	banque._cfg.load(CHEMIN_BANQUE)  # absent au premier lancement : banque vide
+	# AVANT l'import : une vignette complétée ici dédoublonne ensuite celles
+	# d'une planche encore jamais importée (même empreinte image+mot)
+	banque.migrer_mots_manquants()
 	banque.importer_planches_tlab()
 	return banque
 
@@ -274,6 +277,66 @@ func importer_planches_tlab() -> void:
 				empreintes[empreinte] = id
 	if not rien_de_neuf:
 		sauver()
+
+
+## Migration des classeurs déjà remplis (2026-10-08) : une planche n'est importée
+## qu'UNE fois, donc un libellé corrigé dans les .tlab (« serviette », ARASAAC
+## 2566) n'atteignait jamais un appareil qui avait déjà son classeur.
+## Remplit le mot des vignettes au mot VIDE, retrouvées par leur IMAGE (md5 des
+## pixels) dans les planches de leurs propres catégories. Ne fait que remplir : un mot présent n'est jamais
+## touché, ni les tags, ni les positions, ni les images. Si une même image porte
+## plusieurs mots selon les planches, rien n'est deviné.
+## Passe UNE fois par appareil (repère [banque] migration_mots) : un mot que
+## l'adulte viderait ensuite volontairement ne revient pas au démarrage suivant.
+const VERSION_MIGRATION_MOTS := 1
+
+func migrer_mots_manquants() -> void:
+	if int(_cfg.get_value("banque", "migration_mots", 0)) >= VERSION_MIGRATION_MOTS:
+		return
+	var vides := []
+	for id in ids_vignettes():
+		if mot(id) == "":
+			vides.append(id)
+	if not vides.is_empty():
+		# Mots des planches par image, planche par planche : nom → { md5: { mot: true } }
+		var mots_par_planche := {}
+		var planches := PlancheTlab.lister_planches()
+		for nom in planches:
+			var mots_par_image := {}
+			var planche: Dictionary = PlancheTlab.charger(planches[nom])
+			for cellule in planche.get("cellules", []):
+				if cellule["texture"] == null or cellule["libelle"] == "":
+					continue
+				var cle := _md5_pixels((cellule["texture"] as ImageTexture).get_image())
+				if not mots_par_image.has(cle):
+					mots_par_image[cle] = {}
+				mots_par_image[cle][cellule["libelle"]] = true
+			mots_par_planche[nom] = mots_par_image
+		for id in vides:
+			var image := Image.new()
+			if image.load("%s/%d.png" % [DOSSIER_PICTOS, id]) != OK:
+				continue
+			var cle := _md5_pixels(image)
+			# Seules les planches d'où vient la vignette (ses tags) font foi : la
+			# même image peut porter un autre mot ailleurs (« quelle couleur? » de
+			# coloriage n'est pas la vignette sans mot de peinture)
+			var mots := {}
+			for categorie in tags(id):
+				for un_mot in mots_par_planche.get(categorie, {}).get(cle, {}):
+					mots[un_mot] = true
+			if mots.size() == 1:
+				_cfg.set_value("vignette_%d" % id, "mot", mots.keys()[0])
+	_cfg.set_value("banque", "migration_mots", VERSION_MIGRATION_MOTS)
+	sauver()
+
+
+static func _md5_pixels(image: Image) -> String:
+	var contexte := HashingContext.new()
+	contexte.start(HashingContext.HASH_MD5)
+	var pixels := image.get_data()
+	if not pixels.is_empty():
+		contexte.update(pixels)
+	return contexte.finish().hex_encode()
 
 
 func _empreintes_existantes() -> Dictionary:
