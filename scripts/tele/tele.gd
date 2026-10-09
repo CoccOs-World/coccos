@@ -20,6 +20,15 @@ const PinConfig := preload("res://scripts/pin_config.gd")
 const CHEMIN_BUREAU := "res://scenes/bureau.tscn"
 const Lancement := preload("res://scripts/lancement.gd")
 
+## Le clip « CoccOs World », livré avec CoccOs (res://, jamais copié dans
+## user://tele/) : toujours en tête du mur, même vidéothèque vide. Les vidéos de
+## l'adulte s'ajoutent à la suite.
+const VIDEO_PAR_DEFAUT := {
+	"nom": "CoccOs World",
+	"chemin": "res://assets/tele/coccos_world.ogv",
+	"vignette": preload("res://assets/tele/coccos_world.png"),
+}
+
 const COULEUR_BOUTON_QUITTER := Color(0.85, 0.35, 0.30)
 const COULEUR_TELE := Color(0.45, 0.40, 0.85)
 
@@ -83,7 +92,7 @@ func _creer_mur() -> void:
 	titre.add_theme_color_override("font_outline_color", Color(0.10, 0.20, 0.15, 0.85))
 	colonne.add_child(titre)
 
-	var videos: Array = Videotheque.lister()
+	var videos: Array = [VIDEO_PAR_DEFAUT] + Videotheque.lister()
 	if videos.is_empty():
 		var vide := Label.new()
 		vide.text = Lang.t("tele_mur_vide")
