@@ -1248,6 +1248,11 @@ const RECOMMENCER_TAILLE := Vector2(240, 84)        # ZONE réservée à l'évit
 const RECOMMENCER_BTN_TAILLE := Vector2(240, 38)    # bouton Recommencer : moitié HAUTE de la zone → x[28,268] y[24,62]
 const ACCUEIL_POS := Vector2(28, 66)                # bouton Accueil : moitié BASSE de la zone → x[28,268] y[66,104]
 const ACCUEIL_TAILLE := Vector2(240, 38)            # (reste DANS la zone réservée y≤108 → 0 régression caméra par construction)
+# (21-10) Les DEUX boutons de cette zone portent une ICÔNE DESSINÉE à la place du mot (demande Fabrice), reprise du jeu
+# des 7 différences : flèche tournante = Recommencer, maison = Accueil (cf. `IconeDessinee`, fin de fichier). Mêmes
+# teintes que là-bas : fond clair + trait sombre = contraste de LUMINANCE (daltonien, GDD §1) ; l'infobulle reste.
+const COL_SORTIE      := Color(0.88, 0.90, 0.96, 1.0)   # fond clair du bouton, ses 3 états — 7 diff `COL_SORTIE`
+const COL_SORTIE_TXT  := Color(0.08, 0.09, 0.14, 1.0)   # trait sombre de l'icône et de la bordure — 7 diff `COL_SORTIE_TXT`
 # Indicateur de NIVEAU (haut-DROITE). Balle 63 (retour test Fabrice « gagner de la place ») : UNE SEULE ligne
 # « ◄ N ► » — juste le NUMÉRO (plus le mot « Niveau ») encadré par les 2 flèches de navigation, au lieu du label
 # sur une ligne + les flèches SOUS lui sur une 2e (place perdue). Emprise réduite en HAUTEUR (y[20,84] seulement)
@@ -2681,14 +2686,15 @@ func _construire_bouton_recommencer() -> void:
 	_couches_jeu.append(couche)          # balle 49 : masquée pendant l'écran d'accueil
 	var bouton := Button.new()
 	bouton.name = "Recommencer"
-	bouton.text = "Recommencer"                        # libellé explicite (accessibilité) + luminance, pas la couleur seule
+	bouton.text = ""                                   # (21-10) plus de mot : l'icône « rejouer » (flèche tournante) dit « recommence »
 	bouton.tooltip_text = "Recommencer le niveau (sans perdre)"
 	bouton.position = RECOMMENCER_POS                  # haut-gauche, moitié HAUTE de la zone réservée (balle 49)
 	bouton.size = RECOMMENCER_BTN_TAILLE               # bouton = moitié haute ; la ZONE réservée (caméra) reste RECOMMENCER_TAILLE
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
-	bouton.add_theme_font_size_override("font_size", 22)
+	_styler_bouton_icone(bouton)                       # (21-10) fond clair cerné de sombre, comme au jeu des 7 différences
 	bouton.pressed.connect(_recommencer)
 	couche.add_child(bouton)
+	_habiller_icone(bouton, "rejouer", RECOMMENCER_BTN_TAILLE)
 
 # Bouton « Accueil » (balle 49, GDD §2.3) : retourne à l'écran de choix d'avatar (et de curseur sur PC — choix RÉ-MODIFIABLE).
 # Sous le Recommencer (haut-gauche), grosse touche, libellé explicite. Un clic ré-affiche l'accueil PAR-DESSUS
@@ -2700,14 +2706,48 @@ func _construire_bouton_accueil() -> void:
 	_couches_jeu.append(couche)                        # masqué pendant l'accueil (on y est déjà)
 	var bouton := Button.new()
 	bouton.name = "Accueil"
-	bouton.text = "Accueil"                            # libellé explicite (accessibilité) + luminance, pas la couleur seule
+	bouton.text = ""                                   # (21-10) plus de mot : l'icône « maison » dit « retour à l'accueil »
 	bouton.tooltip_text = "Changer d'avatar / de curseur" if _curseur_pc else "Changer d'avatar"
 	bouton.position = ACCUEIL_POS                      # moitié BASSE de la zone réservée haut-gauche (empilé sous Recommencer, balle 49)
 	bouton.size = ACCUEIL_TAILLE
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
-	bouton.add_theme_font_size_override("font_size", 22)
+	_styler_bouton_icone(bouton)                       # (21-10) même fond que Recommencer (7 différences)
 	bouton.pressed.connect(_afficher_accueil)
 	couche.add_child(bouton)
+	_habiller_icone(bouton, "maison", ACCUEIL_TAILLE)
+
+# (21-10) FOND DE BOUTON À ICÔNE — recopié de la fabrique `_bouton` du jeu des 7 différences (sept_differences.gd) :
+# plaque claire à coins ronds (10), cernée de 3 px du sombre de l'icône. Les trois états (normal, survol, appuyé)
+# partagent LE MÊME fond → l'évidement de la porte de la maison (repeint en `COL_SORTIE`) ne « clignote » pas au survol.
+# INACTIF : même forme, même place, luminance nettement plus basse (le BORD tient la forme).
+func _styler_bouton_icone(b: Button) -> void:
+	var fond := StyleBoxFlat.new()
+	fond.bg_color = COL_SORTIE
+	fond.set_corner_radius_all(10)
+	fond.set_border_width_all(3)
+	fond.border_color = COL_SORTIE_TXT
+	for etat in ["normal", "hover", "pressed"]:
+		b.add_theme_stylebox_override(etat, fond)
+	var eteint := StyleBoxFlat.new()
+	eteint.bg_color = Color(COL_SORTIE.r, COL_SORTIE.g, COL_SORTIE.b, 0.14)
+	eteint.set_corner_radius_all(10)
+	eteint.set_border_width_all(3)
+	eteint.border_color = Color(COL_SORTIE.r, COL_SORTIE.g, COL_SORTIE.b, 0.75)
+	b.add_theme_stylebox_override("disabled", eteint)
+
+# (21-10) POSE DE L'ICÔNE — recopié de `_habiller_icone` du jeu des 7 différences : l'icône est un enfant du bouton,
+# dessinée en code (aucun glyphe de police : ce qui manque à la couverture Unicode s'affiche en carré vide — sur le
+# HUD d'un enfant qui ne lit pas encore, l'icône EST le message). `PRESET_FULL_RECT` : elle suit le bouton, quelle que
+# soit sa taille. `MOUSE_FILTER_IGNORE` : elle MONTRE, elle n'intercepte pas — le clic va au bouton.
+func _habiller_icone(bouton: Button, forme: String, taille: Vector2) -> void:
+	var ic := IconeDessinee.new()
+	ic.ov = self
+	ic.forme = forme
+	ic.position = Vector2.ZERO
+	ic.size = taille
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bouton.add_child(ic)
+	ic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 # Label « Niveau N » en HAUT-DROITE (balle 18). Position ÉCRAN FIXE (au-dessus du bandeau y ≥ 120, à droite du
 # Recommencer x ≤ 268). Balle 30 : ce panneau est désormais un obstacle de _rects_boutons → le TUNNEL l'évite
@@ -3785,3 +3825,58 @@ class _IconeCroixFermerCoccOs extends Control:
 		draw_line(centre + Vector2(-bras, bras), centre + Vector2(bras, -bras), Color.WHITE, epaisseur)
 		for coin: Vector2 in [Vector2(-bras, -bras), Vector2(bras, -bras), Vector2(-bras, bras), Vector2(bras, bras)]:
 			draw_circle(centre + coin, epaisseur / 2.0, Color.WHITE)
+
+
+# ============================================================================================================
+# (21-10) ICÔNES DESSINÉES EN CODE — classe RECOPIÉE du jeu des 7 différences (`IconeDessinee`, sept_differences.gd),
+# comme l'a fait le puzzle : la GÉOMÉTRIE est la même, point par point, pour que la fratrie CoccOs parle d'une voix.
+#   • MAISON — un pignon large qui déborde le corps, et une PORTE ÉVIDÉE. C'est la porte qui fait la maison : sans
+#     elle, un carré surmonté d'un triangle se lit aussi bien « tente » ou « flèche vers le haut ».
+#   • FLÈCHE TOURNANTE — un arc de ~300° et non un cercle : un cercle fermé ne tourne pas. L'OUVERTURE dit qu'il y a
+#     un début et une fin, la POINTE tangente dit dans quel sens. Les deux ensemble disent « recommence ».
+# ⚠ TOUT EST TRACÉ EN `COL_SORTIE_TXT` (le sombre) SUR LE FOND CLAIR DU BOUTON : contraste de LUMINANCE, lisible sous
+#   n'importe quel daltonisme. Et tout est en FRACTION de la taille du bouton (marge 16 %), jamais en pixels.
+# ============================================================================================================
+class IconeDessinee extends Control:
+	var ov = null
+	var forme := "maison"
+	const MARGE := 0.16
+
+	func _draw() -> void:
+		if ov == null:
+			return
+		var m: Vector2 = size * MARGE
+		var z := Rect2(m, size - m * 2.0)
+		if z.size.x <= 2.0 or z.size.y <= 2.0:
+			return
+		match forme:
+			"maison":
+				_maison(z)
+			"rejouer":
+				_rejouer(z)
+
+	# LA MAISON — dessinée dans le plus grand CARRÉ que la zone contienne : sur un bouton large (240 px), une maison
+	# étirée à la largeur deviendrait un hangar.
+	func _maison(z: Rect2) -> void:
+		var c: float = minf(z.size.x, z.size.y)
+		var o: Vector2 = z.get_center() - Vector2(c, c) * 0.5
+		var sombre: Color = ov.COL_SORTIE_TXT
+		draw_colored_polygon(PackedVector2Array([
+			o + Vector2(c * 0.50, 0.0), o + Vector2(c, c * 0.46), o + Vector2(0.0, c * 0.46)]), sombre)
+		draw_rect(Rect2(o + Vector2(c * 0.14, c * 0.44), Vector2(c * 0.72, c * 0.56)), sombre, true)
+		# LA PORTE, ÉVIDÉE — on repeint le fond du bouton par-dessus le corps. `COL_SORTIE` est bien la teinte des
+		# trois états (normal, survol, appuyé) de `_styler_bouton_icone`, donc l'évidement ne « clignote » pas au survol.
+		draw_rect(Rect2(o + Vector2(c * 0.39, c * 0.64), Vector2(c * 0.22, c * 0.36)), ov.COL_SORTIE, true)
+
+	# LA FLÈCHE TOURNANTE — l'arc, puis la pointe TANGENTE à son extrémité (c'est elle qui donne le sens).
+	func _rejouer(z: Rect2) -> void:
+		var sombre: Color = ov.COL_SORTIE_TXT
+		var c: Vector2 = z.get_center()
+		var r: float = minf(z.size.x, z.size.y) * 0.42
+		draw_arc(c, r, deg_to_rad(-60.0), deg_to_rad(240.0), 48, sombre, r * 0.42)
+		var a: float = deg_to_rad(240.0)
+		var n := Vector2(cos(a), sin(a))          # radiale : du centre vers le bout de l'arc
+		var t := Vector2(-sin(a), cos(a))         # tangente, dans le sens où l'arc a été tracé
+		var p: Vector2 = c + n * r
+		draw_colored_polygon(PackedVector2Array([
+			p + t * (r * 0.66), p + n * (r * 0.58), p - n * (r * 0.58)]), sombre)
