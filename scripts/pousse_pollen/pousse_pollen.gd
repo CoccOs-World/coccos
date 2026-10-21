@@ -1222,6 +1222,7 @@ const ANCRE_HG := Vector2(0, 0)
 const ANCRE_HD := Vector2(1, 0)
 const ANCRE_BG := Vector2(0, 1)
 const ANCRE_BD := Vector2(1, 1)
+const ANCRE_CENTRE := Vector2(0.5, 0.5)   # (21-10) accueil : le bloc 1024×768 est CENTRÉ sur l'écran réel
 var _ecran := ECRAN
 var _ancrages: Array = []        # [nœud, position dans le repère de conception, ancre] — replacés à chaque changement de taille
 
@@ -1992,9 +1993,9 @@ func _sur_taille_ecran() -> void:
 	_maj_ecran()
 	if _ecran == avant:
 		return
+	_ancrages = _ancrages.filter(func(a: Array) -> bool: return is_instance_valid(a[0]))   # nœuds d'un accueil fermé
 	for a in _ancrages:
-		if is_instance_valid(a[0]):
-			a[0].position = a[1] + _decalage_ancre(a[2])
+		a[0].position = a[1] + _decalage_ancre(a[2])
 	_cadrer_camera()
 	queue_redraw()
 
@@ -2997,6 +2998,7 @@ func _afficher_accueil() -> void:
 	jouer.add_theme_font_size_override("font_size", 44)
 	jouer.pressed.connect(_quitter_accueil)
 	_couche_accueil.add_child(jouer)
+	_ancrer(jouer, ANCRE_CENTRE)                       # (21-10) centré sur l'écran réel (0 en 1024×768)
 	# (08-10) Les PETITES FLEURS du clic, en DERNIER → peintes par-dessus tout l'accueil. Node2D sans surface de clic :
 	# elles ne mangent aucun geste. Enfants de la couche d'accueil → « Jouer » les emporte avec elle.
 	_calque_fleurs_accueil = Node2D.new()
@@ -3023,6 +3025,7 @@ func _ajouter_titre_accueil(couche: CanvasLayer, texte: String, y: float, h: flo
 	lbl.add_theme_color_override("font_outline_color", COL_TRAIT)
 	lbl.add_theme_constant_override("outline_size", 6)
 	couche.add_child(lbl)
+	_ancrer(lbl, ANCRE_CENTRE)                         # (21-10) centré sur l'écran réel (0 en 1024×768)
 
 # Une case de choix : liseré de sélection (doré, caché par défaut) + carte de fond + APERÇU dessiné (placeholder) +
 # libellé + un Button transparent couvrant toute la case (grande cible). Renvoie le liseré (surbrillance au choix).
@@ -3070,6 +3073,8 @@ func _ajouter_cellule_choix(couche: CanvasLayer, region: Rect2, apercu_taille: f
 	btn.tooltip_text = libelle
 	btn.pressed.connect(rappel)
 	couche.add_child(btn)
+	for n in [liseré, carte, apercu, lbl, btn]:        # (21-10) toute la case suit le centre de l'écran réel
+		_ancrer(n, ANCRE_CENTRE)
 	return liseré
 
 # Aperçu d'avatar dans une case d'accueil (dessine sur le Control `ctrl`, pendant SON draw → ctrl.draw_* est valide).
