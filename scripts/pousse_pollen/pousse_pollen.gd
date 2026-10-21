@@ -1650,6 +1650,14 @@ const AV_LEAN := 0.11                # penché du corps vers/contre la boule (fr
 # le terrain (il est dessiné en dernier). AV_PIEDS_FRAC = hauteur des pieds mesurée sur le core détouré (contenu bas
 # ≈ 0,90 de la toile 953×1120). On remonte donc le sprite de (AV_PIEDS_FRAC−0,5)·hauteur.
 const AV_PIEDS_FRAC := 0.90
+# (21-10, REQ_pousse_avatar_decapite_android) ENVELOPPE de l'avatar autour du CENTRE de son sprite, en fraction de sa
+# HAUTEUR dessinée (dim.y) — mesurée sur les PNG détourés (alpha > 8) avec les membres TOURNÉS à leur amplitude max
+# (bras BRAS_REACH + BRAS_BAL_MAX, jambes JAMBE_SWING) : ±0,573/0,580 en X, -0,500/+0,506 en Y → arrondi au-dessus.
+# Le cadrage (_cadrage_ok) garde cette enveloppe (+ penché AV_LEAN) DANS l'écran pour CHAQUE case praticable : la tête
+# (qui déborde de la case vers le haut, ancrage pieds b61) n'est plus coupée par le bord, sur Android comme sur PC.
+const AV_ENV_X := 0.59
+const AV_ENV_HAUT := 0.50
+const AV_ENV_BAS := 0.51
 # ── BALANCEMENT DES BRAS = PENDULE AMORTI (balle 61) — même ressort que le flotteur des boules (b56) : à chaque
 # geste on injecte une impulsion, les bras balancent puis se stabilisent en douceur (2-3 oscillations). Amplitude
 # MARQUÉE (grief test : « ils bougent à peine »). État GLOBAL (un seul avatar). Bras opposés (démarche naturelle).
@@ -2012,6 +2020,12 @@ func _fenetre_camera(z: float) -> Rect2:
 	# Cohérent avec _cadrage_ok (qui projette chaque case au même y comprimé) → cadrage exact, pas approché.
 	var wy0 := boite.position.y * CELL * _plonge_ky
 	var wy1 := (boite.position.y + boite.size.y) * CELL * _plonge_ky
+	# (21-10) débord de l'avatar au-delà de sa case (tête en haut surtout) → même exigence que _cadrage_ok.
+	var env := _enveloppe_avatar()
+	wx0 -= maxf(0.0, -CELL * 0.5 - env.position.x)
+	wx1 += maxf(0.0, env.end.x - CELL * 0.5)
+	wy0 -= maxf(0.0, -CELL * _plonge_ky * 0.5 - env.position.y)
+	wy1 += maxf(0.0, env.end.y - CELL * _plonge_ky * 0.5)
 	var demi_x := _ecran.x * 0.5 - MARGE_BORD
 	var demi_y := _ecran.y * 0.5 - MARGE_BORD
 	var camx_lo := wx1 - demi_x / z
@@ -2131,6 +2145,8 @@ func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 	var cote := CELL * z
 	var cote_y := CELL * _plonge_ky * z                          # hauteur écran d'une case en vue plongée (balle 55 ; b62 : _plonge_ky adaptatif)
 	var ecran := Rect2(MARGE_BORD, MARGE_BORD, _ecran.x - 2.0 * MARGE_BORD, _ecran.y - 2.0 * MARGE_BORD)
+	var env := _enveloppe_avatar()                               # (21-10) l'avatar ENTIER doit tenir à l'écran sur toute case praticable
+	var env_ecran := Rect2(env.position * z, env.size * z)
 	for y in _terrain.size():
 		var ligne: String = _terrain[y]
 		for x in ligne.length():
@@ -2141,6 +2157,9 @@ func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 			var case_rect := Rect2(sx, sy, cote, cote_y)
 			if not ecran.encloses(case_rect):
 				return false                                         # case praticable hors écran
+			var centre := Vector2(sx + cote * 0.5, sy + cote_y * 0.5)
+			if not ecran.encloses(Rect2(centre + env_ecran.position, env_ecran.size)):
+				return false                                         # avatar posé là : une partie (tête) hors écran
 			for b in boutons:
 				if b.grow(GARDE_BOUTON).intersects(case_rect):
 					return false                                     # case praticable sous un bouton
@@ -3530,14 +3549,25 @@ func _dessiner_etiquette(centre: Vector2, texte: String, sur_loge: bool = false)
 # membres autour de leur attache et décale légèrement le corps : REPOS = pièces à l'identité (image d'origine, bras le
 # long, immobile) ; MARCHE = jambes alternées + bras à l'opposé + bob ; POUSSE = les 2 mains vers la boule (+dir) +
 # corps penché vers elle + un pas ; TIRE = mains agrippées vers la boule (en -dir) + corps reculé (+dir) + pas inverse.
+# Balle 63 : demi PROPORTIONNEL à _plonge_ky (cf. AVATAR_FRAC_*) → même remplissage de case que la boule, à
+# tout foreshortening (petits tableaux inchangés, grands agrandis, léger débordement toléré ; objet non distordu).
+func _demi_avatar() -> float:
+	return CELL * clampf(remap(_plonge_ky, PLONGE_KY, PLONGE_KY_MAX, AVATAR_FRAC_MIN, AVATAR_FRAC_MAX), AVATAR_FRAC_MIN, AVATAR_FRAC_MAX)
+
+# (21-10) Rectangle-monde que l'avatar peut couvrir, RELATIF au centre plongé de sa case (_centre_plonge) : enveloppe
+# AV_ENV_* du sprite (remonté par l'ancrage pieds) élargie du penché du corps (AV_LEAN ≥ AV_BOB). Même géométrie que
+# _dessiner_avatar (hauteur dessinée = 2·demi : la toile est plus haute que large).
+func _enveloppe_avatar() -> Rect2:
+	var h := 2.0 * _demi_avatar()
+	var cy := -(AV_PIEDS_FRAC - 0.5) * h
+	var r := Rect2(-AV_ENV_X * h, cy - AV_ENV_HAUT * h, 2.0 * AV_ENV_X * h, (AV_ENV_HAUT + AV_ENV_BAS) * h)
+	return r.grow(AV_LEAN * CELL)
+
 func _dessiner_avatar(centre: Vector2) -> void:
 	var pieces: Dictionary = AV_CUTOUT[_avatar_type]
 	var tex_core: Texture2D = pieces["core"]
 	var ts := Vector2(tex_core.get_size())
-	# Balle 63 : demi PROPORTIONNEL à _plonge_ky (cf. AVATAR_FRAC_*) → même remplissage de case que la boule, à
-	# tout foreshortening (petits tableaux inchangés, grands agrandis, léger débordement toléré ; objet non distordu).
-	var frac_a := clampf(remap(_plonge_ky, PLONGE_KY, PLONGE_KY_MAX, AVATAR_FRAC_MIN, AVATAR_FRAC_MAX), AVATAR_FRAC_MIN, AVATAR_FRAC_MAX)
-	var demi := CELL * frac_a
+	var demi := _demi_avatar()
 	var dim := ts * ((2.0 * demi) / maxf(ts.x, ts.y))   # même fit que _dessiner_texture_fit → recalage identique aux aperçus
 	var pulse := 0.0
 	if _avatar_reste > 0.0:
