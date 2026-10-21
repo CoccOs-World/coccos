@@ -7,7 +7,7 @@
 #   • masque non vide = glyphe présent ;
 #   • enveloppe du masque DANS le bouton hors bordure de 3 px = « non mangée », et ne touche pas la bordure ;
 #   • pixels CLAIRS (COL_SORTIE) majoritaires dans le bouton = fond du 7-diff bien peint.
-# Captures : /tmp/preuve_pousse_icones_<format>.png (plein HUD) et …_hud_x3.png (coin haut-gauche agrandi ×3).
+# Captures : /tmp/preuve_pousse_icones_<format>.png (plein HUD) et …_hud_x3.png (colonne gauche agrandie ×3 — boutons carrés 21-10).
 # Lancement :
 #   DISPLAY=:0 XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --path . --windowed --resolution 64x64 --position 0,0 \
 #       --script res://outils/preuve_pousse_icones_pixel.gd
@@ -60,7 +60,9 @@ func _mesurer(img: Image, sans: Image, jeu: Node, nom: String, etiquette: String
 	_verifier("%s %s : glyphe dessiné (%d px, enveloppe %s)" % [etiquette, nom, glyphe, env], glyphe >= 60)
 	_verifier("%s %s : glyphe entier dans le bouton, hors bordure (non mangé)" % [etiquette, nom],
 		not premier and interieur.encloses(env), "%s dans %s" % [env, interieur])
-	_verifier("%s %s : fond clair du 7-diff peint (%d px clairs)" % [etiquette, nom, clairs], clairs > glyphe * 4)
+	# (21-10, boutons carrés) le glyphe occupe ~20 % d'un bouton quasi carré (contre ~5 % d'une bande 240×38) → le fond
+	# clair est MAJORITAIRE dans le bouton (> 50 % de sa surface), critère conforme à l'en-tête, indépendant de la forme.
+	_verifier("%s %s : fond clair du 7-diff peint et majoritaire (%d px clairs sur %d)" % [etiquette, nom, clairs, r.get_area()], clairs > r.get_area() * 0.5)
 	_verifier("%s %s : bouton entier dans l'image %s" % [etiquette, nom, img.get_size()],
 		Rect2i(Vector2i.ZERO, img.get_size()).encloses(r))
 
@@ -84,8 +86,8 @@ func _derouler() -> void:
 		var img: Image = sub.get_texture().get_image()
 		var etiquette := "%s %s" % [nom_f, sub.get_visible_rect().size]
 		img.save_png("/tmp/preuve_pousse_icones_%s.png" % nom_f)
-		var coin := img.get_region(Rect2i(0, 0, 300, 120))
-		coin.resize(900, 360, Image.INTERPOLATE_NEAREST)
+		var coin := img.get_region(Rect2i(0, 0, 200, 400))
+		coin.resize(600, 1200, Image.INTERPOLATE_NEAREST)
 		coin.save_png("/tmp/preuve_pousse_icones_%s_hud_x3.png" % nom_f)
 		var icones := []
 		for nom in BOUTONS:

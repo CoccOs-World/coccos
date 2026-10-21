@@ -1227,7 +1227,9 @@ var _ecran := ECRAN
 var _ancrages: Array = []        # [nœud, position dans le repère de conception, ancre] — replacés à chaque changement de taille
 
 # CONTRÔLES à l'écran (repère 1024×768, stretch canvas_items) déduits des constructeurs de boutons :
-#   Recommencer (haut-gauche)  : RECOMMENCER_POS/TAILLE → x[28,268]  y[24,108]   (bas = 108)
+#   Recommencer + Accueil (bord GAUCHE, en colonne) : deux boutons CARRÉS (modèle 7-diff), Accueil SOUS Recommencer à une
+#       largeur de bouton d'écart, cf. BOUTON_ICONE_* et _zone_boutons_icones() → PC x[28,90] y[24,82] + y[144,202] ;
+#       tactile x[28,152] y[24,140] + y[264,380] (zone caméra = les deux + l'écart).
 #   Niveau N (haut-droite)     : ~ symétrique  → y[24,~86]
 #   Bandeau « Niveau difficile » (haut-centre) : pos (192,120) taille (640,100) → y[120,220] — TRANSITOIRE :
 #       il s'auto-efface en ~3 s (voir _afficher_annonce_pic) → JAMAIS pris en compte par l'évitement caméra
@@ -1240,17 +1242,23 @@ var _ancrages: Array = []        # [nœud, position dans le repère de conceptio
 # au pixel près ; les murs '#' (couleur du décor) débordent librement dessous. Contenu CENTRÉ en X, top-aligné
 # au SOMMET de l'écran (balle 30 : les 2 boutons du haut suivent la même règle → le tunnel monte dans le couloir
 # libre du centre-haut), zoom MAXIMAL (plafond 1.4). Cf. _cadrer_camera / _cadrage_ok / _rects_boutons.
-const RECOMMENCER_BAS := 108.0                      # bas de la ZONE haut-gauche réservée (barre du haut) — repère historique, conservé
-const RECOMMENCER_POS := Vector2(28, 24)            # coin haut-gauche de la ZONE réservée (Recommencer + Accueil empilés)
-const RECOMMENCER_TAILLE := Vector2(240, 84)        # ZONE réservée à l'évitement caméra (_rects_boutons) → bord bas = 108. NE PAS réduire (cadrage b33).
-# Balle 49 : les DEUX boutons (Recommencer + Accueil) sont EMPILÉS DANS cette même zone réservée → aucun NOUVEAU
-# rectangle d'évitement → cadrage b33 STRICTEMENT INCHANGÉ (mesuré : 38/38 zoom+position identiques). Rendu fin = roadmap.
-const RECOMMENCER_BTN_TAILLE := Vector2(240, 38)    # bouton Recommencer : moitié HAUTE de la zone → x[28,268] y[24,62]
-const ACCUEIL_POS := Vector2(28, 66)                # bouton Accueil : moitié BASSE de la zone → x[28,268] y[66,104]
-const ACCUEIL_TAILLE := Vector2(240, 38)            # (reste DANS la zone réservée y≤108 → 0 régression caméra par construction)
-# (21-10) Les DEUX boutons de cette zone portent une ICÔNE DESSINÉE à la place du mot (demande Fabrice), reprise du jeu
-# des 7 différences : flèche tournante = Recommencer, maison = Accueil (cf. `IconeDessinee`, fin de fichier). Mêmes
-# teintes que là-bas : fond clair + trait sombre = contraste de LUMINANCE (daltonien, GDD §1) ; l'infobulle reste.
+# (21-10, REQ_pousse_boutons_carres_gros — retour test Fabrice sur le Redmi : « deux boutons aussi fins sur Android,
+# impossible de viser celui qu'on veut ») : Recommencer et Accueil sont REFAITS sur le modèle des boutons des autres jeux
+# (7 différences, `SORTIE_TAILLE` 62×58 = « une cible de doigt, pas une icône de barre d'outils ») : deux boutons QUASI
+# CARRÉS, EN COLONNE au bord gauche (Accueil sous Recommencer), séparés d'UNE LARGEUR DE BOUTON (jamais collés, jamais
+# empilés serrés), et DOUBLÉS en mode tactile comme le 7-diff double sa croix sur téléphone (64 → 128).
+# PLACEMENT (libre, décidé par mesure 21-10) : la colonne gauche coûte le MOINS de zoom aux tableaux (cadrage b33 : le
+# tunnel évite les boutons) — côte à côte en haut, la zone 372×116 + la tête de l'avatar prenait une rangée au centre-haut
+# (jusqu'à −19 % de zoom en 16:9, −16 % en 20:9) ; en colonne, 20:9 (Redmi) ≤ −3 %, 16:9 ≤ −11 %, et des tableaux gagnent.
+# Les deux portent une ICÔNE DESSINÉE (flèche tournante = Recommencer, maison = Accueil, cf. `IconeDessinee` en fin de
+# fichier) sur le fond clair cerné de sombre du 7-diff = contraste de LUMINANCE (daltonien, GDD §1) ; l'infobulle garde
+# les mots pour l'adulte.
+# GÉOMÉTRIE À SOURCE UNIQUE : les constructeurs (_construire_bouton_recommencer / _construire_bouton_accueil) ET la zone
+# d'évitement caméra (_rects_boutons → _zone_boutons_icones) lisent _taille_bouton_icone() / _pos_accueil().
+const BOUTON_ICONE_TAILLE := Vector2(62, 58)        # = SORTIE_TAILLE du jeu des 7 différences (PC, repère 1024×768)
+const BOUTON_ICONE_FACTEUR_TACTILE := 2.0           # ×2 au doigt (Android) — même règle que la croix du 7-diff (64 → 128)
+const RECOMMENCER_POS := Vector2(28, 24)            # coin haut-gauche du bouton Recommencer (1er, en haut) ; Accueil = _pos_accueil()
+const ECART_BOUTONS_ICONES := 1.0                   # écart entre les deux boutons, en LARGEURS de bouton (≥ 1 : règle Android Fabrice)
 const COL_SORTIE      := Color(0.88, 0.90, 0.96, 1.0)   # fond clair du bouton, ses 3 états — 7 diff `COL_SORTIE`
 const COL_SORTIE_TXT  := Color(0.08, 0.09, 0.14, 1.0)   # trait sombre de l'icône et de la bordure — 7 diff `COL_SORTIE_TXT`
 # Indicateur de NIVEAU (haut-DROITE). Balle 63 (retour test Fabrice « gagner de la place ») : UNE SEULE ligne
@@ -1977,7 +1985,7 @@ func _rects_boutons() -> Array[Rect2]:
 	var bg := _decalage_ancre(ANCRE_BG)
 	var bd := _decalage_ancre(ANCRE_BD)
 	var rects: Array[Rect2] = [
-		Rect2(RECOMMENCER_POS, RECOMMENCER_TAILLE),                                   # ZONE haut-gauche (Recommencer + Accueil empilés, balle 49) — INCHANGÉE
+		_zone_boutons_icones(),                                                        # ZONE bord gauche : Recommencer + Accueil carrés en colonne, écart compris (21-10)
 		Rect2(LABEL_NIVEAU_POS + hd, LABEL_NIVEAU_TAILLE),
 		Rect2(CROIX_COCCOS_POS + hd, CROIX_COCCOS_TAILLE),  # croix de fermeture CoccOs                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
 		Rect2(NAV_PREC_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ◄ navigation (haut-droite, à gauche du numéro, b63)
@@ -1987,6 +1995,33 @@ func _rects_boutons() -> Array[Rect2]:
 			Vector2(2.0 * DPAD_DEMI, DPAD_DEMI + DPAD_BAS_DEMI)),                     # D-pad (bas-droite) — boîte 2 rangées : « ^ » à -DPAD_DEMI, rangée « < v > » à +DPAD_BAS_DEMI (b63)
 	]
 	return rects
+
+# (21-10) Taille RÉELLE des deux boutons à icône : 62×58 à la souris, ×2 au doigt (Tactile.actif(), coché sur Android).
+# Lue à la construction (même instant que _curseur_pc) : les boutons ET la zone d'évitement caméra en dérivent.
+func _taille_bouton_icone() -> Vector2:
+	return BOUTON_ICONE_TAILLE * (1.0 if _curseur_pc else BOUTON_ICONE_FACTEUR_TACTILE)
+
+# (21-10) Coin haut-gauche du bouton Accueil : SOUS Recommencer, séparé d'ECART_BOUTONS_ICONES LARGEUR(S) de bouton (la
+# largeur, 124 au doigt, est la plus grande des deux dimensions → l'écart vaut bien « au moins une largeur »).
+func _pos_accueil() -> Vector2:
+	var t := _taille_bouton_icone()
+	return RECOMMENCER_POS + Vector2(0.0, t.y + t.x * ECART_BOUTONS_ICONES)
+
+# (21-10) ZONE haut-gauche réservée à l'évitement caméra : l'enveloppe des DEUX boutons, ÉCART COMPRIS (le tunnel ne
+# passe pas entre eux non plus — un avatar coincé entre deux boutons serait injouable au doigt). Le repère de conception
+# est le coin haut-gauche (ANCRE_HG, décalage nul) → aucun ancrage à appliquer. Cette zone est aussi celle que l'AVATAR
+# ENTIER doit éviter (cf. _zones_avatar / _cadrage_ok).
+func _zone_boutons_icones() -> Rect2:
+	var t := _taille_bouton_icone()
+	return Rect2(RECOMMENCER_POS, _pos_accueil() - RECOMMENCER_POS + t)
+
+# (21-10, REQ_pousse_boutons_carres_gros) Zones que l'AVATAR ENTIER (_enveloppe_avatar : tête au-dessus de sa case, bras
+# sur les côtés) ne doit JAMAIS recouvrir — en plus des cases praticables : Recommencer + Accueil. Mesurée au zoom RÉEL
+# dans _cadrage_ok (exact, case par case) plutôt que réservée au pire cas (zoom plafond) : une marge fixe de 109 px sous
+# la zone coûtait jusqu'à −24 % de zoom sur les grands tableaux en 16:9 (mesuré 21-10) — le tableau doit rester GRAND
+# (grief b33). Les autres contrôles gardent la règle b28 (seul le tunnel les évite ; l'avatar peut les frôler).
+func _zones_avatar() -> Array[Rect2]:
+	return [_zone_boutons_icones()]
 
 # (21-10) Décalage d'un contrôle ancré au coin `ancre` : 0 sur un écran visible 1024×768 (repère de conception).
 func _decalage_ancre(ancre: Vector2) -> Vector2:
@@ -2152,6 +2187,7 @@ func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 	var ecran := Rect2(MARGE_BORD, MARGE_BORD, _ecran.x - 2.0 * MARGE_BORD, _ecran.y - 2.0 * MARGE_BORD)
 	var env := _enveloppe_avatar()                               # (21-10) l'avatar ENTIER doit tenir à l'écran sur toute case praticable
 	var env_ecran := Rect2(env.position * z, env.size * z)
+	var zones_avatar := _zones_avatar()                          # (21-10) … et ne jamais passer sous Recommencer / Accueil
 	for y in _terrain.size():
 		var ligne: String = _terrain[y]
 		for x in ligne.length():
@@ -2163,11 +2199,15 @@ func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 			if not ecran.encloses(case_rect):
 				return false                                         # case praticable hors écran
 			var centre := Vector2(sx + cote * 0.5, sy + cote_y * 0.5)
-			if not ecran.encloses(Rect2(centre + env_ecran.position, env_ecran.size)):
+			var avatar_rect := Rect2(centre + env_ecran.position, env_ecran.size)
+			if not ecran.encloses(avatar_rect):
 				return false                                         # avatar posé là : une partie (tête) hors écran
 			for b in boutons:
 				if b.grow(GARDE_BOUTON).intersects(case_rect):
 					return false                                     # case praticable sous un bouton
+			for b in zones_avatar:
+				if b.grow(GARDE_BOUTON).intersects(avatar_rect):
+					return false                                     # (21-10) avatar posé là : une partie sous Recommencer / Accueil
 	return true
 
 # ---------------------------------------------------------------------------
@@ -2677,8 +2717,8 @@ func _mettre_en_valeur_agripper(actif: bool) -> void:
 # ---------------------------------------------------------------------------
 
 # Bouton « Recommencer » à l'écran, en HAUT-GAUCHE (le bas est déjà pris : D-pad à
-# droite, Agripper à gauche). Grosse touche, libellé explicite. Aucun « game over »,
-# aucune confirmation anxiogène (GDD §1) : un clic réinitialise, point.
+# droite, Agripper à gauche). Grosse touche CARRÉE (21-10 : modèle 7-diff, ×2 au doigt), icône « rejouer ».
+# Aucun « game over », aucune confirmation anxiogène (GDD §1) : un clic réinitialise, point.
 func _construire_bouton_recommencer() -> void:
 	var couche := CanvasLayer.new()
 	couche.name = "BoutonRecommencer"
@@ -2688,16 +2728,17 @@ func _construire_bouton_recommencer() -> void:
 	bouton.name = "Recommencer"
 	bouton.text = ""                                   # (21-10) plus de mot : l'icône « rejouer » (flèche tournante) dit « recommence »
 	bouton.tooltip_text = "Recommencer le niveau (sans perdre)"
-	bouton.position = RECOMMENCER_POS                  # haut-gauche, moitié HAUTE de la zone réservée (balle 49)
-	bouton.size = RECOMMENCER_BTN_TAILLE               # bouton = moitié haute ; la ZONE réservée (caméra) reste RECOMMENCER_TAILLE
+	bouton.position = RECOMMENCER_POS                  # haut-gauche, 1er des deux boutons carrés (Accueil dessous)
+	bouton.size = _taille_bouton_icone()               # 62×58 (7-diff) à la souris, 124×116 au doigt ; la zone caméra en dérive
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
 	_styler_bouton_icone(bouton)                       # (21-10) fond clair cerné de sombre, comme au jeu des 7 différences
 	bouton.pressed.connect(_recommencer)
 	couche.add_child(bouton)
-	_habiller_icone(bouton, "rejouer", RECOMMENCER_BTN_TAILLE)
+	_habiller_icone(bouton, "rejouer", bouton.size)
 
 # Bouton « Accueil » (balle 49, GDD §2.3) : retourne à l'écran de choix d'avatar (et de curseur sur PC — choix RÉ-MODIFIABLE).
-# Sous le Recommencer (haut-gauche), grosse touche, libellé explicite. Un clic ré-affiche l'accueil PAR-DESSUS
+# SOUS le Recommencer (bord gauche), à une largeur de bouton d'écart (21-10), grosse touche carrée, icône « maison ».
+# Un clic ré-affiche l'accueil PAR-DESSUS
 # le jeu en cours (sans perdre la progression, aucun « game over ») → l'enfant change d'avatar puis « Jouer » reprend.
 func _construire_bouton_accueil() -> void:
 	var couche := CanvasLayer.new()
@@ -2708,13 +2749,13 @@ func _construire_bouton_accueil() -> void:
 	bouton.name = "Accueil"
 	bouton.text = ""                                   # (21-10) plus de mot : l'icône « maison » dit « retour à l'accueil »
 	bouton.tooltip_text = "Changer d'avatar / de curseur" if _curseur_pc else "Changer d'avatar"
-	bouton.position = ACCUEIL_POS                      # moitié BASSE de la zone réservée haut-gauche (empilé sous Recommencer, balle 49)
-	bouton.size = ACCUEIL_TAILLE
+	bouton.position = _pos_accueil()                   # sous Recommencer, séparé d'une largeur de bouton (jamais collés)
+	bouton.size = _taille_bouton_icone()               # même taille que Recommencer (source unique)
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
 	_styler_bouton_icone(bouton)                       # (21-10) même fond que Recommencer (7 différences)
 	bouton.pressed.connect(_afficher_accueil)
 	couche.add_child(bouton)
-	_habiller_icone(bouton, "maison", ACCUEIL_TAILLE)
+	_habiller_icone(bouton, "maison", bouton.size)
 
 # (21-10) FOND DE BOUTON À ICÔNE — recopié de la fabrique `_bouton` du jeu des 7 différences (sept_differences.gd) :
 # plaque claire à coins ronds (10), cernée de 3 px du sombre de l'icône. Les trois états (normal, survol, appuyé)

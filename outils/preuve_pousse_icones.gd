@@ -3,7 +3,8 @@
 #   ① les deux boutons n'ont plus de mot (`text == ""`) ;
 #   ② chacun porte UNE `IconeDessinee` (classe du script du jeu), de forme « rejouer » / « maison », ancrée plein rect,
 #      transparente aux clics (MOUSE_FILTER_IGNORE) ;
-#   ③ taille et position des boutons INCHANGÉES (constantes b49) et zone d'évitement caméra `_rects_boutons()[0]` inchangée ;
+#   ③ taille et position des boutons = celles de la source unique du jeu (_taille_bouton_icone / RECOMMENCER_POS /
+#      _pos_accueil — boutons carrés 21-10) et zone d'évitement caméra `_rects_boutons()[0]` = _zone_boutons_icones() ;
 #   ④ fond du 7-diff : StyleBoxFlat `COL_SORTIE`, rayon 10, bordure 3 `COL_SORTIE_TXT`, mêmes 3 états ;
 #   ⑤ rien d'autre ne bouge : « Jouer » reste un mot, la croix CoccOs garde son dessin blanc sur rond rouge ;
 #   ⑥ les deux boutons sont entiers dans l'écran visible.
@@ -15,9 +16,9 @@ extends SceneTree
 const SCENE := "res://scenes/pousse_pollen.tscn"
 const FORMATS := [Vector2i(1024, 768), Vector2i(1366, 768), Vector2i(2400, 1080)]
 const NOMS_FORMAT := ["4:3", "16:9", "20:9"]
-const ATTENDU := {   # bouton → [chemin, forme, position, taille, rappel]
-	"Recommencer": ["BoutonRecommencer/Recommencer", "rejouer", Vector2(28, 24), Vector2(240, 38), "_recommencer"],
-	"Accueil": ["BoutonAccueil/Accueil", "maison", Vector2(28, 66), Vector2(240, 38), "_afficher_accueil"],
+const ATTENDU := {   # bouton → [chemin, forme, rappel] (position/taille lues sur la source unique du jeu, cf. _controler)
+	"Recommencer": ["BoutonRecommencer/Recommencer", "rejouer", "_recommencer"],
+	"Accueil": ["BoutonAccueil/Accueil", "maison", "_afficher_accueil"],
 }
 
 var _echecs := 0
@@ -65,9 +66,10 @@ func _controler(jeu: Node, etiquette: String) -> void:
 				ic.get_global_rect().is_equal_approx(b.get_global_rect()) and ic.anchor_right == 1.0 and ic.anchor_bottom == 1.0)
 			_verifier("② %s %s : icône transparente aux clics" % [etiquette, nom], ic.mouse_filter == Control.MOUSE_FILTER_IGNORE)
 			_verifier("② %s %s : icône reliée au jeu (ov)" % [etiquette, nom], ic.ov == jeu)
-		_verifier("③ %s %s : position %s et taille %s inchangées" % [etiquette, nom, b.position, b.size],
-			b.position.is_equal_approx(a[2]) and b.size.is_equal_approx(a[3]))
-		_verifier("③ %s %s : rappel %s toujours branché" % [etiquette, nom, a[4]], b.pressed.is_connected(Callable(jeu, a[4])))
+		var pos_attendue: Vector2 = jeu.RECOMMENCER_POS if nom == "Recommencer" else jeu._pos_accueil()
+		_verifier("③ %s %s : position %s et taille %s = source unique du jeu" % [etiquette, nom, b.position, b.size],
+			b.position.is_equal_approx(pos_attendue) and b.size.is_equal_approx(jeu._taille_bouton_icone()))
+		_verifier("③ %s %s : rappel %s toujours branché" % [etiquette, nom, a[2]], b.pressed.is_connected(Callable(jeu, a[2])))
 		var sb: StyleBox = b.get_theme_stylebox("normal")
 		var ok4 := sb is StyleBoxFlat and (sb as StyleBoxFlat).bg_color.is_equal_approx(col_fond) \
 			and (sb as StyleBoxFlat).corner_radius_top_left == 10 and (sb as StyleBoxFlat).border_width_left == 3 \
@@ -76,8 +78,8 @@ func _controler(jeu: Node, etiquette: String) -> void:
 		_verifier("④ %s %s : fond du 7-diff (clair, rayon 10, bordure 3 sombre, 3 états)" % [etiquette, nom], ok4)
 		_verifier("⑥ %s %s : entier dans l'écran visible %s" % [etiquette, nom, vis.size], vis.grow(0.5).encloses(b.get_global_rect()))
 	var zone: Rect2 = jeu._rects_boutons()[0]
-	_verifier("③ %s zone d'évitement caméra haut-gauche inchangée %s" % [etiquette, zone],
-		zone.is_equal_approx(Rect2(Vector2(28, 24), Vector2(240, 84))))
+	_verifier("③ %s zone d'évitement caméra haut-gauche %s = _zone_boutons_icones()" % [etiquette, zone],
+		zone.is_equal_approx(jeu._zone_boutons_icones()))
 	var jouer: Button = jeu.get_node_or_null("Accueil/Jouer")
 	_verifier("⑤ %s « Jouer » reste un mot" % etiquette, jouer != null and jouer.text == "Jouer", str(jouer.text if jouer else null))
 	var croix: Button = null
