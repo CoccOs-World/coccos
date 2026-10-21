@@ -1,0 +1,174 @@
+; ============================================================================
+;  CoccOs — préréglages d'export, COPIE DE RÉFÉRENCE
+;
+;  Le vrai export_presets.cfg est gitignoré : Godot le réécrit à chaque
+;  ouverture de l'éditeur, et il porte des chemins et mots de passe propres
+;  à chaque poste. Ce fichier-ci sert à comparer ses préréglages aux nôtres.
+;
+;  À vérifier en priorité sur les deux préréglages Android :
+;    include_filter="lang/**,classeur/**,voix_android/**"
+;  Sans voix_android/**, l'APK part SANS voix hors ligne.
+;
+;  Les champs keystore sont VIDÉS ici — à remplir sur son propre poste,
+;  jamais dans le dépôt.
+; ============================================================================
+[preset.0]
+
+name="Web"
+platform="Web"
+runnable=true
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter="lang/**,classeur/**"
+exclude_filter=""
+export_path="../site/jeu/index.html"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.0.options]
+
+custom_template/debug=""
+custom_template/release=""
+variant/extensions_support=false
+variant/thread_support=false
+vram_texture_compression/for_desktop=true
+vram_texture_compression/for_mobile=false
+html/export_icon=true
+html/custom_html_shell=""
+html/head_include=""
+html/canvas_resize_policy=2
+html/focus_canvas_on_start=true
+html/experimental_virtual_keyboard=false
+progressive_web_app/enabled=false
+
+[preset.1]
+
+name="Windows Desktop"
+platform="Windows Desktop"
+runnable=true
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter="lang/**,classeur/**"
+exclude_filter=""
+export_path="../installeur/windows/coccos.exe"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.1.options]
+
+custom_template/debug=""
+custom_template/release=""
+debug/export_console_wrapper=0
+binary_format/architecture="x86_64"
+application/modify_resources=false
+application/icon=""
+application/console_wrapper_icon=""
+application/icon_interpolation=4
+application/file_version="0.1.25.28"
+application/product_version="0.1.25.28"
+application/company_name="NET&TIC"
+application/product_name="CoccOs"
+application/file_description="CoccOs - plateforme educative pour l'enfant"
+application/copyright="© 2026 IA&TIC - CC BY-SA 4.0"
+application/trademarks=""
+application/export_angle=0
+application/d3d12_agility_sdk_multiarch=true
+ssh_remote_deploy/enabled=false
+
+[preset.2]
+
+name="Android"
+platform="Android"
+runnable=true
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter="lang/**,classeur/**,voix_android/**"
+exclude_filter=""
+export_path="../installeur/android/coccos.apk"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.2.options]
+
+custom_template/debug=""
+custom_template/release=""
+gradle_build/use_gradle_build=true
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+permissions/internet=true
+permissions/access_wifi_state=true
+version/code=11
+version/name="0.1.31.38"
+package/unique_name="fr.coccos.app"
+package/name="CoccOs"
+launcher_icons/main_192x192="res://assets/android/icone_192.png"
+launcher_icons/adaptive_foreground_432x432="res://assets/android/icone_adaptive_fg.png"
+launcher_icons/adaptive_background_432x432="res://assets/android/icone_adaptive_bg.png"
+keystore/debug=""
+keystore/debug_user=""
+keystore/debug_password=""
+
+[preset.3]
+
+name="Android AAB"
+platform="Android"
+runnable=false
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter="lang/**,classeur/**,voix_android/**"
+exclude_filter=""
+export_path="../installeur/android/coccos.aab"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.3.options]
+
+custom_template/debug=""
+custom_template/release=""
+gradle_build/use_gradle_build=true
+gradle_build/export_format=1
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+permissions/internet=true
+permissions/access_wifi_state=true
+version/code=11
+version/name="0.1.31.38"
+package/unique_name="fr.coccos.app"
+package/name="CoccOs"
+launcher_icons/main_192x192="res://assets/android/icone_192.png"
+launcher_icons/adaptive_foreground_432x432="res://assets/android/icone_adaptive_fg.png"
+launcher_icons/adaptive_background_432x432="res://assets/android/icone_adaptive_bg.png"
+keystore/debug=""
+keystore/debug_user=""
+keystore/debug_password=""
+keystore/release=""
+keystore/release_user=""
+keystore/release_password=""
