@@ -1214,6 +1214,16 @@ const POOL_LETTRES := ["A", "B", "C", "D", "E", "F", "G", "H", "K", "M"]
 # pour faire tenir chaque tableau à l'écran (N2/N3 plus grands que N1) sans dépendre du timing
 # du stretch dans _ready (valeur déterministe, alignée sur project.godot).
 const ECRAN := Vector2(1024, 768)
+# CADRAGE ÉCRAN RÉEL (21-10, REQ_pousse_cadrage_android) : ECRAN reste le repère de CONCEPTION des contrôles ci-dessous.
+# Le projet CoccOs est en 1280×720 « expand » → l'écran VISIBLE réel (`_ecran`) vaut 1280×960 en 4:3, 1280×720 en 16:9,
+# 1600×720 sur un téléphone 20:9. Le cadrage caméra et le fond lisent `_ecran` (mêmes règles b28/b33, bonne mesure) ;
+# chaque contrôle garde sa distance à SON coin (ANCRE_*) → sur un écran visible de 1024×768, tout reste au pixel près.
+const ANCRE_HG := Vector2(0, 0)
+const ANCRE_HD := Vector2(1, 0)
+const ANCRE_BG := Vector2(0, 1)
+const ANCRE_BD := Vector2(1, 1)
+var _ecran := ECRAN
+var _ancrages: Array = []        # [nœud, position dans le repère de conception, ancre] — replacés à chaque changement de taille
 
 # CONTRÔLES à l'écran (repère 1024×768, stretch canvas_items) déduits des constructeurs de boutons :
 #   Recommencer (haut-gauche)  : RECOMMENCER_POS/TAILLE → x[28,268]  y[24,108]   (bas = 108)
@@ -1676,6 +1686,8 @@ func _ready() -> void:
 	_curseur_pc = not Tactile.actif()  # (08-10) choix de curseur + curseur en jeu : PC seulement (avant l'UI qui en dépend)
 	randomize()                        # graine aléatoire → étiquettes tirées au hasard varient d'une session à l'autre (balle 24)
 	_construire_lecteurs_son()         # balle 71 : un AudioStreamPlayer réutilisable par bruitage
+	_maj_ecran()                       # (21-10) écran visible RÉEL, avant l'UI ancrée et le premier cadrage
+	get_viewport().size_changed.connect(_sur_taille_ecran)
 	_construire_fleches_ecran()
 	_construire_bouton_agripper()
 	_construire_bouton_recommencer()
@@ -1947,22 +1959,49 @@ func _boite_contenu() -> Rect2:
 func _rects_boutons() -> Array[Rect2]:
 	# Les flèches ◄/► (balle 34) sont réservées MÊME quand elles sont cachées (◄ au N1, ► si non débloqué) →
 	# le cadrage reste DÉTERMINISTE (il ne varie pas selon la visibilité) : coin haut-droite stable, non-régression.
+	var hd := _decalage_ancre(ANCRE_HD)                # (21-10) chaque contrôle suit SON coin de l'écran réel
+	var bg := _decalage_ancre(ANCRE_BG)
+	var bd := _decalage_ancre(ANCRE_BD)
 	var rects: Array[Rect2] = [
 		Rect2(RECOMMENCER_POS, RECOMMENCER_TAILLE),                                   # ZONE haut-gauche (Recommencer + Accueil empilés, balle 49) — INCHANGÉE
-		Rect2(LABEL_NIVEAU_POS, LABEL_NIVEAU_TAILLE),
-		Rect2(CROIX_COCCOS_POS, CROIX_COCCOS_TAILLE),  # croix de fermeture CoccOs                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
-		Rect2(NAV_PREC_CENTRE - NAV_TAILLE * 0.5, NAV_TAILLE),                        # flèche ◄ navigation (haut-droite, à gauche du numéro, b63)
-		Rect2(NAV_SUIV_CENTRE - NAV_TAILLE * 0.5, NAV_TAILLE),                        # flèche ► navigation (haut-droite, à droite du numéro, b63)
-		Rect2(AGRIPPER_CENTRE - AGRIPPER_TAILLE * 0.5, AGRIPPER_TAILLE),              # Agripper (bas-gauche)
-		Rect2(Vector2(DPAD_CENTRE_X - DPAD_DEMI, DPAD_CENTRE_Y - DPAD_DEMI),
+		Rect2(LABEL_NIVEAU_POS + hd, LABEL_NIVEAU_TAILLE),
+		Rect2(CROIX_COCCOS_POS + hd, CROIX_COCCOS_TAILLE),  # croix de fermeture CoccOs                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
+		Rect2(NAV_PREC_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ◄ navigation (haut-droite, à gauche du numéro, b63)
+		Rect2(NAV_SUIV_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ► navigation (haut-droite, à droite du numéro, b63)
+		Rect2(AGRIPPER_CENTRE - AGRIPPER_TAILLE * 0.5 + bg, AGRIPPER_TAILLE),              # Agripper (bas-gauche)
+		Rect2(Vector2(DPAD_CENTRE_X - DPAD_DEMI, DPAD_CENTRE_Y - DPAD_DEMI) + bd,
 			Vector2(2.0 * DPAD_DEMI, DPAD_DEMI + DPAD_BAS_DEMI)),                     # D-pad (bas-droite) — boîte 2 rangées : « ^ » à -DPAD_DEMI, rangée « < v > » à +DPAD_BAS_DEMI (b63)
 	]
 	return rects
 
+# (21-10) Décalage d'un contrôle ancré au coin `ancre` : 0 sur un écran visible 1024×768 (repère de conception).
+func _decalage_ancre(ancre: Vector2) -> Vector2:
+	return (_ecran - ECRAN) * ancre
+
+# (21-10) Enregistre un nœud d'UI (Control ou TouchScreenButton) posé dans le repère de conception et le place à son coin.
+func _ancrer(n: Node, ancre: Vector2) -> void:
+	_ancrages.append([n, n.position, ancre])
+	n.position += _decalage_ancre(ancre)
+
+func _maj_ecran() -> void:
+	_ecran = get_viewport().get_visible_rect().size
+
+# (21-10) Rotation / fenêtre redimensionnée : contrôles replacés à leur coin, plateau recadré (mêmes règles).
+func _sur_taille_ecran() -> void:
+	var avant := _ecran
+	_maj_ecran()
+	if _ecran == avant:
+		return
+	for a in _ancrages:
+		if is_instance_valid(a[0]):
+			a[0].position = a[1] + _decalage_ancre(a[2])
+	_cadrer_camera()
+	queue_redraw()
+
 # Fenêtre des positions caméra qui font tenir TOUT le contenu (bbox des cases praticables) à l'écran au zoom z,
-# marge MARGE_BORD. Bornes analytiques : depuis screen = (monde - cam)·z + ECRAN/2, le bord GAUCHE du contenu
-# (monde wx0) doit être ≥ MARGE_BORD et le bord DROIT (wx1) ≤ ECRAN.x-MARGE_BORD → cam.x ∈ [wx1-demi/z, wx0+demi/z]
-# avec demi = ECRAN.x/2-MARGE_BORD (idem en Y). Rect2 VIDE (size < 0) si le contenu ne tient pas à ce zoom.
+# marge MARGE_BORD. Bornes analytiques : depuis screen = (monde - cam)·z + _ecran/2, le bord GAUCHE du contenu
+# (monde wx0) doit être ≥ MARGE_BORD et le bord DROIT (wx1) ≤ _ecran.x-MARGE_BORD → cam.x ∈ [wx1-demi/z, wx0+demi/z]
+# avec demi = _ecran.x/2-MARGE_BORD (idem en Y). Rect2 VIDE (size < 0) si le contenu ne tient pas à ce zoom.
 # N'INTÈGRE PAS l'évitement des boutons (non convexe) : c'est _cadrage_ok qui le teste, point par point.
 func _fenetre_camera(z: float) -> Rect2:
 	var boite := _boite_contenu()
@@ -1972,8 +2011,8 @@ func _fenetre_camera(z: float) -> Rect2:
 	# Cohérent avec _cadrage_ok (qui projette chaque case au même y comprimé) → cadrage exact, pas approché.
 	var wy0 := boite.position.y * CELL * _plonge_ky
 	var wy1 := (boite.position.y + boite.size.y) * CELL * _plonge_ky
-	var demi_x := ECRAN.x * 0.5 - MARGE_BORD
-	var demi_y := ECRAN.y * 0.5 - MARGE_BORD
+	var demi_x := _ecran.x * 0.5 - MARGE_BORD
+	var demi_y := _ecran.y * 0.5 - MARGE_BORD
 	var camx_lo := wx1 - demi_x / z
 	var camx_hi := wx0 + demi_x / z
 	var camy_lo := wy1 - demi_y / z
@@ -2045,7 +2084,7 @@ func _cadrer_camera() -> void:
 	var boite := _boite_contenu()
 	if boite.size.x > boite.size.y:
 		var h_px := boite.size.y * CELL * _plonge_ky * z
-		var bande_v := ECRAN.y                                     # balle 69 : hauteur jouable = plein écran (plus de bande horizon réservée)
+		var bande_v := _ecran.y                                     # balle 69 : hauteur jouable = plein écran (plus de bande horizon réservée)
 		if h_px < PLAT_REMPLIR_V * bande_v:
 			var ky_vise := (PLAT_REMPLIR_V * bande_v) / (boite.size.y * CELL * z)
 			_plonge_ky = clampf(ky_vise, PLONGE_KY, PLONGE_KY_MAX)
@@ -2085,19 +2124,19 @@ func _cadrer_camera() -> void:
 
 # Vrai si, à la position caméra `cam_pos` et au zoom z, AUCUNE case PRATICABLE (glyphe ≠ '#') ne chevauche un
 # bouton (agrandi de GARDE_BOUTON) ni ne déborde de l'écran. Projection Camera2D standard :
-#   sx = (x·CELL - cam_pos.x)·z + ECRAN.x/2 ,  sy = (y·CELL - cam_pos.y)·z + ECRAN.y/2 .
+#   sx = (x·CELL - cam_pos.x)·z + _ecran.x/2 ,  sy = (y·CELL - cam_pos.y)·z + _ecran.y/2   (écran RÉEL, 21-10).
 # Les murs '#' sont IGNORÉS (ils peuvent passer sous un bouton) — c'est toute la règle définitive b28.
 func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 	var cote := CELL * z
 	var cote_y := CELL * _plonge_ky * z                          # hauteur écran d'une case en vue plongée (balle 55 ; b62 : _plonge_ky adaptatif)
-	var ecran := Rect2(MARGE_BORD, MARGE_BORD, ECRAN.x - 2.0 * MARGE_BORD, ECRAN.y - 2.0 * MARGE_BORD)
+	var ecran := Rect2(MARGE_BORD, MARGE_BORD, _ecran.x - 2.0 * MARGE_BORD, _ecran.y - 2.0 * MARGE_BORD)
 	for y in _terrain.size():
 		var ligne: String = _terrain[y]
 		for x in ligne.length():
 			if ligne[x] == "#":
 				continue                                             # mur (terre) : aucune contrainte
-			var sx := (x * CELL - cam_pos.x) * z + ECRAN.x * 0.5
-			var sy := (y * CELL * _plonge_ky - cam_pos.y) * z + ECRAN.y * 0.5   # y comprimé (plongée)
+			var sx := (x * CELL - cam_pos.x) * z + _ecran.x * 0.5
+			var sy := (y * CELL * _plonge_ky - cam_pos.y) * z + _ecran.y * 0.5   # y comprimé (plongée)
 			var case_rect := Rect2(sx, sy, cote, cote_y)
 			if not ecran.encloses(case_rect):
 				return false                                         # case praticable hors écran
@@ -2395,7 +2434,7 @@ func _lancer_gouttelettes_pollen() -> void:
 		return
 	var eclat := CPUParticles2D.new()
 	eclat.name = "GouttelettesPollen"
-	eclat.position = ECRAN * 0.5                   # éclatent DEPUIS le mot (centré plein écran, comme « Bravo ! »)
+	eclat.position = _ecran * 0.5                   # éclatent DEPUIS le mot (centré plein écran, comme « Bravo ! »)
 	eclat.texture = _texture_gouttelette()         # petit disque doux (sans texture, le point serait à peine visible)
 	eclat.one_shot = true                          # un seul éclat (pas d'émission continue)
 	eclat.explosiveness = 1.0                      # toutes les gouttelettes partent D'UN COUP = éclat (burst)
@@ -2442,7 +2481,7 @@ func _lancer_ami_remercie() -> void:
 	if not is_instance_valid(_couche_reussite):
 		return
 	var ami_type := 1 - _avatar_type                   # l'AMI = l'autre perso (0 coccinelle ↔ 1 abeille)
-	var centre := ECRAN * 0.5 + Vector2(0, 150)        # sous le mot « Bravo ! » (centré) → n'en masque pas les lettres
+	var centre := _ecran * 0.5 + Vector2(0, 150)        # sous le mot « Bravo ! » (centré) → n'en masque pas les lettres
 	var r := 66.0
 	var ami := Node2D.new()
 	ami.name = "AmiRemercie"
@@ -2514,7 +2553,7 @@ func _peindre_coeur(canvas: CanvasItem, centre: Vector2, taille: float) -> void:
 # Sur PC, project.godot active emulate_touch_from_mouse → la souris pilote aussi ces touches
 # (un seul pointeur : pas de vrai multitouch souris — le maintien Agripper passe par l'espace).
 # Retourne { "tsb": TouchScreenButton, "visuel": ColorRect }.
-func _creer_touche_ecran(couche: CanvasLayer, nom: String, libelle: String, centre: Vector2, taille: Vector2, taille_police: int) -> Dictionary:
+func _creer_touche_ecran(couche: CanvasLayer, nom: String, libelle: String, centre: Vector2, taille: Vector2, taille_police: int, ancre: Vector2 = ANCRE_HG) -> Dictionary:
 	var visuel := ColorRect.new()
 	visuel.name = "Visuel_" + nom
 	visuel.color = COL_TOUCHE
@@ -2539,6 +2578,8 @@ func _creer_touche_ecran(couche: CanvasLayer, nom: String, libelle: String, cent
 	tsb.shape = forme
 	tsb.shape_visible = false                         # pas de contour de forme en jeu (le visuel ColorRect suffit)
 	couche.add_child(tsb)
+	_ancrer(visuel, ancre)                            # (21-10) visuel + zone tactile suivent le même coin de l'écran réel
+	_ancrer(tsb, ancre)
 	return {"tsb": tsb, "visuel": visuel, "label": etiquette}
 
 # Quatre flèches à l'écran, chacune une touche MULTITOUCH. Reliées aux MÊMES actions que le
@@ -2566,7 +2607,7 @@ func _construire_fleches_ecran() -> void:
 
 # Crée une flèche écran et renvoie son VISUEL (pour la flèche gauche pulsée par le guide).
 func _ajouter_fleche(couche: CanvasLayer, nom: String, libelle: String, centre: Vector2, taille: Vector2, direction: Vector2i) -> Control:
-	var touche := _creer_touche_ecran(couche, nom, libelle, centre, taille, 40)
+	var touche := _creer_touche_ecran(couche, nom, libelle, centre, taille, 40, ANCRE_BD)   # D-pad : coin bas-droit
 	var tsb: TouchScreenButton = touche["tsb"]
 	# Même chemin que le clavier : le signal pressed appelle _tenter_deplacement (un appui = une case).
 	tsb.pressed.connect(_tenter_deplacement.bind(direction))
@@ -2586,7 +2627,7 @@ func _construire_bouton_agripper() -> void:
 	var taille := AGRIPPER_TAILLE
 	var centre := AGRIPPER_CENTRE                     # bas-gauche ; balle 28 : DESCENDU (voir constantes)
 	# Balle 34 : le bouton affiche TOUJOURS « Agripper » (le mode « OK » du sélecteur b16 est retiré).
-	var touche := _creer_touche_ecran(couche, "agripper", "Agripper", centre, taille, 34)
+	var touche := _creer_touche_ecran(couche, "agripper", "Agripper", centre, taille, 34, ANCRE_BG)   # coin bas-gauche
 	var tsb: TouchScreenButton = touche["tsb"]
 	_visuel_agripper = touche["visuel"]               # gardé : vire au doré tant qu'on tient, remis au repos par « Recommencer »
 	tsb.pressed.connect(_sur_agripper_presse)
@@ -2676,6 +2717,7 @@ func _construire_label_niveau() -> void:
 	_label_niveau.add_theme_constant_override("outline_size", 5)
 	panneau.add_child(_label_niveau)
 	couche.add_child(panneau)
+	_ancrer(panneau, ANCRE_HD)                         # (21-10) « N » suit le coin haut-droit réel
 
 # « Niveau N » montre le niveau VISÉ (_niveau_vise) : au repos c'est le niveau chargé, et pendant un anti-rebond
 # ◄/► c'est la CIBLE en cours de sélection — retour visuel immédiat, avant tout chargement (balle 35).
@@ -2765,6 +2807,7 @@ func _creer_bouton_nav(couche: CanvasLayer, nom: String, sens: int, centre: Vect
 	bouton.add_child(triangle)
 	bouton.pressed.connect(rappel)
 	couche.add_child(bouton)
+	_ancrer(bouton, ANCRE_HD)                          # (21-10) ◄ ► suivent le coin haut-droit réel
 	return bouton
 
 # Dessine un triangle PLEIN pointant à gauche (sens<0) ou à droite (sens>0), centré verticalement, dans le
@@ -2866,7 +2909,7 @@ func _afficher_ecran_fin() -> void:
 	rejouer.name = "Rejouer"
 	rejouer.text = "Rejouer"
 	rejouer.size = Vector2(280, 90)
-	rejouer.position = Vector2((ECRAN.x - 280) * 0.5, ECRAN.y * 0.5 + 90)
+	rejouer.position = Vector2((_ecran.x - 280) * 0.5, _ecran.y * 0.5 + 90)
 	rejouer.focus_mode = Control.FOCUS_NONE
 	rejouer.add_theme_font_size_override("font_size", 40)
 	rejouer.pressed.connect(_rejouer_depuis_fin)
@@ -3274,7 +3317,7 @@ func _afficher_annonce_pic() -> void:
 	var panneau := ColorRect.new()
 	panneau.name = "Bandeau"
 	panneau.color = Color(0.98, 0.88, 0.25, 0.90)     # doré doux (chaud, calme), semi-opaque
-	panneau.position = Vector2((ECRAN.x - largeur) * 0.5, 120)   # haut-centre : sous Recommencer, au-dessus du D-pad
+	panneau.position = Vector2((_ecran.x - largeur) * 0.5, 120)   # haut-centre : sous Recommencer, au-dessus du D-pad
 	panneau.size = Vector2(largeur, hauteur)
 	panneau.mouse_filter = Control.MOUSE_FILTER_IGNORE  # laisse passer tous les clics (Recommencer, flèches…)
 	var etiquette := Label.new()
@@ -3317,10 +3360,10 @@ func _draw() -> void:
 	# Assombrie par MOD_FOND_TERRE (luminance) → la galerie éclairée du premier plan ressort. Le plateau (sols +
 	# murs + relief) se peint PAR-DESSUS, inchangé.
 	var z_cam: float = _cam.zoom.x if _cam != null and _cam.zoom.x > 0.0 else 1.0
-	var demi := ECRAN * 0.5 / z_cam
+	var demi := _ecran * 0.5 / z_cam
 	var centre_cam: Vector2 = _cam.position if _cam != null else Vector2.ZERO
 	var vue := Rect2(centre_cam - demi - Vector2(FOND_MARGE, FOND_MARGE),
-		ECRAN / z_cam + Vector2(FOND_MARGE, FOND_MARGE) * 2.0)
+		_ecran / z_cam + Vector2(FOND_MARGE, FOND_MARGE) * 2.0)
 	draw_texture_rect(TEX_TERRE, vue, false, MOD_FOND_TERRE)
 	# Dimensions de la grille (en cases) : servent à ÉTALER les textures terre/sol sur tout le plateau
 	# (une part de texture par case → pas de répétition ni de couture). cols = ligne la plus longue.
@@ -3669,6 +3712,7 @@ func _creer_bouton_quitter_coccos() -> void:
 	btn.add_child(icone)
 	btn.pressed.connect(_quitter_coccos)
 	couche.add_child(btn)
+	_ancrer(btn, ANCRE_HD)                             # (21-10) croix au coin haut-droit RÉEL
 
 
 ## Retour au bureau CoccOs (ou fermeture en lancement direct --app).
