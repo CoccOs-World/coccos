@@ -5,7 +5,8 @@
 # preuve_barre_android) et chaque reglage [souris] taille_curseur ecrit dans un user:// ISOLE,
 # monte les 4 copies de curseur.gd (le jeu des lettres n'a plus de facteur propre : il suit la gamme
 # comme les autres, cf. outils/preuve_lettres_reglable_fond.gd)
-# et lit l'echelle effective, les bornes de la molette et le defaut sans config.
+# et lit l'echelle effective, les bornes de la molette et le defaut sans config :
+# PC = « moyen » (inchange), Android = « petit » (#223, Fabrice 22-10) — un reglage ecrit prime.
 # Attendus ecrits ICI (gamme d'origine 0.55 / 1.0 / 1.45) — pas lus dans le code teste.
 # Lancement :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_curseur_tailles.gd
@@ -33,6 +34,7 @@ func _initialize() -> void:
 func _monter(chemin: String, android: bool) -> Node2D:
 	var c: Node2D = (load(chemin) as GDScript).new()
 	if android:
+		c.android = true
 		c.gamme = c.gamme_pour(true)
 	root.add_child(c)
 	return c
@@ -46,11 +48,13 @@ func _plateforme(android: bool) -> void:
 	var x := 2.0 if android else 1.0
 	var nom := "ANDROID" if android else "PC"
 	print("== %s (gamme attendue x%.0f)" % [nom, x])
-	print("-- A. sans config.cfg (installation neuve) = moyen = %.2f" % (1.0 * x))
+	var defaut := "petit" if android else "moyen"  # #223 : Android demarre en « petit »
+	var attendu_defaut: float = ORIGINE[defaut] * x
+	print("-- A. sans config.cfg (installation neuve) = %s = %.2f" % [defaut, attendu_defaut])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://config.cfg"))
 	for chemin in COPIES:
 		var c := _monter(chemin, android)
-		_verifier("%s sans reglage = %.2f" % [_nom(chemin), x], is_equal_approx(c.scale.x, x), "echelle = %.3f" % c.scale.x)
+		_verifier("%s sans reglage = %.2f" % [_nom(chemin), attendu_defaut], is_equal_approx(c.scale.x, attendu_defaut), "echelle = %.3f" % c.scale.x)
 		c.free()
 	for taille in ["petit", "moyen", "grand"]:
 		var attendu: float = ORIGINE[taille] * x
