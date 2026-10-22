@@ -5,7 +5,8 @@
 ## (assets/curseurs/) ; repli automatique sur les dessins par code si absentes
 ## (l'activité reste auto-contenue). La flèche reste dessinée par code.
 ## Forme, taille et vitesse lues dans les réglages adulte (user://config.cfg, [souris] :
-## forme_curseur = fleche/main/abeille/coccinelle ; taille_curseur = petit/moyen/grand ;
+## forme_curseur = fleche/main/abeille/coccinelle ; taille_curseur = petit/moyen/grand —
+## sans réglage enregistré : « petit » sur Android, « moyen » sur PC (taille_par_defaut) ;
 ## vitesse_curseur = 0.3 à 1.5, 1.0 = vitesse système).
 ## - pulser() : petit écrasement/rebond à chaque clic
 ## - zoomer() : grossit/rétrécit avec la molette (bornes min/max)
@@ -59,7 +60,8 @@ const POINTS_FLECHE: Array[Vector2] = [
 
 var forme_forcee := ""  # pour les aperçus des réglages (prime sur la config)
 
-var gamme := gamme_pour(OS.has_feature("android"))  # multiplicateur de la gamme, posé avant add_child
+var android := OS.has_feature("android")  # plateforme (posable avant add_child par les preuves)
+var gamme := gamme_pour(android)  # multiplicateur de la gamme, posé avant add_child
 
 var _echelle_base := 1.0
 var _forme := "coccinelle"  # la mascotte de CoccOs est le curseur par défaut
@@ -70,11 +72,12 @@ var _warp_attendu := false
 
 
 func _ready() -> void:
-	_echelle_base = ECHELLES_TAILLE["moyen"] * gamme  # sans réglage = « moyen »
+	var defaut := taille_par_defaut(android)
+	_echelle_base = ECHELLES_TAILLE[defaut] * gamme  # sans réglage enregistré
 	var cfg := ConfigFile.new()
 	if cfg.load(CHEMIN_CONFIG) == OK:
-		var taille: String = cfg.get_value("souris", "taille_curseur", "moyen")
-		_echelle_base = ECHELLES_TAILLE.get(taille, ECHELLES_TAILLE["moyen"]) * gamme
+		var taille: String = cfg.get_value("souris", "taille_curseur", defaut)
+		_echelle_base = ECHELLES_TAILLE.get(taille, ECHELLES_TAILLE[defaut]) * gamme
 		_forme = cfg.get_value("souris", "forme_curseur", "coccinelle")
 		_vitesse = float(cfg.get_value("souris", "vitesse_curseur", 1.0))
 	if forme_forcee != "":
@@ -167,8 +170,15 @@ func pulser() -> void:
 
 
 ## Gamme des tailles : x2 sur Android, inchangée sur PC (même test que la barre).
-static func gamme_pour(android: bool) -> float:
-	return AGRANDI_TAILLE_ANDROID if android else 1.0
+static func gamme_pour(sur_android: bool) -> float:
+	return AGRANDI_TAILLE_ANDROID if sur_android else 1.0
+
+
+## Taille SANS réglage enregistré (premier lancement) : « petit » sur Android (#223, Fabrice
+## 22-10 : avec « moyen » dans la gamme x2, le joueur n'atteignait plus le bouton éteindre),
+## « moyen » sur PC, inchangé. Un réglage écrit par le parent prime toujours (lu dans _ready).
+static func taille_par_defaut(sur_android: bool) -> String:
+	return "petit" if sur_android else "moyen"
 
 
 ## Molette : +1 = grossit, -1 = rétrécit (dans les bornes).

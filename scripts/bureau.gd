@@ -83,6 +83,8 @@ var _menu_contextuel := false  # option parent : appui long sur le bureau nu = b
 var _bulle: Control = null  # voile plein écran portant la bulle de menu (null = fermée)
 var _couche_bulle: CanvasLayer  # au-dessus des effets (5), sous le curseur (10)
 var _appui_sur_bureau := false  # le dernier appui gauche est tombé sur le bureau nu
+var _boutons_au_doigt: Array[Control] = []  # roue des réglages + éteindre : au doigt BRUT (#224)
+var _doigt_sur_bouton := false  # le doigt posé l'a été sur l'un d'eux : brut jusqu'au relâché
 
 
 func _ready() -> void:
@@ -249,6 +251,11 @@ func _gui_input(event: InputEvent) -> void:
 ## la pointe AVANT que quiconque les lise (signal `window_input` de la fenêtre racine, émis
 ## avant `_input` et l'interface) → icônes, barre, fenêtres, bulle, glissés reçoivent la
 ## pointe. La vraie souris du PC (déjà la pointe) et le tactile qu'elle émule sont inchangés.
+## EXCEPTION #224 (Fabrice, 22-10) : sur la ROUE DES RÉGLAGES et le bouton ÉTEINDRE de la
+## barre, c'est le doigt BRUT du joueur qui compte — le décalage doigt → pointe est annulé.
+## Décidée à l'appui (le clic émulé et son ScreenTouch portent le même doigt brut), tenue
+## jusqu'au relâché du vrai doigt (une petite dérive du doigt ne rebascule pas en visée).
+## Tout le reste du bureau garde la visée à la pointe.
 func _enter_tree() -> void:
 	get_tree().root.window_input.connect(_viser_a_la_pointe)
 
@@ -266,6 +273,16 @@ func _viser_a_la_pointe(event: InputEvent) -> void:
 			and event.device != InputEvent.DEVICE_ID_EMULATION
 	if not (souris_du_doigt or vrai_doigt):
 		return
+	var appui: bool = event is InputEventMouseButton or event is InputEventScreenTouch
+	if appui and event.pressed:
+		_doigt_sur_bouton = _bouton_au_doigt(event.position)
+	if _doigt_sur_bouton:
+		# #224 : position BRUTE conservée, le bouton sous le doigt reçoit le tap. Le vrai
+		# doigt se relâche en dernier (le moteur livre d'abord le clic émulé) : c'est lui
+		# qui lève l'exception.
+		if event is InputEventScreenTouch and not event.pressed:
+			_doigt_sur_bouton = false
+		return
 	var pointe: Vector2 = _pointe_fenetre(event.position)
 	if event is InputEventMouseMotion or event is InputEventScreenDrag:
 		event.relative = pointe - _pointe_fenetre(event.position - event.relative)
@@ -279,6 +296,16 @@ func _pointe_fenetre(doigt: Vector2) -> Vector2:
 	var vers_fenetre: Transform2D = get_tree().root.get_final_transform()
 	var dans_viewport: Vector2 = vers_fenetre.affine_inverse() * doigt
 	return vers_fenetre * _curseur.pointe_pour_doigt(dans_viewport, get_viewport().get_visible_rect())
+
+
+## Le doigt BRUT (coordonnées de la fenêtre) tombe-t-il sur la roue des réglages ou sur éteindre ?
+func _bouton_au_doigt(doigt_fenetre: Vector2) -> bool:
+	var dans_viewport: Vector2 = get_tree().root.get_final_transform().affine_inverse() * doigt_fenetre
+	for bouton in _boutons_au_doigt:
+		if is_instance_valid(bouton) and bouton.is_visible_in_tree() \
+				and bouton.get_global_rect().has_point(dans_viewport):
+			return true
+	return false
 
 
 func _input(event: InputEvent) -> void:
@@ -762,6 +789,8 @@ func _creer_barre_taches() -> void:
 	btn_eteindre.add_child(picto_eteindre)
 	btn_eteindre.pressed.connect(_eteindre)
 	ligne.add_child(btn_eteindre)
+	# #224 : ces deux boutons répondent au doigt BRUT (décalage annulé), cf. _viser_a_la_pointe
+	_boutons_au_doigt = [btn_reglages, btn_eteindre]
 
 
 func _mettre_a_jour_horloge() -> void:

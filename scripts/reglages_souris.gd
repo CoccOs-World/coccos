@@ -86,7 +86,10 @@ func _ready() -> void:
 	sous_titre_taille.add_theme_color_override("font_color", Color(0.78, 0.88, 0.82))
 	vbox.add_child(sous_titre_taille)
 
-	var taille_actuelle: String = PinConfig.lire_option("souris", "taille_curseur", "moyen")
+	# Sans réglage enregistré, la case cochée est celle que le curseur applique vraiment
+	# (« petit » sur Android, « moyen » sur PC — #223)
+	var taille_actuelle: String = PinConfig.lire_option("souris", "taille_curseur",
+		CurseurOS.taille_par_defaut(OS.has_feature("android")))
 	var groupe := ButtonGroup.new()
 	var ligne_tailles := HBoxContainer.new()
 	ligne_tailles.add_theme_constant_override("separation", 30)
