@@ -1,10 +1,12 @@
 # Preuve : CADRAGE ÉCRAN de Pousse-Pollen sur plusieurs formats (REQ_pousse_cadrage_android 21-10).
 # Monte le VRAI jeu à plusieurs tailles de fenêtre (4:3 PC, 16:9 PC, 20:9 téléphone) et vérifie, par mesure :
-#   ① chaque contrôle de jeu (D-pad, Agripper, Recommencer, Accueil, ◄ N ►, croix) est ENTIÈREMENT dans l'écran visible ;
-#   ② il est ancré au BON bord (croix/◄ N ► à droite, D-pad bas-droite, Agripper bas-gauche, Recommencer haut-gauche) ;
+#   ① chaque contrôle de jeu (D-pad, Agripper, Recommencer, Accueil, ◄ N ►) est ENTIÈREMENT dans l'écran visible ;
+#      (22-10 : la croix de fermeture n'est plus EN JEU — elle vit à l'accueil, preuve_pousse_croix_accueil.gd) ;
+#   ② il est ancré au BON bord (◄ N ► à droite, D-pad bas-droite, Agripper bas-gauche, Recommencer haut-gauche) ;
+#      ► reste à 120 px du bord droit : les 100 px de l'ex-croix sont conservés (disposition = décision Fabrice) ;
 #   ③ sur plusieurs niveaux, AUCUNE case praticable du tunnel n'est hors écran ni sous un contrôle (garde-fou b28/b33),
 #      projetée par la VRAIE transformée caméra (get_canvas_transform), pas par la formule du jeu (38 niveaux) ;
-#   ④ fenêtre redimensionnée EN JEU (1024×768 → 2400×1080) : croix replacée au coin réel, plateau recadré.
+#   ④ fenêtre redimensionnée EN JEU (1024×768 → 2400×1080) : ► replacé au coin réel, plateau recadré.
 # Lancement (user:// ISOLÉ) :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_pousse_cadrage_ecran.gd
 # Code de sortie 0 = tout vert, 1 = au moins un échec.
@@ -12,7 +14,7 @@ extends SceneTree
 
 const SCENE := "res://scenes/pousse_pollen.tscn"
 const FORMATS := [Vector2i(1024, 768), Vector2i(1366, 768), Vector2i(2400, 1080)]
-const COUCHES := ["FlechesEcran", "BoutonAgripper", "BoutonRecommencer", "BoutonAccueil", "LabelNiveau", "FlechesNavigation", "CroixCoccOs"]
+const COUCHES := ["FlechesEcran", "BoutonAgripper", "BoutonRecommencer", "BoutonAccueil", "LabelNiveau", "FlechesNavigation"]
 const TOL := 1.0
 
 var _echecs := 0
@@ -31,6 +33,13 @@ func _initialize() -> void:
 func _trames(n: int) -> void:
 	for i in n:
 		await process_frame
+
+
+func _tous(n: Node) -> Array[Node]:
+	var liste: Array[Node] = [n]
+	for e in n.get_children():
+		liste.append_array(_tous(e))
+	return liste
 
 
 func _controles(jeu: Node) -> Dictionary:
@@ -70,15 +79,13 @@ func _derouler() -> void:
 			if not vis.grow(TOL).encloses(r):
 				dehors.append("%s %s" % [nom, r])
 		_verifier("① contrôles dans l'écran (%d)" % ctl.size(), dehors.is_empty(), ", ".join(dehors))
-		var croix: Rect2 = ctl.get("@Button@", Rect2())
-		for nom in ctl:
-			if str(nom).begins_with("@Button") or str(nom) == "Button":
-				croix = ctl[nom]
 		var droite := vis.size.x
 		var bas := vis.size.y
-		_verifier("② croix au coin haut-droit", absf(droite - croix.end.x - 16.0) <= 4.0 and croix.position.y <= 20.0, str(croix))
+		var Icone: GDScript = jeu.get_script().get_script_constant_map().get("_IconeCroixFermerCoccOs")
+		var croix_en_jeu := _tous(jeu).filter(func(n: Node) -> bool: return n.get_script() == Icone).size()
+		_verifier("② aucune croix de fermeture en jeu (22-10 : elle vit à l'accueil)", croix_en_jeu == 0 and jeu.get_node_or_null("CroixCoccOs") == null, "%d icône(s)" % croix_en_jeu)
 		var suiv: Rect2 = ctl.get("Nav_suiv", Rect2())
-		_verifier("② ► collé à gauche de la croix", suiv.end.x <= croix.position.x and croix.position.x - suiv.end.x <= 40.0, str(suiv))
+		_verifier("② ► ancré au bord droit (120 px : 20 + les 100 px de l'ex-croix, conservés)", absf(droite - suiv.end.x - 120.0) <= 4.0 and suiv.position.y <= 24.0, str(suiv))
 		var vb: Rect2 = ctl.get("Visuel_bas", Rect2())
 		var vd: Rect2 = ctl.get("Visuel_droite", Rect2())
 		_verifier("② D-pad ancré bas-droite", absf(bas - vb.end.y - 36.0) <= 4.0 and absf(droite - vd.end.x - 20.0) <= 24.0, "%s %s" % [vb, vd])
@@ -125,11 +132,8 @@ func _derouler() -> void:
 	await _trames(4)
 	var vis2: Rect2 = root.get_visible_rect()
 	var ctl2 := _controles(jeu2)
-	var croix2 := Rect2()
-	for nom in ctl2:
-		if str(nom).begins_with("@Button"):
-			croix2 = ctl2[nom]
-	_verifier("④ croix suit le coin réel après redimensionnement", absf(vis2.size.x - croix2.end.x - 16.0) <= 4.0, "%s dans %s" % [croix2, vis2.size])
+	var suiv2: Rect2 = ctl2.get("Nav_suiv", Rect2())
+	_verifier("④ ► suit le coin réel après redimensionnement", absf(vis2.size.x - suiv2.end.x - 120.0) <= 4.0, "%s dans %s" % [suiv2, vis2.size])
 	_verifier("④ plateau recadré (zoom N15 %.2f → %.2f)" % [z_avant, jeu2._cam.zoom.x], not is_equal_approx(z_avant, jeu2._cam.zoom.x))
 	jeu2.queue_free()
 	await _trames(3)

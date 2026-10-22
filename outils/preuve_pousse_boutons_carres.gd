@@ -6,11 +6,11 @@
 #   ② ÉCART entre les deux (Accueil SOUS Recommencer, colonne gauche) ≥ UNE largeur de bouton, même colonne, sans chevauchement ;
 #   ③ les deux boutons sont DANS la zone d'évitement caméra (_rects_boutons()[0]) et cette zone est aussi celle que
 #      l'avatar entier évite (_zones_avatar) ;
-#   ④ loin de la croix (haut-droite) et des flèches ◄ ► ; entiers dans l'écran visible ;
+#   ④ loin des flèches ◄ ► (22-10 : la croix n'est plus en jeu, elle vit à l'accueil) ; entiers dans l'écran visible ;
 #   ⑤ l'icône (IconeDessinee) est plein rect et son carré de dessin ≥ 39 px (×2 au doigt) — glyphe du 7-diff à l'échelle ;
 #   ⑥ sur les 38 niveaux : AUCUNE case praticable sous un des deux boutons, et l'AVATAR ENTIER (_enveloppe_avatar, posé
 #      sur CHAQUE case praticable, projeté par la VRAIE transformée caméra) ne chevauche jamais un des deux boutons.
-#      (info, non bloquant : même mesure contre les AUTRES contrôles — D-pad, Agripper, ◄ N ►, croix.)
+#      (info, non bloquant : même mesure contre les AUTRES contrôles — D-pad, Agripper, ◄ N ►.)
 # Lancement (user:// ISOLÉ) :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_pousse_boutons_carres.gd
 # Code de sortie 0 = tout vert, 1 = au moins un échec.
@@ -20,7 +20,7 @@ const SCENE := "res://scenes/pousse_pollen.tscn"
 const FORMATS := [Vector2i(1024, 768), Vector2i(1366, 768), Vector2i(2400, 1080)]
 const NOMS_FORMAT := ["4:3", "16:9", "20:9"]
 const CIBLE_PC := Vector2(62, 58)          # SORTIE_TAILLE du 7-diff
-const AUTRES := ["FlechesEcran", "BoutonAgripper", "LabelNiveau", "FlechesNavigation", "CroixCoccOs"]
+const AUTRES := ["FlechesEcran", "BoutonAgripper", "LabelNiveau", "FlechesNavigation"]   # (22-10) plus de CroixCoccOs en jeu
 
 var _echecs := 0
 var _info_autres := 0
@@ -86,7 +86,7 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 		var o: Rect2 = autres[nom]
 		if o.grow(r1.size.x).intersects(r1) or o.grow(r1.size.x).intersects(r2):
 			trop_pres.append(nom)
-	_verifier("④ %s à ≥ une largeur de la croix, des flèches ◄ ►, du D-pad, d'Agripper" % etiquette, trop_pres.is_empty(), ", ".join(trop_pres))
+	_verifier("④ %s à ≥ une largeur des flèches ◄ ►, du D-pad, d'Agripper" % etiquette, trop_pres.is_empty(), ", ".join(trop_pres))
 	var Icone: GDScript = jeu.get_script().get_script_constant_map().get("IconeDessinee")
 	for paire in [["Recommencer", rc, "rejouer"], ["Accueil", ac, "maison"]]:
 		var b: Button = paire[1]

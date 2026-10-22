@@ -2,8 +2,9 @@
 ## POUSSE-POLLEN — CONÇU PAR FABRICE (premier jeu contributeur, 2026-07-10→13).
 ## Source d'origine : dev/contributions/pousse_pollen/ (balle 71) — c'est LÀ que
 ## le jeu évolue, par ses « balles » ; ce fichier n'ajoute que l'habillage CoccOs
-## (bloc en FIN de fichier) : croix de fermeture (haut-droit, ses ◄ N ► décalés
-## de 100 px), voix CoccOs sur l'appariement réussi, Échap/retour Android,
+## (bloc en FIN de fichier) : croix de fermeture SUR L'ACCUEIL (haut-droit, comme
+## les autres jeux du bureau — 22-10), voix CoccOs sur l'appariement réussi,
+## Échap/retour Android (en jeu → accueil ; à l'accueil → sortie),
 ## chemins relocalisés (res://scripts/pousse_pollen/, user://pousse_pollen_*).
 ## ════════════════════════════════════════════════════════════════════
 extends Node2D
@@ -1266,15 +1267,15 @@ const COL_SORTIE_TXT  := Color(0.08, 0.09, 0.14, 1.0)   # trait sombre de l'icô
 # sur une ligne + les flèches SOUS lui sur une 2e (place perdue). Emprise réduite en HAUTEUR (y[20,84] seulement)
 # → libère le haut-droite pour le cadrage (point E). Géométrie CENTRALISÉE ici (source unique) → le constructeur
 # (_construire_label_niveau) ET l'évitement caméra (_rects_boutons) la lisent → le TUNNEL ne passe jamais dessous.
-const LABEL_NIVEAU_POS := Vector2(768, 20)  # CoccOs : décalé de 100 px (croix de fermeture à droite)          # panneau du NUMÉRO seul, au MILIEU de « ◄ N ► » → x[868,936]
+const LABEL_NIVEAU_POS := Vector2(768, 20)  # CoccOs : décalé de 100 px (ex-croix en jeu ; SANS OBJET depuis le 22-10, croix à l'accueil — disposition laissée telle quelle, décision Fabrice)          # panneau du NUMÉRO seul, au MILIEU de « ◄ N ► » → x[868,936]
 const LABEL_NIVEAU_TAILLE := Vector2(68, 64)        # → couvre x[868,936], y[20,84] (rétréci au numéro, 1-2 chiffres)
 # Flèches de NAVIGATION de NIVEAU (balle 34) : changent de TABLEAU (distinctes du D-pad qui déplace l'avatar).
 # Balle 63 : placées de CHAQUE CÔTÉ du numéro, sur la MÊME ligne (« ◄ N ► ») → 1 rangée au lieu de 2. Distinctes
 # du D-pad : triangles PLEINS ◄/► (vs flèches fines ^v<>), fond clair, POSITION opposée (haut-droite vs bas-droite).
 # Réservées dans _rects_boutons (toujours, déterministe) → le tunnel jamais dessous.
 const NAV_TAILLE := Vector2(64, 64)
-const NAV_PREC_CENTRE := Vector2(732, 52)  # CoccOs : décalé de 100 px (croix de fermeture à droite)           # ◄ (précédent) — à GAUCHE du numéro, même ligne → x[800,864] y[20,84]
-const NAV_SUIV_CENTRE := Vector2(872, 52)  # CoccOs : décalé de 100 px (croix de fermeture à droite)           # ► (suivant)   — à DROITE du numéro, bord écran → x[940,1004] y[20,84]
+const NAV_PREC_CENTRE := Vector2(732, 52)  # CoccOs : décalé de 100 px (ex-croix en jeu ; SANS OBJET depuis le 22-10, croix à l'accueil — disposition laissée telle quelle, décision Fabrice)           # ◄ (précédent) — à GAUCHE du numéro, même ligne → x[800,864] y[20,84]
+const NAV_SUIV_CENTRE := Vector2(872, 52)  # CoccOs : décalé de 100 px (ex-croix en jeu ; SANS OBJET depuis le 22-10, croix à l'accueil — disposition laissée telle quelle, décision Fabrice)           # ► (suivant)   — à DROITE du numéro, bord écran → x[940,1004] y[20,84]
 # Anti-rebond (débounce) de la navigation (balle 35, GDD §2.3 « Liberté ») : un clic ◄/► met à jour AUSSITÔT le
 # NUMÉRO visé (« Niveau N ») SANS charger, et (re)démarre ce minuteur. On ne charge le niveau visé qu'à
 # l'expiration — 2 s APRÈS le DERNIER clic. Enchaîner les clics ne provoque donc qu'UN seul chargement (pas de
@@ -1714,7 +1715,6 @@ func _ready() -> void:
 	_construire_bouton_agripper()
 	_construire_bouton_recommencer()
 	_construire_label_niveau()
-	_creer_bouton_quitter_coccos()
 	_construire_fleches_navigation()   # balle 34 : les 2 flèches ◄/► de navigation de niveau (haut-droite)
 	_construire_bouton_accueil()       # balle 49 : bouton « Accueil » (retour au choix avatar/curseur, top-centre)
 	_charger_progression()             # balle 25 : recharge le plus haut niveau atteint (disque) → tout est débloqué
@@ -1986,8 +1986,7 @@ func _rects_boutons() -> Array[Rect2]:
 	var bd := _decalage_ancre(ANCRE_BD)
 	var rects: Array[Rect2] = [
 		_zone_boutons_icones(),                                                        # ZONE bord gauche : Recommencer + Accueil carrés en colonne, écart compris (21-10)
-		Rect2(LABEL_NIVEAU_POS + hd, LABEL_NIVEAU_TAILLE),
-		Rect2(CROIX_COCCOS_POS + hd, CROIX_COCCOS_TAILLE),  # croix de fermeture CoccOs                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
+		Rect2(LABEL_NIVEAU_POS + hd, LABEL_NIVEAU_TAILLE),                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
 		Rect2(NAV_PREC_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ◄ navigation (haut-droite, à gauche du numéro, b63)
 		Rect2(NAV_SUIV_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ► navigation (haut-droite, à droite du numéro, b63)
 		Rect2(AGRIPPER_CENTRE - AGRIPPER_TAILLE * 0.5 + bg, AGRIPPER_TAILLE),              # Agripper (bas-gauche)
@@ -3099,6 +3098,7 @@ func _afficher_accueil() -> void:
 	jouer.pressed.connect(_quitter_accueil)
 	_couche_accueil.add_child(jouer)
 	_ancrer(jouer, ANCRE_CENTRE)                       # (21-10) centré sur l'écran réel (0 en 1024×768)
+	_ajouter_croix_accueil(_couche_accueil)            # (22-10) la croix rouge « fermer » vit ICI, comme sur les autres jeux
 	# (08-10) Les PETITES FLEURS du clic, en DERNIER → peintes par-dessus tout l'accueil. Node2D sans surface de clic :
 	# elles ne mangent aucun geste. Enfants de la couche d'accueil → « Jouer » les emporte avec elle.
 	_calque_fleurs_accueil = Node2D.new()
@@ -3803,14 +3803,18 @@ const CROIX_COCCOS_TAILLE := Vector2(72, 72)
 const COULEUR_CROIX_COCCOS := Color(0.85, 0.35, 0.30)
 
 
-## Croix de fermeture CoccOs — même bouton rond rouge que les autres applis,
-## coin haut-droit (les ◄ N ► de Fabrice sont décalés de 100 px pour lui).
-func _creer_bouton_quitter_coccos() -> void:
-	var couche := CanvasLayer.new()
-	couche.name = "CroixCoccOs"
-	add_child(couche)
+## Croix de fermeture CoccOs — SUR L'ACCUEIL, comme les autres jeux du bureau (22-10, Fabrice : « dans le jeu on
+## revient à l'accueil, et à partir de l'accueil on sort du jeu »). Motif recopié de `_creer_bouton_quitter` des
+## jeux intégrés (jeu_ballons.gd:240, jeu_lettres.gd:534, jeu_chasse.gd:331, jeu_mots.gd:352, tele.gd:183,
+## decouverte_souris.gd:170, classeur.gd:299) : rond rouge 72×72 à 16 px du haut et 16 px du bord droit
+## (leur `PRESET_TOP_RIGHT` + (-88, 16) = ici (936, 16) ancré au coin haut-droit RÉEL), croix blanche dessinée.
+## En jeu, la sortie passe par la MAISON (→ accueil) ; la croix n'y figure plus.
+func _ajouter_croix_accueil(couche: CanvasLayer) -> void:
 	var btn := Button.new()
+	btn.name = "CroixFermer"
+	btn.tooltip_text = "Quitter le jeu"
 	btn.custom_minimum_size = CROIX_COCCOS_TAILLE
+	btn.size = CROIX_COCCOS_TAILLE
 	btn.position = CROIX_COCCOS_POS
 	btn.focus_mode = Control.FOCUS_NONE
 	for etat in ["normal", "hover", "pressed", "focus"]:
@@ -3828,7 +3832,7 @@ func _creer_bouton_quitter_coccos() -> void:
 	btn.add_child(icone)
 	btn.pressed.connect(_quitter_coccos)
 	couche.add_child(btn)
-	_ancrer(btn, ANCRE_HD)                             # (21-10) croix au coin haut-droit RÉEL
+	_ancrer(btn, ANCRE_HD)                             # (21-10) croix au coin haut-droit RÉEL (nœud libéré avec l'accueil)
 
 
 ## Retour au bureau CoccOs (ou fermeture en lancement direct --app).
@@ -3841,18 +3845,28 @@ func _quitter_coccos() -> void:
 		get_tree().quit()
 
 
-## Échap = quitter (réflexe universel CoccOs) — Fabrice n'utilise pas ui_cancel.
+## (22-10) Échap et Retour Android = « un cran en arrière », comme la croix des autres jeux à leur unique écran :
+## EN JEU → l'accueil (le geste de la maison) ; À L'ACCUEIL → sortie du jeu (le geste de la croix).
+## (Même motif que tele.gd:53 : d'abord refermer ce qui est ouvert, quitter ensuite.)
+func _retour_ou_quitter() -> void:
+	if _en_accueil:
+		_quitter_coccos()
+	else:
+		_afficher_accueil()
+
+
+## Échap — Fabrice n'utilise pas ui_cancel.
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_quitter_coccos()
+		_retour_ou_quitter()
 		return
 	_fleurs_accueil_sur_appui(event)   # (08-10) fleurs au clic/touche, ACCUEIL seulement
 
 
-## Bouton Retour d'Android (mode bureau) : même geste que la croix.
+## Bouton Retour d'Android (mode bureau) : même geste qu'Échap.
 func _notification(quoi: int) -> void:
 	if quoi == NOTIFICATION_WM_GO_BACK_REQUEST:
-		_quitter_coccos()
+		_retour_ou_quitter()
 
 
 ## Croix blanche du bouton Quitter — le dessin commun des applis CoccOs.

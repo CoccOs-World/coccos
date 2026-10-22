@@ -6,7 +6,8 @@
 #   ③ taille et position des boutons = celles de la source unique du jeu (_taille_bouton_icone / RECOMMENCER_POS /
 #      _pos_accueil — boutons carrés 21-10) et zone d'évitement caméra `_rects_boutons()[0]` = _zone_boutons_icones() ;
 #   ④ fond du 7-diff : StyleBoxFlat `COL_SORTIE`, rayon 10, bordure 3 `COL_SORTIE_TXT`, mêmes 3 états ;
-#   ⑤ rien d'autre ne bouge : « Jouer » reste un mot, la croix CoccOs garde son dessin blanc sur rond rouge ;
+#   ⑤ rien d'autre ne bouge : « Jouer » reste un mot, la croix CoccOs garde son dessin blanc sur rond rouge
+#      (22-10 : elle vit désormais dans la couche Accueil, cf. preuve_pousse_croix_accueil.gd) ;
 #   ⑥ les deux boutons sont entiers dans l'écran visible.
 # Lancement (user:// ISOLÉ) :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_pousse_icones.gd
@@ -82,16 +83,11 @@ func _controler(jeu: Node, etiquette: String) -> void:
 		zone.is_equal_approx(jeu._zone_boutons_icones()))
 	var jouer: Button = jeu.get_node_or_null("Accueil/Jouer")
 	_verifier("⑤ %s « Jouer » reste un mot" % etiquette, jouer != null and jouer.text == "Jouer", str(jouer.text if jouer else null))
-	var croix: Button = null
-	var cc: Node = jeu.get_node_or_null("CroixCoccOs")
-	if cc != null:
-		for e in cc.get_children():
-			if e is Button:
-				croix = e
+	var croix: Button = jeu.get_node_or_null("Accueil/CroixFermer")   # (22-10) la croix est sur l'ACCUEIL
 	var croix_ok: bool = croix != null and croix.get_child_count() == 1 \
 		and croix.get_child(0).get_script() == jeu.get_script().get_script_constant_map().get("_IconeCroixFermerCoccOs") \
 		and (croix.get_theme_stylebox("normal") as StyleBoxFlat).bg_color.is_equal_approx(jeu.COULEUR_CROIX_COCCOS)
-	_verifier("⑤ %s croix CoccOs intacte (dessin blanc, rond rouge)" % etiquette, croix_ok)
+	_verifier("⑤ %s croix CoccOs intacte, sur l'accueil (dessin blanc, rond rouge)" % etiquette, croix_ok)
 
 
 func _derouler() -> void:

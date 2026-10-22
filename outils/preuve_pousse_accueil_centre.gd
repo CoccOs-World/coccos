@@ -5,6 +5,8 @@
 #   ② « Jouer » est ENTIÈREMENT dans l'écran visible (non rogné) et centré ;
 #   ③ la prairie couvre l'écran visible jusqu'aux bords ;
 #   ④ la mise en page de conception est conservée : chaque nœud = position 1024×768 + UN SEUL décalage commun ;
+#      (22-10) sauf la croix de fermeture « CroixFermer », ancrée au coin HAUT-DROIT réel comme sur les autres jeux
+#      → hors du bloc centré, et son décalage propre = (écran − 1024×768) × (1, 0) ;
 #   ⑤ fenêtre redimensionnée pendant l'accueil (4:3 → 20:9) : le bloc se recentre.
 # Lancement (user:// ISOLÉ) :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_pousse_accueil_centre.gd
@@ -38,7 +40,7 @@ func _trames(n: int) -> void:
 func _bloc(accueil: Node) -> Array:
 	var l := []
 	for c in accueil.get_children():
-		if c is Control and str(c.name) not in ["Prairie"] and not (c is ColorRect and (c as Control).anchor_right == 1.0):
+		if c is Control and str(c.name) not in ["Prairie", "CroixFermer"] and not (c is ColorRect and (c as Control).anchor_right == 1.0):
 			l.append(c)
 	return l
 
@@ -76,11 +78,16 @@ func _controler(jeu: Node, etiquette: String) -> void:
 		and prairie.get_global_rect().is_equal_approx(vis), str(tr.get_global_rect() if tr else null))
 	var attendu: Vector2 = (vis.size - Vector2(1024, 768)) * 0.5
 	var ecarts := 0
+	var attendu_croix: Vector2 = (vis.size - Vector2(1024, 768)) * Vector2(1, 0)   # (22-10) la croix suit le coin haut-droit
+	var croix_ok := false
 	for a in jeu._ancrages:
 		if is_instance_valid(a[0]) and a[0].get_parent() == accueil:
-			if not (a[0].position - a[1]).is_equal_approx(attendu):
+			if str(a[0].name) == "CroixFermer":
+				croix_ok = (a[0].position - a[1]).is_equal_approx(attendu_croix)
+			elif not (a[0].position - a[1]).is_equal_approx(attendu):
 				ecarts += 1
 	_verifier("④ %s mise en page 1024×768 conservée, décalage unique %s" % [etiquette, attendu], ecarts == 0, "%d écart(s)" % ecarts)
+	_verifier("④ %s croix de fermeture ancrée au coin haut-droit réel (décalage %s)" % [etiquette, attendu_croix], croix_ok)
 
 
 func _derouler() -> void:
