@@ -40,7 +40,10 @@ VERSION=$(grep -E '^config/version=' project.godot | cut -d'"' -f2)
 bash release/build_deb.sh
 bash release/publier_apt.sh
 
-# 5. copier les binaires à la racine du site, puis publier
+# 5. casser le cache du jeu web (pck, wasm et worklets nommés avec la version)
+bash release/web_cassage_cache.sh
+
+# 6. copier les binaires à la racine du site, puis publier
 #    (rsync avec excludes ANCRÉS — sinon jeu/index.html est exclu)
 rsync -av --exclude '/index.html' --exclude '/guide.html' \
           --exclude '/images' --exclude '/_odoo' \
@@ -59,9 +62,12 @@ Odoo ensuite, pour le cache QWeb.
 - les URL en 200 : `/`, `/guide`, `/jeu/`, `/apt/InRelease`
 - `sudo apt update` sur une machine où CoccOs est installé
 - **rsync ne purge pas** : les anciens `.deb` restent dans `/apt/` sur le serveur
-- **le cache navigateur** : `.pck` et `.wasm` ont des noms fixes et `max-age`
-  30 jours — un visiteur récent garde l'ancienne version. Tester en navigation
-  privée, et casser le cache si la version doit arriver tout de suite.
+- **le cache navigateur** : `.pck` et `.wasm` sont servis avec `max-age`
+  30 jours. Depuis la 0.1.31.40, `web_cassage_cache.sh` les nomme
+  `index-<version>.*` et `index.html` (servi en `no-cache`) pointe vers eux :
+  chaque publication arrive tout de suite. rsync ne purge pas : les fichiers
+  des versions précédentes restent sur le serveur, ce qui sert encore les
+  onglets déjà ouverts.
 
 ## Signature Android — le piège qui casse les mises à jour
 
