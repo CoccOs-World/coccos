@@ -1,12 +1,14 @@
-# Preuve PIXEL : le LOGO TIRER (avatar + flèche vers lui + boule de pollen, REQ P1 02-11) est DESSINÉ, entier dans son
+# Preuve PIXEL : le LOGO TIRER (REQ P1b 02-11 : empilé boule de pollen · avatar · flèche pointe en bas) est DESSINÉ, entier dans son
 # bouton, et lisible sans la couleur (trait sombre sur fond clair), en 4:3, 16:9 et 20:9, au doigt et à la souris.
 # `--headless` ne rend aucun pixel → vrai affichage SANS prendre l'écran : jeu monté dans un SubViewport à la taille de
 # l'écran visible, fenêtre 64×64 (même recette que preuve_pousse_icones_pixel).
 # Le LOGO est isolé par DIFFÉRENCE (même rendu, logo caché) :
-#   • logo dessiné (≥ 15 % de la surface du bouton) et entier dans le bouton ;
+#   • logo dessiné (≥ 10 % de la surface du bouton — P1b : avatar plus petit voulu, P1 exigeait 15 %) et entier dans le bouton ;
 #   • pixels SOMBRES (luminance < 0,25 : flèche, cernes, cadre) ET pixels CLAIRS (fond, luminance > 0,6) tous deux
 #     présents en quantité → contraste de luminance, pas la couleur seule ;
-#   • l'avatar (moitié gauche) ET la boule (moitié droite, au-dessus de la flèche) changent des pixels.
+#   • la boule, l'avatar ET la flèche changent des pixels CHACUN dans sa case (geometrie() du logo), de haut en bas ;
+#   • la flèche POINTE EN BAS, lu sur les pixels sombres : la rangée la plus large (base de la tête) est AU-DESSUS de la
+#     dernière rangée sombre (la pointe), qui est étroite, et le trait du haut est étroit.
 # Captures : /tmp/preuve_pousse_tirer_<cas>.png (écran entier) et …_bouton_x2.png (bouton agrandi ×2).
 # Lancement :
 #   xvfb-run -a -s "-screen 0 1920x1080x24" Godot_v4.7.2 --path . --windowed --resolution 64x64 --position 0,0 \
@@ -75,12 +77,18 @@ func _derouler() -> void:
 		var change := 0
 		var sombres := 0
 		var clairs := 0
-		var gauche := 0
-		var droite_haut := 0
+		var g: Dictionary = logo.geometrie()
+		var o := logo.get_global_rect().position
+		var cb: Vector2 = g["boule_c"]
+		var rb: float = g["boule_r"]
+		var cases := {
+			"boule": Rect2i(Rect2(o + cb - Vector2.ONE * rb, Vector2.ONE * rb * 2.0)),
+			"avatar": Rect2i(Rect2(o + (g["avatar"] as Rect2).position, (g["avatar"] as Rect2).size)),
+			"flèche": Rect2i(Rect2(o + (g["fleche"] as Rect2).position, (g["fleche"] as Rect2).size)),
+		}
+		var dans := {"boule": 0, "avatar": 0, "flèche": 0}
 		var env := Rect2i()
 		var premier := true
-		var mx := r.position.x + r.size.x / 2
-		var my := r.position.y + r.size.y / 2
 		for y in range(r.position.y, r.end.y):
 			for x in range(r.position.x, r.end.x):
 				var c := img.get_pixel(x, y)
@@ -93,17 +101,44 @@ func _derouler() -> void:
 					change += 1
 					env = Rect2i(x, y, 1, 1) if premier else env.merge(Rect2i(x, y, 1, 1))
 					premier = false
-					if x < mx:
-						gauche += 1
-					elif y < my:
-						droite_haut += 1
+					for k in cases:
+						if cases[k].has_point(Vector2i(x, y)):
+							dans[k] += 1
 		var aire := r.get_area()
-		_verifier("%s : logo dessiné (%d px changés, %.0f %% du bouton ≥ 15 %%)" % [etiquette, change, 100.0 * change / aire], change >= aire * 0.15)
+		_verifier("%s : logo dessiné (%d px changés, %.0f %% du bouton ≥ 10 %%)" % [etiquette, change, 100.0 * change / aire], change >= aire * 0.10)
 		_verifier("%s : logo entier dans le bouton (enveloppe %s)" % [etiquette, env], not premier and r.encloses(env))
 		_verifier("%s : sombres %d (≥ 8 %%) ET clairs %d (≥ 20 %%) → contraste de luminance" % [etiquette, sombres, clairs],
 			sombres >= aire * 0.08 and clairs >= aire * 0.20)
-		_verifier("%s : avatar à gauche (%d px) et boule en haut à droite (%d px) dessinés" % [etiquette, gauche, droite_haut],
-			gauche >= aire * 0.08 and droite_haut >= aire * 0.04)
+		for k in cases:
+			var a: int = cases[k].get_area()
+			_verifier("%s : %s dessinée dans sa case %s (%d px, ≥ 25 %%)" % [etiquette, k, cases[k], dans[k]], dans[k] >= a * 0.25)
+		_verifier("%s : de haut en bas boule %d < avatar %d < flèche %d (y des cases, sans chevauchement)" % [etiquette,
+			cases["boule"].position.y, cases["avatar"].position.y, cases["flèche"].position.y],
+			cases["boule"].end.y <= cases["avatar"].position.y + 1 and cases["avatar"].end.y <= cases["flèche"].position.y + 1)
+		# Sens de la flèche, lu sur les pixels SOMBRES de sa case, rangée par rangée.
+		var fr: Rect2i = cases["flèche"]
+		var larg := []
+		for y in range(fr.position.y, fr.end.y + 1):
+			var n := 0
+			for x in range(fr.position.x, fr.end.x):
+				if img.get_pixel(x, y).get_luminance() < 0.25:
+					n += 1
+			larg.append(n)
+		var y_max := 0
+		var y_bas := -1
+		for i in larg.size():
+			if larg[i] > larg[y_max]:
+				y_max = i
+			if larg[i] > 0:
+				y_bas = i
+		var y_haut := 0
+		while y_haut < larg.size() and larg[y_haut] == 0:
+			y_haut += 1
+		var haut_w: int = larg[mini(y_haut + 1, larg.size() - 1)]
+		var bas_w: int = larg[y_bas] if y_bas >= 0 else 0
+		_verifier("%s : flèche POINTE EN BAS (largeur sombre : trait du haut %d px, base de tête %d px à la rangée %d, pointe %d px à la rangée %d)"
+			% [etiquette, haut_w, larg[y_max], y_max, bas_w, y_bas],
+			y_bas > y_max + 2 and bas_w * 2 < larg[y_max] and haut_w * 2 < larg[y_max])
 		_verifier("%s : bouton entier dans l'image %s" % [etiquette, img.get_size()], Rect2i(Vector2i.ZERO, img.get_size()).encloses(r))
 		sub.queue_free()
 		await _trames(3)

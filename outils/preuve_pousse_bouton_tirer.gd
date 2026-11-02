@@ -3,6 +3,8 @@
 # une boule de pollen ». 02-11 : « Il faut qu'il soit plus grand. Et il ne faut pas non plus qu'il devienne gênant. »
 # Monte le VRAI jeu (3 formats × Android/PC) et LIT les nœuds, la caméra et les tableaux, sans rien supposer :
 #   ① logo présent (LogoTirer plein rect du visuel), AUCUN texte (aucun Label/Button à texte non vide dans le bouton) ;
+#      (P1b, 02-11) DISPOSITION lue dans LogoTirer.geometrie() : de haut en bas boule de pollen > avatar > flèche, sans
+#      chevauchement, centrés ; avatar PLUS PETIT (≤ 50 % de la hauteur utile) ; flèche POINTE EN BAS ; tout dans le bouton ;
 #   ② plus grand que l'ancien mot (150×72) dans les deux sens ; ×1,25 au doigt ; zone tactile = visuel ;
 #   ③ entier dans l'écran visible ; ne touche ni le D-pad, ni Recommencer/Accueil, ni ◄ N ► ;
 #   ④ sur les 38 niveaux : AUCUNE case praticable sous le bouton, l'AVATAR ENTIER (posé sur chaque case praticable,
@@ -51,6 +53,36 @@ func _textes(n: Node) -> Array:
 	return t
 
 
+# (P1b) Fabrice 02-11 : « la boule de pollen en haut, l'avatar en dessous, la flèche en dessous de l'avatar […] elle garde
+# la même direction que si elle était entre la boule de pollen et l'avatar » → pointe EN BAS.
+func _disposition(logo: Control, etiquette: String) -> void:
+	var g: Dictionary = logo.geometrie()
+	_verifier("① %s géométrie du logo calculée" % etiquette, not g.is_empty())
+	if g.is_empty():
+		return
+	var c: Vector2 = g["boule_c"]
+	var rb: float = g["boule_r"]
+	var boule := Rect2(c - Vector2.ONE * rb, Vector2.ONE * rb * 2.0)
+	var av: Rect2 = g["avatar"]
+	var fl: Rect2 = g["fleche"]
+	var q: Vector2 = g["queue"]
+	var pt: Vector2 = g["pointe"]
+	var z: Rect2 = g["zone"]
+	_verifier("① %s ordre vertical : boule (bas %.1f) AU-DESSUS de l'avatar (haut %.1f)" % [etiquette, boule.end.y, av.position.y],
+		boule.end.y <= av.position.y)
+	_verifier("① %s ordre vertical : avatar (bas %.1f) AU-DESSUS de la flèche (haut %.1f)" % [etiquette, av.end.y, fl.position.y],
+		av.end.y <= fl.position.y)
+	_verifier("① %s flèche POINTE EN BAS (queue y %.1f → pointe y %.1f, pointe = bas de la flèche)" % [etiquette, q.y, pt.y],
+		pt.y > q.y + 1.0 and is_equal_approx(pt.y, fl.end.y) and is_equal_approx(q.y, fl.position.y))
+	_verifier("① %s boule, avatar, flèche centrés (x %.1f / %.1f / %.1f)" % [etiquette, c.x, av.get_center().x, pt.x],
+		absf(c.x - av.get_center().x) < 0.5 and absf(pt.x - av.get_center().x) < 0.5 and absf(q.x - pt.x) < 0.5)
+	_verifier("① %s avatar plus petit : %.1f px de haut ≤ 50 %% de %.1f (P1 : 100 %%)" % [etiquette, av.size.y, z.size.y],
+		av.size.y <= z.size.y * 0.5 and av.size.y >= z.size.y * 0.3)
+	var dedans := Rect2(Vector2.ZERO, logo.size)
+	_verifier("① %s boule, avatar et flèche entiers dans le bouton %s" % [etiquette, logo.size],
+		dedans.encloses(boule) and dedans.encloses(av) and dedans.encloses(fl))
+
+
 func _controler(jeu: Node, etiquette: String, k: float) -> void:
 	var vis: Rect2 = jeu.get_viewport().get_visible_rect()
 	var visuel: ColorRect = jeu.get_node_or_null("BoutonAgripper/Visuel_agripper")
@@ -61,6 +93,8 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 	var r: Rect2 = visuel.get_global_rect()
 	var logo: Control = visuel.get_node_or_null("LogoTirer")
 	_verifier("① %s logo TIRER présent, plein rect du bouton" % etiquette, logo != null and logo.get_global_rect().is_equal_approx(r))
+	if logo != null:
+		_disposition(logo, etiquette)
 	var textes := _textes(visuel)
 	_verifier("① %s aucun texte sur le bouton" % etiquette, textes.is_empty(), str(textes))
 	_verifier("② %s taille %s plus grande que l'ancien %s" % [etiquette, r.size, ANCIEN], r.size.x > ANCIEN.x and r.size.y > ANCIEN.y)

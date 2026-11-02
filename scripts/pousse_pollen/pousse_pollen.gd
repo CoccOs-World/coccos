@@ -1299,8 +1299,8 @@ const DPAD_BAS_DEMI := DPAD_TAILLE_FLECHE * 0.5           # balle 63 : sous le c
 # (_rects_boutons) lisent la MÊME source.
 # (02-11, REQ P1 — Fabrice : « le bouton ne peut pas garder la taille qu'il a aujourd'hui. Il faut qu'il soit plus grand.
 # Et il ne faut pas non plus qu'il devienne gênant. » · « C'est un bouton atypique au jeu ») : le mot « Agripper » cède la
-# place au LOGO TIRER (`LogoTirer` en fin de fichier : l'avatar + une flèche VERS lui + la boule de pollen au-dessus de la
-# flèche). Bouton PLUS GRAND, ×1,25 au doigt, ancré par son coin BAS-GAUCHE : bord gauche aligné sur la colonne
+# place au LOGO TIRER (`LogoTirer` en fin de fichier ; P1b : empilé boule de pollen · avatar · flèche pointe en bas).
+# Bouton PLUS GRAND, ×1,25 au doigt, ancré par son coin BAS-GAUCHE : bord gauche aligné sur la colonne
 # Recommencer/Accueil (x 28), bord bas inchangé (730, bas de la rangée « < v > » du D-pad). Taille choisie par MESURE du
 # zoom des 38 tableaux × 3 formats × souris/doigt (cf. RES P1). L'AVATAR ENTIER l'évite aussi (_zones_avatar) : le
 # bouton ne passe jamais sur lui. Nœuds et mécanique gardent le nom « agripper » (maintien, espace, guide N4 inchangés).
@@ -2709,7 +2709,7 @@ func _construire_bouton_agripper() -> void:
 	_couches_jeu.append(couche)          # balle 49 : masquée pendant l'écran d'accueil
 	var taille := _taille_tirer()                     # (02-11) plus grand, ×1,25 au doigt
 	var centre := TIRER_COIN_BG + Vector2(taille.x, -taille.y) * 0.5   # coin bas-gauche fixe (repère de conception)
-	# (02-11) AUCUN mot : le libellé est vide et le LOGO TIRER (avatar + flèche vers lui + boule) remplit le bouton.
+	# (02-11) AUCUN mot : le libellé est vide et le LOGO TIRER (boule · avatar · flèche vers le bas) remplit le bouton.
 	var touche := _creer_touche_ecran(couche, "agripper", "", centre, taille, 34, ANCRE_BG)   # coin bas-gauche
 	var tsb: TouchScreenButton = touche["tsb"]
 	_visuel_agripper = touche["visuel"]               # gardé : vire au doré tant qu'on tient, remis au repos par « Recommencer »
@@ -3966,19 +3966,52 @@ class IconeDessinee extends Control:
 
 
 # ============================================================================================================
-# (02-11, REQ P1) LOGO DU BOUTON TIRER — mot pour mot Fabrice (08-10) : « logo illustré SANS MOT : petit CoccOs
-# reconnaissable + une flèche VERS LUI + au-dessus de la flèche, une boule de pollen = "tirer le pollen vers CoccOs".
-# L'enfant comprend immédiatement. »
-#   • L'AVATAR est le personnage que l'enfant joue (coccinelle CoccOs par défaut, abeille si choisie) : MÊME image que
-#     l'accueil (TEX_AV_*) — c'est lui qu'on reconnaît. À GAUCHE, contre le bord.
-#   • La FLÈCHE, horizontale, part de la droite et pointe SUR lui ; trait SOMBRE plein sur le fond clair du bouton.
-#   • La BOULE de pollen (TEX_POLLEN, celle des tableaux) est posée AU-DESSUS de la flèche, côté départ, cernée de sombre.
+# LOGO DU BOUTON TIRER — (02-11, REQ P1) Fabrice 08-10 : « logo illustré SANS MOT : petit CoccOs reconnaissable + une
+# flèche VERS LUI + au-dessus de la flèche, une boule de pollen ». (02-11, REQ P1b) DISPOSITION corrigée, mot pour mot :
+# « L'ordre, c'est la boule de pollen en haut, l'avatar en dessous, la flèche en dessous de l'avatar. Ça représente
+# mieux la boule de pollen avec l'avatar qui descend. Ensemble. Attention de ne pas me mettre la flèche dans le mauvais
+# sens. […] Si la flèche est en dessous de l'avatar, elle n'est plus en direction de l'avatar. Mais elle garde la même
+# direction que si elle était entre la boule de pollen et l'avatar. » → EMPILÉ, centré, DE HAUT EN BAS :
+#   • la BOULE de pollen (TEX_POLLEN, celle des tableaux), cernée de sombre — comme au plateau, au-dessus de l'avatar ;
+#   • l'AVATAR, PLUS PETIT (« Il peut le faire plus petit ») : le personnage que l'enfant joue (coccinelle CoccOs par
+#     défaut, abeille si choisie), MÊME image que l'accueil (TEX_AV_*) ;
+#   • la FLÈCHE, verticale, POINTE EN BAS (jamais vers le haut) : boule et avatar descendent ensemble.
+# La géométrie est calculée UNE fois (geometrie()) : le dessin ET la preuve la lisent (ordre et sens vérifiés par positions).
 # ⚠ Lisible sans la couleur : silhouettes + contraste de LUMINANCE (trait et cernes sombres sur fond clair, cadre sombre).
 #   Tout est en FRACTION de la taille du bouton (responsive : souris, doigt, n'importe quel écran), jamais en pixels.
 # ============================================================================================================
 class LogoTirer extends Control:
 	var ov = null
 	const MARGE := 0.07
+	const BOULE_R := 0.13          # rayon de la boule (fraction de la hauteur utile) ; cerne = ×1,10
+	const AVATAR_H := 0.40         # hauteur de l'avatar (P1 : toute la hauteur → 2,5× plus petit)
+	const ECART := 0.03            # air entre boule / avatar / flèche
+	const FLECHE_EP := 0.10        # épaisseur du trait
+	const TETE_L := 0.13           # longueur de la tête (vers le bas)
+	const TETE_W := 0.34           # largeur de la tête
+
+	# Repère du logo : « boule » (centre + rayon du cerne), « avatar » (Rect2 de
+	# l'image), « fleche » (enveloppe), « queue » (haut du trait) et « pointe » (bas de la tête). Vide si trop petit.
+	func geometrie() -> Dictionary:
+		if ov == null:
+			return {}
+		var m: Vector2 = Vector2.ONE * minf(size.x, size.y) * MARGE
+		var z := Rect2(m, size - m * 2.0)
+		if z.size.x <= 4.0 or z.size.y <= 4.0:
+			return {}
+		var h: float = z.size.y
+		var cx: float = z.get_center().x
+		var r: float = h * BOULE_R
+		var c := Vector2(cx, z.position.y + r * 1.10)
+		var tex: Texture2D = ov.TEX_AV_ABEILLE if ov._avatar_type == 1 else ov.TEX_AV_COCC
+		var ts := Vector2(tex.get_size())
+		var dim_av: Vector2 = ts * (h * AVATAR_H / ts.y)
+		var av := Rect2(Vector2(cx - dim_av.x * 0.5, c.y + r * 1.10 + h * ECART), dim_av)
+		var queue := Vector2(cx, av.end.y + h * ECART)
+		var pointe := Vector2(cx, z.end.y)
+		var fl := Rect2(Vector2(cx - h * TETE_W * 0.5, queue.y), Vector2(h * TETE_W, pointe.y - queue.y))
+		return {"zone": z, "h": h, "tex": tex, "boule_c": c, "boule_r": r * 1.10, "avatar": av,
+			"fleche": fl, "queue": queue, "pointe": pointe}
 
 	func _draw() -> void:
 		if ov == null:
@@ -3986,30 +4019,25 @@ class LogoTirer extends Control:
 		var sombre: Color = ov.COL_TRAIT
 		var cadre: float = maxf(2.0, minf(size.x, size.y) * 0.025)
 		draw_rect(Rect2(Vector2.ONE * cadre * 0.5, size - Vector2.ONE * cadre), sombre, false, cadre)   # cadre sombre : le bouton se détache du décor
-		var m: Vector2 = Vector2.ONE * minf(size.x, size.y) * MARGE
-		var z := Rect2(m, size - m * 2.0)
-		if z.size.x <= 4.0 or z.size.y <= 4.0:
+		var g := geometrie()
+		if g.is_empty():
 			return
-		# L'AVATAR — toile 953×1120 (plus haute que large) posée sur toute la hauteur, à gauche.
-		var tex: Texture2D = ov.TEX_AV_ABEILLE if ov._avatar_type == 1 else ov.TEX_AV_COCC
-		var ts := Vector2(tex.get_size())
-		var dim_av: Vector2 = ts * (z.size.y / ts.y)
-		draw_texture_rect(tex, Rect2(z.position, dim_av), false)
-		# LA FLÈCHE — du bord droit jusque devant l'avatar, au tiers bas ; la POINTE touche presque l'avatar.
-		var h: float = z.size.y
-		var y: float = z.position.y + h * 0.78
-		var x_pointe: float = z.position.x + dim_av.x * 0.92
-		var x_queue: float = z.end.x
-		var ep: float = h * 0.13                       # épaisseur du trait
-		var tete_l: float = h * 0.30                   # longueur de la tête
-		var tete_h: float = h * 0.36                   # hauteur de la tête
-		draw_rect(Rect2(Vector2(x_pointe + tete_l * 0.9, y - ep * 0.5), Vector2(x_queue - x_pointe - tete_l * 0.9, ep)), sombre, true)
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(x_pointe, y), Vector2(x_pointe + tete_l, y - tete_h * 0.5), Vector2(x_pointe + tete_l, y + tete_h * 0.5)]), sombre)
-		# LA BOULE DE POLLEN — au-dessus de la flèche, côté départ (elle va venir vers l'avatar), cernée de sombre.
-		var r: float = minf(h * 0.30, (x_queue - x_pointe) * 0.30)
-		var c := Vector2(x_queue - r * 1.25, y - ep * 0.5 - h * 0.05 - r)
+		var h: float = g["h"]
+		# LA BOULE DE POLLEN — en haut, cernée de sombre.
+		var c: Vector2 = g["boule_c"]
+		var r: float = g["boule_r"] / 1.10
 		draw_circle(c, r * 1.10, sombre)
 		var tp := Vector2(ov.TEX_POLLEN.get_size())
 		var dim_b: Vector2 = tp * ((2.0 * r * 1.08) / maxf(tp.x, tp.y))
 		draw_texture_rect(ov.TEX_POLLEN, Rect2(c - dim_b * 0.5, dim_b), false)
+		# L'AVATAR — en dessous, plus petit, centré.
+		draw_texture_rect(g["tex"], g["avatar"], false)
+		# LA FLÈCHE — sous l'avatar, POINTE EN BAS : trait de la queue jusqu'à la tête, tête triangulaire en bas.
+		var q: Vector2 = g["queue"]
+		var p: Vector2 = g["pointe"]
+		var ep: float = h * FLECHE_EP
+		var tete_l: float = minf(h * TETE_L, (p.y - q.y) * 0.6)
+		var base_y: float = p.y - tete_l
+		draw_rect(Rect2(Vector2(q.x - ep * 0.5, q.y), Vector2(ep, base_y - q.y + tete_l * 0.1)), sombre, true)
+		draw_colored_polygon(PackedVector2Array([
+			p, Vector2(p.x - h * TETE_W * 0.5, base_y), Vector2(p.x + h * TETE_W * 0.5, base_y)]), sombre)
