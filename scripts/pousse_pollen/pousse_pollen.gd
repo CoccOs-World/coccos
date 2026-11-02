@@ -1610,7 +1610,13 @@ var _fin_jauge: VSlider = null
 var _fin_pause: Button = null
 var _fin_rejouer: Button = null
 var _fin_maison: Button = null
-var fin_volume := 1.0                          # réglage de la jauge jaune (0..1), lu par la preuve
+# (P8, 02-11) LA JAUGE SE SOUVIENT TANT QU'ON RESTE DANS POUSSE-POLLEN. Fabrice : « Il a baissé le son. […] Il décide
+# de relancer le dernier tableau. Le niveau sonore aura été sauvegardé. Mais s'il sort de Pousse-Pollen, je veux que
+# le niveau sonore soit réinitialisé par défaut et ce réglage par défaut serait à 50 % ». Le réglage vit DANS ce nœud :
+# rejouer, regagner, maison/accueil, revoir la vidéo le gardent ; sortir (bureau = change_scene, appli fermée) libère
+# le nœud → la prochaine entrée repart du défaut. Rien n'est écrit dans la sauvegarde (il ne doit pas survivre à une sortie).
+const FIN_VOLUME_DEFAUT := 0.5                 # 50 % (P8 ; 100 % en P2)
+var fin_volume := FIN_VOLUME_DEFAUT            # réglage de la jauge jaune (0..1), lu par la preuve
 # Balle 71 — un AudioStreamPlayer RÉUTILISABLE par son (créés dans _ready, joués par _jouer_son). Réutilisés →
 # jamais d'empilement d'instances. Clé = même identité que la constante SON_* correspondante.
 var _lecteurs_son: Dictionary = {}
@@ -3345,7 +3351,8 @@ func _montrer_boutons_fin() -> void:
 	if is_instance_valid(_fin_maison):
 		_fin_maison.visible = true
 
-# La jauge baisse le son de la VIDÉO seule (Pousse-Pollen n'a pas de bus de jeu) ; la vidéo continue.
+# La jauge baisse le son de la VIDÉO seule (Pousse-Pollen n'a pas de bus de jeu) ; la vidéo continue. Réglage gardé
+# tant qu'on reste dans Pousse-Pollen (P8, voir FIN_VOLUME_DEFAUT).
 func _volume_fin_change(valeur: float) -> void:
 	fin_volume = clampf(valeur / 100.0, 0.0, 1.0)
 	_regler_volume_fin()

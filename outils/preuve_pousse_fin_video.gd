@@ -160,7 +160,9 @@ func _cas(nom_f: String, tactile: bool, premier: bool) -> void:
 	var textes := _textes_visibles(jeu._couche_fin)
 	_verifier("%s : AUCUN texte à lire sur l'écran de fin" % et, textes.is_empty(), str(textes))
 	_verifier("%s : l'UI de jeu est retirée derrière la vidéo" % et, _couches_jeu_visibles(jeu) == 0)
-	_verifier("%s : son de la vidéo non coupé (volume %.2f)" % [et, jeu._fin_video.volume], jeu._fin_video.volume > 0.99)
+	# (P8) 1re vidéo de ce nœud neuf : défaut 50 % (au lieu de 100 % en P2), son non coupé, jauge sur 50.
+	_verifier("%s : son de la vidéo non coupé, défaut 50 %% (volume %.2f, jauge %.0f)" % [et, jeu._fin_video.volume, jeu._fin_jauge.value],
+		absf(jeu._fin_video.volume - 0.5) < 0.01 and absf(jeu._fin_jauge.value - 50.0) < 0.5)
 	# Géométrie : tout dans l'écran, aucun chevauchement entre TOUS les éléments (P4 : rejouer / maison ne sont plus sur la vidéo).
 	var r: Dictionary = jeu.cadres_fin()
 	var ecran := Rect2(Vector2.ZERO, Vector2(sub.size))
