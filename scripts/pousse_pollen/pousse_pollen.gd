@@ -1235,7 +1235,7 @@ var _ancrages: Array = []        # [nœud, position dans le repère de conceptio
 #   Bandeau « Niveau difficile » (haut-centre) : pos (192,120) taille (640,100) → y[120,220] — TRANSITOIRE :
 #       il s'auto-efface en ~3 s (voir _afficher_annonce_pic) → JAMAIS pris en compte par l'évitement caméra
 #       (il peut couvrir brièvement les rangées hautes à l'entrée d'un pic : c'est son rôle d'annonce).
-#   Agripper/OK (bas-gauche)   : AGRIPPER_CENTRE/TAILLE — balle 28 : DESCENDU (584→634).
+#   TIRER (bas-gauche)         : logo sans mot, _rect_tirer() (TIRER_TAILLE, coin bas-gauche TIRER_COIN_BG) — 02-11 : agrandi.
 #   D-pad (bas-droite)         : centre (DPAD_CENTRE_X,DPAD_CENTRE_Y), flèches DPAD_TAILLE_FLECHE à ±DPAD_ECART.
 #       Balle 28 : flèches réduites 96→80. Boîte englobante = centre ± DPAD_DEMI.
 # Balle 28 — RÈGLE DÉFINITIVE Fabrice : « les flèches peuvent être PAR-DESSUS la TERRE ; c'est le TUNNEL qui
@@ -1297,8 +1297,16 @@ const DPAD_BAS_DEMI := DPAD_TAILLE_FLECHE * 0.5           # balle 63 : sous le c
 # HAUT ≈ moitié, ~ hauteur d'un bouton texte), plus ÉTROIT (180→150) et DESCENDU encore. Reste une cible confortable
 # au pouce (GDD §1). Géométrie centralisée ici → le bouton (_construire_bouton_agripper) et l'évitement caméra
 # (_rects_boutons) lisent la MÊME source.
-const AGRIPPER_TAILLE := Vector2(150, 72)
-const AGRIPPER_CENTRE := Vector2(155, 694)          # bord bas ~730, aligné avec le bas de la rangée « < v > » du D-pad
+# (02-11, REQ P1 — Fabrice : « le bouton ne peut pas garder la taille qu'il a aujourd'hui. Il faut qu'il soit plus grand.
+# Et il ne faut pas non plus qu'il devienne gênant. » · « C'est un bouton atypique au jeu ») : le mot « Agripper » cède la
+# place au LOGO TIRER (`LogoTirer` en fin de fichier : l'avatar + une flèche VERS lui + la boule de pollen au-dessus de la
+# flèche). Bouton PLUS GRAND, ×1,25 au doigt, ancré par son coin BAS-GAUCHE : bord gauche aligné sur la colonne
+# Recommencer/Accueil (x 28), bord bas inchangé (730, bas de la rangée « < v > » du D-pad). Taille choisie par MESURE du
+# zoom des 38 tableaux × 3 formats × souris/doigt (cf. RES P1). L'AVATAR ENTIER l'évite aussi (_zones_avatar) : le
+# bouton ne passe jamais sur lui. Nœuds et mécanique gardent le nom « agripper » (maintien, espace, guide N4 inchangés).
+const TIRER_TAILLE := Vector2(176, 112)             # à la souris (PC), repère 1024×768 — l'ancien mot tenait dans 150×72
+const TIRER_FACTEUR_TACTILE := 1.25                 # au doigt (Android) → 220×140
+const TIRER_COIN_BG := Vector2(28, 730)             # coin BAS-GAUCHE du bouton (repère de conception, ancre ANCRE_BG)
 # Cadrage (balle 28, RÈGLE DÉFINITIVE Fabrice) : « seul le TUNNEL évite les boutons ; la TERRE peut passer
 # dessous ». On cadre sur les seules cases PRATICABLES (glyphe ≠ '#'), au zoom RÉELLEMENT MAXIMAL (plafond 1.4) :
 # les murs '#' (couleur du décor) débordent librement sous les 4 boutons. Balle 33 (grief Fabrice répété : les
@@ -1574,6 +1582,7 @@ var _agripper_bouton := false
 var _visuel_gauche: Control = null
 var _visuel_bas: Control = null                # flèche BAS : pulsée par le guide du tirer (N4)
 var _visuel_agripper: ColorRect = null
+var _logo_tirer: Control = null                # (02-11) logo du bouton TIRER, redessiné quand l'avatar change
 var _couche_reussite: CanvasLayer = null
 var _couche_fin: CanvasLayer = null            # écran de fin / félicitations après le dernier niveau (balle 24)
 # Balle 71 — un AudioStreamPlayer RÉUTILISABLE par son (créés dans _ready, joués par _jouer_son). Réutilisés →
@@ -1989,7 +1998,7 @@ func _rects_boutons() -> Array[Rect2]:
 		Rect2(LABEL_NIVEAU_POS + hd, LABEL_NIVEAU_TAILLE),                                 # numéro « N » (haut-droite, milieu de « ◄ N ► », b63)
 		Rect2(NAV_PREC_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ◄ navigation (haut-droite, à gauche du numéro, b63)
 		Rect2(NAV_SUIV_CENTRE - NAV_TAILLE * 0.5 + hd, NAV_TAILLE),                        # flèche ► navigation (haut-droite, à droite du numéro, b63)
-		Rect2(AGRIPPER_CENTRE - AGRIPPER_TAILLE * 0.5 + bg, AGRIPPER_TAILLE),              # Agripper (bas-gauche)
+		_rect_tirer(),                                                                     # TIRER (bas-gauche, logo — 02-11)
 		Rect2(Vector2(DPAD_CENTRE_X - DPAD_DEMI, DPAD_CENTRE_Y - DPAD_DEMI) + bd,
 			Vector2(2.0 * DPAD_DEMI, DPAD_DEMI + DPAD_BAS_DEMI)),                     # D-pad (bas-droite) — boîte 2 rangées : « ^ » à -DPAD_DEMI, rangée « < v > » à +DPAD_BAS_DEMI (b63)
 	]
@@ -2020,7 +2029,17 @@ func _zone_boutons_icones() -> Rect2:
 # la zone coûtait jusqu'à −24 % de zoom sur les grands tableaux en 16:9 (mesuré 21-10) — le tableau doit rester GRAND
 # (grief b33). Les autres contrôles gardent la règle b28 (seul le tunnel les évite ; l'avatar peut les frôler).
 func _zones_avatar() -> Array[Rect2]:
-	return [_zone_boutons_icones()]
+	return [_zone_boutons_icones(), _rect_tirer()]       # (02-11) + le bouton TIRER agrandi : « pas gênant » = jamais sur l'avatar
+
+# (02-11) Taille RÉELLE du bouton TIRER : TIRER_TAILLE à la souris, ×TIRER_FACTEUR_TACTILE au doigt (lue comme _taille_bouton_icone).
+func _taille_tirer() -> Vector2:
+	return TIRER_TAILLE * (1.0 if _curseur_pc else TIRER_FACTEUR_TACTILE)
+
+# (02-11) Rectangle ÉCRAN du bouton TIRER, déjà ancré au coin bas-gauche réel. Source UNIQUE : constructeur, évitement
+# caméra (_rects_boutons) et évitement de l'avatar (_zones_avatar).
+func _rect_tirer() -> Rect2:
+	var t := _taille_tirer()
+	return Rect2(TIRER_COIN_BG - Vector2(0.0, t.y) + _decalage_ancre(ANCRE_BG), t)
 
 # (21-10) Décalage d'un contrôle ancré au coin `ancre` : 0 sur un écran visible 1024×768 (repère de conception).
 func _decalage_ancre(ancre: Vector2) -> Vector2:
@@ -2688,12 +2707,19 @@ func _construire_bouton_agripper() -> void:
 	couche.name = "BoutonAgripper"
 	add_child(couche)
 	_couches_jeu.append(couche)          # balle 49 : masquée pendant l'écran d'accueil
-	var taille := AGRIPPER_TAILLE
-	var centre := AGRIPPER_CENTRE                     # bas-gauche ; balle 28 : DESCENDU (voir constantes)
-	# Balle 34 : le bouton affiche TOUJOURS « Agripper » (le mode « OK » du sélecteur b16 est retiré).
-	var touche := _creer_touche_ecran(couche, "agripper", "Agripper", centre, taille, 34, ANCRE_BG)   # coin bas-gauche
+	var taille := _taille_tirer()                     # (02-11) plus grand, ×1,25 au doigt
+	var centre := TIRER_COIN_BG + Vector2(taille.x, -taille.y) * 0.5   # coin bas-gauche fixe (repère de conception)
+	# (02-11) AUCUN mot : le libellé est vide et le LOGO TIRER (avatar + flèche vers lui + boule) remplit le bouton.
+	var touche := _creer_touche_ecran(couche, "agripper", "", centre, taille, 34, ANCRE_BG)   # coin bas-gauche
 	var tsb: TouchScreenButton = touche["tsb"]
 	_visuel_agripper = touche["visuel"]               # gardé : vire au doré tant qu'on tient, remis au repos par « Recommencer »
+	(touche["label"] as Label).queue_free()           # pas de texte sur ce bouton (Fabrice 08-10 : « logo illustré SANS MOT »)
+	_logo_tirer = LogoTirer.new()
+	_logo_tirer.name = "LogoTirer"
+	_logo_tirer.ov = self
+	_logo_tirer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_logo_tirer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_visuel_agripper.add_child(_logo_tirer)           # enfant du visuel → pulse (modulate) et doré (fond) le suivent
 	tsb.pressed.connect(_sur_agripper_presse)
 	tsb.released.connect(_sur_agripper_relache)
 
@@ -3213,6 +3239,8 @@ func _choisir_avatar(type: int) -> void:
 	_sauver_choix()
 	_maj_surbrillance_accueil()
 	queue_redraw()
+	if is_instance_valid(_logo_tirer):
+		_logo_tirer.queue_redraw()                     # (02-11) le logo TIRER montre l'avatar choisi
 
 # Choix du curseur (PC) : mémorise, sauve (disque), rafraîchit la surbrillance (le curseur réel est posé en quittant l'accueil).
 func _choisir_curseur(type: int) -> void:
@@ -3935,3 +3963,53 @@ class IconeDessinee extends Control:
 		var p: Vector2 = c + n * r
 		draw_colored_polygon(PackedVector2Array([
 			p + t * (r * 0.66), p + n * (r * 0.58), p - n * (r * 0.58)]), sombre)
+
+
+# ============================================================================================================
+# (02-11, REQ P1) LOGO DU BOUTON TIRER — mot pour mot Fabrice (08-10) : « logo illustré SANS MOT : petit CoccOs
+# reconnaissable + une flèche VERS LUI + au-dessus de la flèche, une boule de pollen = "tirer le pollen vers CoccOs".
+# L'enfant comprend immédiatement. »
+#   • L'AVATAR est le personnage que l'enfant joue (coccinelle CoccOs par défaut, abeille si choisie) : MÊME image que
+#     l'accueil (TEX_AV_*) — c'est lui qu'on reconnaît. À GAUCHE, contre le bord.
+#   • La FLÈCHE, horizontale, part de la droite et pointe SUR lui ; trait SOMBRE plein sur le fond clair du bouton.
+#   • La BOULE de pollen (TEX_POLLEN, celle des tableaux) est posée AU-DESSUS de la flèche, côté départ, cernée de sombre.
+# ⚠ Lisible sans la couleur : silhouettes + contraste de LUMINANCE (trait et cernes sombres sur fond clair, cadre sombre).
+#   Tout est en FRACTION de la taille du bouton (responsive : souris, doigt, n'importe quel écran), jamais en pixels.
+# ============================================================================================================
+class LogoTirer extends Control:
+	var ov = null
+	const MARGE := 0.07
+
+	func _draw() -> void:
+		if ov == null:
+			return
+		var sombre: Color = ov.COL_TRAIT
+		var cadre: float = maxf(2.0, minf(size.x, size.y) * 0.025)
+		draw_rect(Rect2(Vector2.ONE * cadre * 0.5, size - Vector2.ONE * cadre), sombre, false, cadre)   # cadre sombre : le bouton se détache du décor
+		var m: Vector2 = Vector2.ONE * minf(size.x, size.y) * MARGE
+		var z := Rect2(m, size - m * 2.0)
+		if z.size.x <= 4.0 or z.size.y <= 4.0:
+			return
+		# L'AVATAR — toile 953×1120 (plus haute que large) posée sur toute la hauteur, à gauche.
+		var tex: Texture2D = ov.TEX_AV_ABEILLE if ov._avatar_type == 1 else ov.TEX_AV_COCC
+		var ts := Vector2(tex.get_size())
+		var dim_av: Vector2 = ts * (z.size.y / ts.y)
+		draw_texture_rect(tex, Rect2(z.position, dim_av), false)
+		# LA FLÈCHE — du bord droit jusque devant l'avatar, au tiers bas ; la POINTE touche presque l'avatar.
+		var h: float = z.size.y
+		var y: float = z.position.y + h * 0.78
+		var x_pointe: float = z.position.x + dim_av.x * 0.92
+		var x_queue: float = z.end.x
+		var ep: float = h * 0.13                       # épaisseur du trait
+		var tete_l: float = h * 0.30                   # longueur de la tête
+		var tete_h: float = h * 0.36                   # hauteur de la tête
+		draw_rect(Rect2(Vector2(x_pointe + tete_l * 0.9, y - ep * 0.5), Vector2(x_queue - x_pointe - tete_l * 0.9, ep)), sombre, true)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x_pointe, y), Vector2(x_pointe + tete_l, y - tete_h * 0.5), Vector2(x_pointe + tete_l, y + tete_h * 0.5)]), sombre)
+		# LA BOULE DE POLLEN — au-dessus de la flèche, côté départ (elle va venir vers l'avatar), cernée de sombre.
+		var r: float = minf(h * 0.30, (x_queue - x_pointe) * 0.30)
+		var c := Vector2(x_queue - r * 1.25, y - ep * 0.5 - h * 0.05 - r)
+		draw_circle(c, r * 1.10, sombre)
+		var tp := Vector2(ov.TEX_POLLEN.get_size())
+		var dim_b: Vector2 = tp * ((2.0 * r * 1.08) / maxf(tp.x, tp.y))
+		draw_texture_rect(ov.TEX_POLLEN, Rect2(c - dim_b * 0.5, dim_b), false)
