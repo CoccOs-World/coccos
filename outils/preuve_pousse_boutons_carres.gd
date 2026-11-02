@@ -79,7 +79,7 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 	var zone: Rect2 = jeu._rects_boutons()[0]
 	var zones_av: Array = jeu._zones_avatar()
 	_verifier("③ %s zone caméra %s contient les deux boutons (écart compris) et = zone évitée par l'avatar" % [etiquette, zone],
-		zone.encloses(r1) and zone.encloses(r2) and zones_av.size() == 1 and (zones_av[0] as Rect2).is_equal_approx(zone))
+		zone.encloses(r1) and zone.encloses(r2) and zones_av.size() >= 1 and (zones_av[0] as Rect2).is_equal_approx(zone))   # (02-11, REQ P1) + le bouton TIRER en 2e zone
 	var autres := _rects_couches(jeu, AUTRES)
 	var trop_pres := []
 	for nom in autres:
