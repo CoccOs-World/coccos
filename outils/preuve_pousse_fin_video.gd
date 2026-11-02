@@ -1,6 +1,8 @@
 # Preuve P2 (02-11) — Pousse-Pollen : l'écran de fin = la vidéo « CoccOs World » de Ma télé, SANS TEXTE ; triangle
 # rouge STOP + jauge jaune (puzzle) + pause/lecture (télé) ; pause ≠ STOP ; rejouer / maison seulement à la fin ou
 # au STOP ; rejouer = dernier tableau joué ; maison = accueil ; rien ne se chevauche (3 formats × doigt/souris).
+# (P4) rejouer + maison = MÊMES rectangles que Recommencer / Accueil en jeu (lus sur les nœuds du jeu) ; vidéo centrée
+# en x entre la colonne de gauche et la colonne STOP + jauge (marges égales, chiffrées).
 # Rendu réel (la vidéo n'avance et ne se peint qu'avec un vrai affichage) : SubViewport à la taille de l'écran
 # visible, fenêtre 64×64 ; clics = vrais événements souris poussés dans le SubViewport (`push_input`).
 # Captures (HORS projet, jamais dans l'APK) : <dossier>/preuve_fin_<format>_<mode>_<etape>.png
@@ -159,28 +161,43 @@ func _cas(nom_f: String, tactile: bool, premier: bool) -> void:
 	_verifier("%s : AUCUN texte à lire sur l'écran de fin" % et, textes.is_empty(), str(textes))
 	_verifier("%s : l'UI de jeu est retirée derrière la vidéo" % et, _couches_jeu_visibles(jeu) == 0)
 	_verifier("%s : son de la vidéo non coupé (volume %.2f)" % [et, jeu._fin_video.volume], jeu._fin_video.volume > 0.99)
-	# Géométrie : tout dans l'écran, aucun chevauchement (la paire rejouer/maison remplace STOP/jauge/pause).
+	# Géométrie : tout dans l'écran, aucun chevauchement entre TOUS les éléments (P4 : rejouer / maison ne sont plus sur la vidéo).
 	var r: Dictionary = jeu.cadres_fin()
 	var ecran := Rect2(Vector2.ZERO, Vector2(sub.size))
+	var noms := ["video", "stop", "picto", "jauge", "pause", "rejouer", "maison"]
 	var hors := []
-	for k in r:
+	for k in noms:
 		if not ecran.encloses(r[k]):
 			hors.append(k)
 	_verifier("%s : tout tient dans l'écran" % et, hors.is_empty(), str(hors))
 	var chev := []
-	for grp in [["video", "stop", "picto", "jauge", "pause"], ["video", "rejouer", "maison"]]:
-		for i in grp.size():
-			for j in range(i + 1, grp.size()):
-				var a: String = grp[i]
-				var b: String = grp[j]
-				if a == "video" and (b == "rejouer" or b == "maison"):
-					continue                       # posés EXPRÈS sur la vidéo figée
-				if r[a].intersects(r[b]):
-					chev.append(a + "×" + b)
-	_verifier("%s : aucun chevauchement (vidéo %s, STOP %s, jauge %s, pause %s)" % [et, r.video, r.stop, r.jauge, r.pause],
+	for i in noms.size():
+		for j in range(i + 1, noms.size()):
+			if r[noms[i]].intersects(r[noms[j]]):
+				chev.append(noms[i] + "×" + noms[j])
+	_verifier("%s : aucun chevauchement (vidéo %s, STOP %s, jauge %s, pause %s, rejouer %s, maison %s)" % [et, r.video, r.stop, r.jauge, r.pause, r.rejouer, r.maison],
 		chev.is_empty(), str(chev))
-	_verifier("%s : rejouer et maison dans la vidéo, séparés" % et,
-		r.video.encloses(r.rejouer) and r.video.encloses(r.maison) and not r.rejouer.intersects(r.maison))
+	# (P4) Place habituelle : rectangles RÉELS des nœuds de fin = rectangles RÉELS de Recommencer / Accueil en jeu.
+	var g_rec: Rect2 = jeu._bouton_recommencer.get_global_rect()
+	var g_acc: Rect2 = jeu._bouton_accueil.get_global_rect()
+	var f_rej: Rect2 = jeu._fin_rejouer.get_global_rect()
+	var f_mai: Rect2 = jeu._fin_maison.get_global_rect()
+	_verifier("%s : P4 rejouer %s = Recommencer en jeu %s ; maison %s = Accueil en jeu %s" % [et, f_rej, g_rec, f_mai, g_acc],
+		f_rej.position.is_equal_approx(g_rec.position) and f_rej.size.is_equal_approx(g_rec.size)
+		and f_mai.position.is_equal_approx(g_acc.position) and f_mai.size.is_equal_approx(g_acc.size))
+	# (P4) Place réservée dès le début : la vidéo commence à droite de la colonne de gauche.
+	var bord_g: float = maxf(g_rec.end.x, g_acc.end.x)
+	var bord_d: float = jeu._fin_stop.get_global_rect().position.x
+	var mg: float = r.video.position.x - bord_g
+	var md: float = bord_d - r.video.end.x
+	print("  [mesure] %s : colonne gauche finit à x %.1f ; vidéo x %.1f → %.1f (%.0f×%.0f) ; colonne droite commence à x %.1f ; marges %.1f / %.1f" % [et, bord_g, r.video.position.x, r.video.end.x, r.video.size.x, r.video.size.y, bord_d, mg, md])
+	_verifier("%s : P4 vidéo centrée entre les colonnes (marge gauche %.1f = marge droite %.1f, ≥ %.0f)" % [et, mg, md, jeu.FIN_MARGE],
+		absf(mg - md) < 0.5 and mg >= jeu.FIN_MARGE - 0.01)
+	var nat: Vector2 = Vector2(jeu._fin_video.get_video_texture().get_size()) if jeu._fin_video.get_video_texture() != null else Vector2(16, 9)
+	_verifier("%s : P4 vidéo garde ses proportions (%.4f = flux %.4f)" % [et, r.video.size.x / r.video.size.y, nat.x / nat.y],
+		absf(r.video.size.x / r.video.size.y - nat.x / nat.y) < 0.01)
+	_verifier("%s : P4 pause centrée sous la vidéo (%.1f = %.1f)" % [et, r.pause.get_center().x, r.video.get_center().x],
+		absf(r.pause.get_center().x - r.video.get_center().x) < 0.5)
 	# Pixels pendant la lecture.
 	await _attendre(1.5)
 	var i1: Image = await _capturer(sub)
@@ -231,11 +248,17 @@ func _cas(nom_f: String, tactile: bool, premier: bool) -> void:
 	_verifier("%s : rejouer + maison VISIBLES (pixels plaque claire %d / %d)" % [et, _compter(istop, r.rejouer, jeu.COL_SORTIE), _compter(istop, r.maison, jeu.COL_SORTIE)],
 		jeu._fin_rejouer.visible and jeu._fin_maison.visible
 		and _compter(istop, r.rejouer, jeu.COL_SORTIE) > 200 and _compter(istop, r.maison, jeu.COL_SORTIE) > 200)
+	_verifier("%s : P4 après STOP, rejouer / maison aux rectangles de la colonne en jeu (%s / %s)" % [et, jeu._fin_rejouer.get_global_rect(), jeu._fin_maison.get_global_rect()],
+		jeu._fin_rejouer.get_global_rect() == jeu._bouton_recommencer.get_global_rect() and jeu._fin_maison.get_global_rect() == jeu._bouton_accueil.get_global_rect())
 	await _attendre(1.0)
 	_verifier("%s : on reste sur l'écran jusqu'au choix (état « %s »)" % [et, jeu.fin_etat], jeu.fin_etat == "stoppee" and is_instance_valid(jeu._couche_fin))
 	# REJOUER (vrai clic) → le dernier tableau joué, en jeu.
+	var fin_rej: Rect2 = jeu._fin_rejouer.get_global_rect()
+	var fin_mai: Rect2 = jeu._fin_maison.get_global_rect()
 	await _cliquer(sub, jeu._fin_rejouer.get_global_rect().get_center())
 	await _trames(4)
+	_verifier("%s : P4 de retour EN JEU (tableau recadré), Recommencer %s / Accueil %s = rejouer / maison de la fin %s / %s" % [et, jeu._bouton_recommencer.get_global_rect(), jeu._bouton_accueil.get_global_rect(), fin_rej, fin_mai],
+		jeu._bouton_recommencer.get_global_rect() == fin_rej and jeu._bouton_accueil.get_global_rect() == fin_mai)
 	_verifier("%s : REJOUER → tableau index %d (= dernier joué %d), en jeu, écran de fin retiré, UI de jeu revenue" % [et, jeu._niveau_courant, dernier],
 		jeu._niveau_courant == dernier and not is_instance_valid(jeu._couche_fin) and jeu.fin_etat == "" and not jeu._a_gagne
 		and not jeu._en_accueil and _couches_jeu_visibles(jeu) == jeu._couches_jeu.size())
@@ -257,6 +280,8 @@ func _cas(nom_f: String, tactile: bool, premier: bool) -> void:
 	_verifier("%s : fin NATURELLE (saut à %.1f s sur %.1f) → état « %s », STOP + jauge + pause disparus, rejouer + maison visibles" % [et, maxf(0.0, lg - 2.0), lg, jeu.fin_etat],
 		jeu.fin_etat == "finie" and not jeu._fin_stop.visible and not jeu._fin_jauge.visible and not jeu._fin_pause.visible
 		and jeu._fin_rejouer.visible and jeu._fin_maison.visible)
+	_verifier("%s : P4 après fin naturelle, rejouer / maison aux rectangles de la colonne en jeu (%s / %s)" % [et, jeu._fin_rejouer.get_global_rect(), jeu._fin_maison.get_global_rect()],
+		jeu._fin_rejouer.get_global_rect() == jeu._bouton_recommencer.get_global_rect() and jeu._fin_maison.get_global_rect() == jeu._bouton_accueil.get_global_rect())
 	await _cliquer(sub, jeu._fin_maison.get_global_rect().get_center())
 	await _trames(4)
 	var iac: Image = await _capturer(sub)

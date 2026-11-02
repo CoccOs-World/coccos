@@ -3251,9 +3251,12 @@ func _afficher_ecran_fin() -> void:
 # Mise en page — refaite à chaque rotation / redimensionnement (`_sur_taille_ecran`).
 #   • à DROITE, la colonne du puzzle : STOP en haut, haut-parleur, jauge ; la colonne entière centrée en hauteur ;
 #   • en BAS, la bande de commandes de la télé (86 px) : le pause/lecture, centré sous la vidéo ;
-#   • la VIDÉO : le plus grand rectangle 16:9 (rapport du flux) entre le bord gauche, la colonne et la bande du bas ;
-#   • REJOUER + MAISON : côte à côte au milieu de la vidéo figée, écartés d'une largeur de bouton (comme en jeu).
-# Rien ne se chevauche par construction : la vidéo s'arrête FIN_MARGE avant la colonne et au-dessus de la bande.
+#   • à GAUCHE, la colonne du jeu (P4) : REJOUER + MAISON à leur place habituelle (mêmes rectangles que Recommencer /
+#     Accueil en jeu, _pos_recommencer / _pos_accueil), place réservée dès le début de la vidéo ;
+#   • la VIDÉO : le plus grand rectangle 16:9 (rapport du flux) entre les deux colonnes et au-dessus de la bande du bas,
+#     CENTRÉ en x entre elles (marges gauche = droite) — « s'il l'avait centré correctement » (Fabrice, P4).
+# Rien ne se chevauche par construction : la vidéo s'arrête FIN_MARGE après la colonne de gauche, FIN_MARGE avant celle
+# de droite, et au-dessus de la bande.
 func _placer_ecran_fin() -> void:
 	if not is_instance_valid(_couche_fin) or not is_instance_valid(_fin_porteur):
 		return
@@ -3289,8 +3292,14 @@ func cadres_fin() -> Dictionary:
 	var r_stop := Rect2(Vector2(xc - stop.x * 0.5, y0), stop)
 	var r_picto := Rect2(Vector2(xc - picto * 0.5, r_stop.end.y + PuzzleScript.VOL_FIN_ECART), Vector2(picto, picto))
 	var r_jauge := Rect2(Vector2(xc - larg_j * 0.5, r_picto.end.y + PuzzleScript.VOL_FIN_ECART_PICTO), Vector2(larg_j, h_j))
-	var zone := Rect2(Vector2(FIN_MARGE, FIN_MARGE),
-		Vector2(e.x - 3.0 * FIN_MARGE - lc, e.y - FIN_MARGE - FIN_BANDE_COMMANDES))
+	# (P4) Rejouer + maison = la colonne de gauche du jeu, telle quelle (même source que Recommencer / Accueil).
+	var t := _taille_bouton_icone()
+	var r_rejouer := Rect2(_pos_recommencer(), t)
+	var r_maison := Rect2(_pos_accueil(), t)
+	var bord_g: float = maxf(r_rejouer.end.x, r_maison.end.x)   # bord droit de la colonne de gauche
+	var bord_d: float = xc - lc * 0.5                          # bord gauche de la colonne de droite
+	var zone := Rect2(Vector2(bord_g + FIN_MARGE, FIN_MARGE),
+		Vector2(bord_d - bord_g - 2.0 * FIN_MARGE, e.y - FIN_MARGE - FIN_BANDE_COMMANDES))
 	var nat := Vector2(16.0, 9.0)                              # coccos_world.ogv = 1280×720 (lu par ffprobe)
 	if is_instance_valid(_fin_video) and _fin_video.get_video_texture() != null:
 		var tv := _fin_video.get_video_texture().get_size()
@@ -3300,11 +3309,8 @@ func cadres_fin() -> Dictionary:
 	var r_video := Rect2(zone.position + (zone.size - nat * k) * 0.5, nat * k)
 	var r_pause := Rect2(Vector2(r_video.get_center().x - FIN_PAUSE_TAILLE.x * 0.5,
 		e.y - FIN_BANDE_COMMANDES + (FIN_BANDE_COMMANDES - FIN_PAUSE_TAILLE.y) * 0.5), FIN_PAUSE_TAILLE)
-	var t := _taille_bouton_icone()
-	var largeur_paire: float = t.x * 3.0                       # bouton · écart d'une largeur · bouton
-	var hg := r_video.get_center() - Vector2(largeur_paire * 0.5, t.y * 0.5)
 	return {"stop": r_stop, "picto": r_picto, "jauge": r_jauge, "video": r_video, "pause": r_pause,
-		"rejouer": Rect2(hg, t), "maison": Rect2(hg + Vector2(t.x * 2.0, 0.0), t)}
+		"rejouer": r_rejouer, "maison": r_maison, "colonne_g": bord_g, "colonne_d": bord_d}
 
 # Pause/lecture — le geste de la télé (`_LecteurVideo._basculer_pause`). Ne touche PAS `fin_etat` : aucun bouton
 # de fin n'apparaît en pause.
