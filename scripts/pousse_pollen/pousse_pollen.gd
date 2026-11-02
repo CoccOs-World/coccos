@@ -1599,6 +1599,18 @@ var _bouton_accueil: Button = null              # (P1c) replacé en x avec la co
 var _axe_colonne := -1.0                        # (P1c) x de l'axe commun des 3 boutons de gauche ; < 0 = axe minimal
 var _couche_reussite: CanvasLayer = null
 var _couche_fin: CanvasLayer = null            # écran de fin / félicitations après le dernier niveau (balle 24)
+# (P2, 02-11) Écran de fin = la vidéo « CoccOs World » de Ma télé. État lu par la preuve : "" (pas d'écran de fin) ·
+# "joue" (lecture, en pause comprise) · "finie" (allée au bout) · "stoppee" (triangle rouge). Pause ≠ STOP.
+var fin_etat := ""
+var _fin_porteur: _PorteurVideoFin = null               # porte `_video` : `tele.gd:_IconePauseLecture` lit `proprietaire._video`
+var _fin_video: VideoStreamPlayer = null
+var _fin_stop: Button = null
+var _fin_picto: Control = null
+var _fin_jauge: VSlider = null
+var _fin_pause: Button = null
+var _fin_rejouer: Button = null
+var _fin_maison: Button = null
+var fin_volume := 1.0                          # réglage de la jauge jaune (0..1), lu par la preuve
 # Balle 71 — un AudioStreamPlayer RÉUTILISABLE par son (créés dans _ready, joués par _jouer_son). Réutilisés →
 # jamais d'empilement d'instances. Clé = même identité que la constante SON_* correspondante.
 var _lecteurs_son: Dictionary = {}
@@ -2107,6 +2119,7 @@ func _sur_taille_ecran() -> void:
 	for a in _ancrages:
 		a[0].position = a[1] + _decalage_ancre(a[2])
 	_cadrer_camera()
+	_placer_ecran_fin()                                # (P2) l'écran de fin vidéo suit la rotation / le redimensionnement
 	queue_redraw()
 
 # Fenêtre des positions caméra qui font tenir TOUT le contenu (bbox des cases praticables) à l'écran au zoom z,
@@ -2296,6 +2309,8 @@ func _cadrage_ok(cam_pos: Vector2, z: float, boutons: Array[Rect2]) -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if _en_accueil:
 		return                                        # écran d'accueil affiché → aucune entrée de jeu (clavier compris) — balle 49
+	if is_instance_valid(_couche_fin):
+		return                                        # (P2) écran de fin vidéo : le plateau ne reçoit rien
 	# Barre espace = Agripper MAINTENU (PC). physical_keycode → indépendant de la
 	# disposition clavier. pressed=true à l'enfoncement (et aux échos), false au relâché.
 	if event is InputEventKey and event.physical_keycode == KEY_SPACE:
@@ -2928,9 +2943,8 @@ func _aller_a_niveau(index: int) -> void:
 	if is_instance_valid(_couche_reussite):            # si « Bravo ! » affiché (après victoire) → le retirer
 		_couche_reussite.queue_free()
 		_couche_reussite = null
-	if is_instance_valid(_couche_fin):                 # si l'écran de fin est affiché (balle 24) → le retirer
-		_couche_fin.queue_free()
-		_couche_fin = null
+	if is_instance_valid(_couche_fin):                 # si l'écran de fin est affiché (balle 24 ; P2 : vidéo) → le retirer
+		_fermer_ecran_fin()
 	_agripper_touche = false                           # état neutre : on relâche l'Agripper (touche + écran)
 	_agripper_bouton = false
 	_mettre_en_valeur_agripper(false)                  # visuel de l'Agripper remis au repos
@@ -3063,57 +3077,321 @@ func _fin_victoire_niveau_suivant() -> void:
 		return
 	_aller_a_niveau(_niveau_courant + 1)
 
-# Écran de FIN (balle 24, GDD §1 « récompense de félicitations » — jamais de reboucle du dernier niveau).
-# Panneau de félicitations joyeux plein écran + petits cœurs (récompense positive, §7 « cœurs qui s'allument »)
-# et un bouton « Rejouer » qui recharge N1 en JEU (l'enfant navigue ensuite librement par ◄/►, aucun échec, aucun
-# cul-de-sac d'écran). Luminance + libellé (jamais la couleur seule, daltonien GDD §1).
+# Écran de FIN — (P2, 02-11) LA VIDÉO « CoccOs World » DE MA TÉLÉ, AUCUN TEXTE À LIRE.
+# Fabrice : « cette phrase, on va l'enlever. On est censé être devant des enfants qui ne savent pas lire. Pour
+# remplacer cette fameuse phrase, nous allons afficher la vidéo qui est dans ma télé. » La phrase « Bravo ! Tu as tout
+# fini ! » (balle 24) et son bouton « Rejouer » écrit ont disparu.
+# RÉUTILISÉ TEL QUEL, RIEN DE REDESSINÉ :
+#   • la vidéo : `tele.gd:VIDEO_PAR_DEFAUT` (même chemin, même flux Theora) ;
+#   • le pause/lecture : la classe `tele.gd:_IconePauseLecture` et le style du gros bouton de la télé ;
+#   • le triangle rouge STOP et le haut-parleur : la classe `puzzle.gd:IconeDessinee` (formes "stop", "haut_parleur")
+#     avec les teintes du puzzle (`ov` = le script du puzzle : seules ses CONSTANTES sont lues) ;
+#   • la jauge jaune : le patron `puzzle.gd:_batir_volume_fin` (rail, jauge, pastille recopiée comme le puzzle l'a
+#     lui-même recopiée de l'accueil) ;
+#   • rejouer (flèche tournante) et maison : les boutons du jeu (`_styler_bouton_icone` + `_habiller_icone`).
+# ⚠ LES MOTS DU PUZZLE (« STOP », « Volume », « Rejouer », « Accueil ») NE SONT PAS REPRIS, ni les infobulles : la
+#   demande est « aucun texte à lire ». Le daltonien garde la FORME (triangle, barres/triangle de lecture, haut-parleur,
+#   flèche tournante, maison) et la LUMINANCE (glyphes clairs sur plaques sombres, sombres sur plaques claires).
+# ⚠ PAUSE ≠ STOP (Fabrice : « on ne confond pas les arrêts de lecture du lecteur et l'arrêt total du triangle
+#   rouge ») : la pause ne change pas `fin_etat` (« joue ») et ne montre AUCUN bouton de fin ; le STOP clôt la
+#   séquence (« stoppee »), exactement comme la fin naturelle (« finie »). Dans les deux cas STOP, jauge et pause
+#   disparaissent ENSEMBLE, puis rejouer + maison apparaissent — et on reste là jusqu'au choix de l'enfant.
+# ⚠ STOP = `paused`, pas `stop()` (leçon du puzzle B17 : `stop()` vide l'affichage → rectangle noir).
+const TeleScript := preload("res://scripts/tele/tele.gd")
+const PuzzleScript := preload("res://jeux_integres/puzzle/scripts/puzzle.gd")
+const FIN_MARGE := 18.0                                # = puzzle.gd FIN_MARGE
+const FIN_BANDE_COMMANDES := 86.0                      # = la barre de commandes de la télé (CenterContainer 86)
+const FIN_PAUSE_TAILLE := Vector2(120, 64)             # = le bouton pause/lecture de la télé
+const FIN_COUL_TELE := Color(0.45, 0.40, 0.85)         # = le violet du bouton pause/lecture de la télé
+
+class _PorteurVideoFin extends Control:
+	var _video: VideoStreamPlayer = null                # nom imposé par `tele.gd:_IconePauseLecture`
+
 func _afficher_ecran_fin() -> void:
 	if is_instance_valid(_couche_reussite):            # retire le « Bravo ! » transitoire avant l'écran de fin
 		_couche_reussite.queue_free()
 		_couche_reussite = null
+	if is_instance_valid(_couche_fin):
+		return
+	for c in _couches_jeu:                              # comme l'accueil : l'UI de jeu se retire derrière la vidéo
+		if is_instance_valid(c):
+			c.visible = false
 	_couche_fin = CanvasLayer.new()
 	_couche_fin.name = "EcranFin"
+	_couche_fin.layer = 30
 	add_child(_couche_fin)
-	var fond := ColorRect.new()                        # voile chaud semi-opaque (calme, pas d'alarme)
-	fond.color = Color(0.35, 0.22, 0.12, 0.75)
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fin_porteur = _PorteurVideoFin.new()
+	_fin_porteur.name = "PorteurFin"
+	_fin_porteur.mouse_filter = Control.MOUSE_FILTER_STOP   # bouchon : aucun geste ne passe au plateau
+	_couche_fin.add_child(_fin_porteur)
+	var fond := ColorRect.new()                        # noir de salle de projection (les bandes autour de la vidéo)
+	fond.name = "Fond"
+	fond.color = Color(0.0, 0.0, 0.0, 1.0)
 	fond.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_couche_fin.add_child(fond)
-	var titre := Label.new()
-	titre.text = "Bravo ! Tu as tout fini ! ♥ ♥ ♥"
-	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	titre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	titre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	titre.add_theme_font_size_override("font_size", 54)   # tient dans 1024 px avec les cœurs (pas de débord)
-	titre.add_theme_color_override("font_color", Color(0.98, 0.88, 0.25))   # doré joyeux
-	titre.add_theme_color_override("font_outline_color", COL_TRAIT)
-	titre.add_theme_constant_override("outline_size", 10)
-	_couche_fin.add_child(titre)
-	# Bouton « Rejouer » (centré, sous le titre) → recharge N1 en JEU, navigation libre par ◄/► (GDD §2.3).
-	var rejouer := Button.new()
-	rejouer.name = "Rejouer"
-	rejouer.text = "Rejouer"
-	rejouer.size = Vector2(280, 90)
-	rejouer.position = Vector2((_ecran.x - 280) * 0.5, _ecran.y * 0.5 + 90)
-	rejouer.focus_mode = Control.FOCUS_NONE
-	rejouer.add_theme_font_size_override("font_size", 40)
-	rejouer.pressed.connect(_rejouer_depuis_fin)
-	_couche_fin.add_child(rejouer)
-	# Apparition en fondu doux (discret, sans son — GDD §1 calme).
-	fond.modulate.a = 0.0
-	titre.modulate.a = 0.0
-	var t := create_tween()
-	t.tween_property(fond, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
-	t.parallel().tween_property(titre, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	_fin_porteur.add_child(fond)
+	# ① LA VIDÉO — celle de Ma télé, avec son son.
+	_fin_video = VideoStreamPlayer.new()
+	_fin_video.name = "VideoFin"
+	var flux := VideoStreamTheora.new()
+	flux.file = TeleScript.VIDEO_PAR_DEFAUT["chemin"]
+	_fin_video.stream = flux
+	_fin_video.expand = true
+	_fin_video.autoplay = false
+	_fin_video.loop = false
+	_fin_video.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_video.finished.connect(_video_fin_finie)
+	_fin_porteur.add_child(_fin_video)
+	_fin_porteur._video = _fin_video
+	_regler_volume_fin()
+	# ② LE STOP — bouton sombre, triangle rouge cerné de clair (puzzle `_batir_stop`, sans le mot).
+	_fin_stop = Button.new()
+	_fin_stop.name = "BoutonStop"
+	_fin_stop.focus_mode = Control.FOCUS_NONE
+	for etat in ["normal", "hover", "pressed"]:
+		var st := StyleBoxFlat.new()
+		st.bg_color = PuzzleScript.COL_STOP if etat == "normal" else PuzzleScript.COL_STOP_SURVOL
+		st.set_corner_radius_all(12)
+		st.set_border_width_all(3)
+		st.border_color = PuzzleScript.COL_ETIQUETTE
+		_fin_stop.add_theme_stylebox_override(etat, st)
+	_fin_stop.pressed.connect(_stop_fin)
+	var ic_stop = PuzzleScript.IconeDessinee.new()
+	ic_stop.ov = PuzzleScript
+	ic_stop.forme = "stop"
+	ic_stop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_porteur.add_child(_fin_stop)
+	_fin_stop.add_child(ic_stop)
+	ic_stop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# ③ LE HAUT-PARLEUR sur sa plaque sombre, puis LA JAUGE JAUNE (puzzle `_batir_volume_fin`, sans le mot).
+	_fin_picto = Control.new()
+	_fin_picto.name = "PictoVolume"
+	_fin_picto.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_porteur.add_child(_fin_picto)
+	var plaque := ColorRect.new()
+	plaque.color = Color(0.05, 0.06, 0.09, 0.72)
+	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_picto.add_child(plaque)
+	plaque.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var ic_hp = PuzzleScript.IconeDessinee.new()
+	ic_hp.ov = PuzzleScript
+	ic_hp.forme = "haut_parleur"
+	ic_hp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_picto.add_child(ic_hp)
+	ic_hp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var s := VSlider.new()
+	s.name = "BarreVolumeFin"
+	s.min_value = 0.0
+	s.max_value = 100.0
+	s.step = 1.0
+	s.set_value_no_signal(round(fin_volume * 100.0))
+	s.focus_mode = Control.FOCUS_NONE
+	var larg: float = PuzzleScript.VOL_FIN_LARGEUR
+	var arrondi: int = int(larg * 0.5)
+	var rail := StyleBoxFlat.new()
+	rail.bg_color = PuzzleScript.COL_VOL_RAIL
+	rail.set_corner_radius_all(arrondi)
+	rail.set_border_width_all(3)
+	rail.border_color = PuzzleScript.COL_ETIQUETTE
+	rail.content_margin_left = larg * 0.5
+	rail.content_margin_right = larg * 0.5
+	s.add_theme_stylebox_override("slider", rail)
+	for etat in ["grabber_area", "grabber_area_highlight"]:
+		var jauge := StyleBoxFlat.new()
+		jauge.bg_color = PuzzleScript.COL_VOL_JAUGE
+		jauge.set_corner_radius_all(arrondi)
+		jauge.content_margin_left = larg * 0.5
+		jauge.content_margin_right = larg * 0.5
+		s.add_theme_stylebox_override(etat, jauge)
+	var poignee := _pastille_volume_fin(larg)
+	for icone in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		s.add_theme_icon_override(icone, poignee)
+	s.value_changed.connect(_volume_fin_change)
+	_fin_porteur.add_child(s)
+	_fin_jauge = s
+	# ④ LE PAUSE/LECTURE DE MA TÉLÉ — même bouton, même icône (classe de `tele.gd`), même geste.
+	_fin_pause = Button.new()
+	_fin_pause.name = "BoutonPause"
+	_fin_pause.focus_mode = Control.FOCUS_NONE
+	for etat in ["normal", "hover", "pressed", "focus"]:
+		var sp := StyleBoxFlat.new()
+		sp.bg_color = FIN_COUL_TELE if etat != "hover" else FIN_COUL_TELE.lightened(0.15)
+		sp.set_corner_radius_all(32)
+		_fin_pause.add_theme_stylebox_override(etat, sp)
+	var ic_pause = TeleScript._IconePauseLecture.new()
+	ic_pause.proprietaire = _fin_porteur
+	ic_pause.name = "IconePause"
+	ic_pause.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fin_pause.add_child(ic_pause)
+	ic_pause.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fin_pause.pressed.connect(_basculer_pause_fin)
+	_fin_porteur.add_child(_fin_pause)
+	# ⑤ REJOUER + MAISON — posés tout de suite mais CACHÉS : ils n'apparaissent qu'à la fin ou au STOP.
+	_fin_rejouer = Button.new()
+	_fin_rejouer.name = "Rejouer"
+	_fin_rejouer.focus_mode = Control.FOCUS_NONE
+	_fin_rejouer.size = _taille_bouton_icone()
+	_styler_bouton_icone(_fin_rejouer)
+	_fin_rejouer.pressed.connect(_rejouer_depuis_fin)
+	_fin_porteur.add_child(_fin_rejouer)
+	_habiller_icone(_fin_rejouer, "rejouer", _fin_rejouer.size)
+	_fin_maison = Button.new()
+	_fin_maison.name = "Maison"
+	_fin_maison.focus_mode = Control.FOCUS_NONE
+	_fin_maison.size = _taille_bouton_icone()
+	_styler_bouton_icone(_fin_maison)
+	_fin_maison.pressed.connect(_maison_depuis_fin)
+	_fin_porteur.add_child(_fin_maison)
+	_habiller_icone(_fin_maison, "maison", _fin_maison.size)
+	_fin_rejouer.visible = false
+	_fin_maison.visible = false
+	_placer_ecran_fin()
+	fin_etat = "joue"
+	_fin_video.play()
 
-# « Rejouer » depuis l'écran de fin → retire l'écran et recharge N1 en JEU (balle 34 : plus de mode sélection ;
-# tous les niveaux restent débloqués via _niveau_max_atteint → l'enfant navigue librement par ◄/►).
-func _rejouer_depuis_fin() -> void:
+# Mise en page — refaite à chaque rotation / redimensionnement (`_sur_taille_ecran`).
+#   • à DROITE, la colonne du puzzle : STOP en haut, haut-parleur, jauge ; la colonne entière centrée en hauteur ;
+#   • en BAS, la bande de commandes de la télé (86 px) : le pause/lecture, centré sous la vidéo ;
+#   • la VIDÉO : le plus grand rectangle 16:9 (rapport du flux) entre le bord gauche, la colonne et la bande du bas ;
+#   • REJOUER + MAISON : côte à côte au milieu de la vidéo figée, écartés d'une largeur de bouton (comme en jeu).
+# Rien ne se chevauche par construction : la vidéo s'arrête FIN_MARGE avant la colonne et au-dessus de la bande.
+func _placer_ecran_fin() -> void:
+	if not is_instance_valid(_couche_fin) or not is_instance_valid(_fin_porteur):
+		return
+	var e := _ecran
+	_fin_porteur.position = Vector2.ZERO
+	_fin_porteur.size = e
+	(_fin_porteur.get_node("Fond") as Control).size = e
+	var r := cadres_fin()
+	_fin_stop.position = r["stop"].position
+	_fin_stop.size = r["stop"].size
+	_fin_picto.position = r["picto"].position
+	_fin_picto.size = r["picto"].size
+	_fin_jauge.position = r["jauge"].position
+	_fin_jauge.size = r["jauge"].size
+	_fin_video.position = r["video"].position
+	_fin_video.size = r["video"].size
+	_fin_pause.position = r["pause"].position
+	_fin_pause.size = r["pause"].size
+	_fin_rejouer.position = r["rejouer"].position
+	_fin_maison.position = r["maison"].position
+
+# Les rectangles de l'écran de fin, rendus au jeu ET à la preuve (un seul calcul).
+func cadres_fin() -> Dictionary:
+	var e := _ecran
+	var stop: Vector2 = PuzzleScript.STOP_TAILLE
+	var picto: float = PuzzleScript.VOL_FIN_PICTO
+	var larg_j: float = PuzzleScript.VOL_FIN_LARGEUR
+	var lc: float = maxf(stop.x, larg_j)
+	var fixe: float = stop.y + PuzzleScript.VOL_FIN_ECART + picto + PuzzleScript.VOL_FIN_ECART_PICTO
+	var h_j: float = clampf(e.y - 2.0 * FIN_MARGE - fixe, PuzzleScript.VOL_FIN_HAUTEUR_MIN, PuzzleScript.VOL_FIN_HAUTEUR)
+	var y0: float = maxf(FIN_MARGE, (e.y - fixe - h_j) * 0.5)
+	var xc: float = e.x - FIN_MARGE - lc * 0.5                 # axe de la colonne
+	var r_stop := Rect2(Vector2(xc - stop.x * 0.5, y0), stop)
+	var r_picto := Rect2(Vector2(xc - picto * 0.5, r_stop.end.y + PuzzleScript.VOL_FIN_ECART), Vector2(picto, picto))
+	var r_jauge := Rect2(Vector2(xc - larg_j * 0.5, r_picto.end.y + PuzzleScript.VOL_FIN_ECART_PICTO), Vector2(larg_j, h_j))
+	var zone := Rect2(Vector2(FIN_MARGE, FIN_MARGE),
+		Vector2(e.x - 3.0 * FIN_MARGE - lc, e.y - FIN_MARGE - FIN_BANDE_COMMANDES))
+	var nat := Vector2(16.0, 9.0)                              # coccos_world.ogv = 1280×720 (lu par ffprobe)
+	if is_instance_valid(_fin_video) and _fin_video.get_video_texture() != null:
+		var tv := _fin_video.get_video_texture().get_size()
+		if tv.x > 0.0 and tv.y > 0.0:
+			nat = tv
+	var k: float = minf(zone.size.x / nat.x, zone.size.y / nat.y)
+	var r_video := Rect2(zone.position + (zone.size - nat * k) * 0.5, nat * k)
+	var r_pause := Rect2(Vector2(r_video.get_center().x - FIN_PAUSE_TAILLE.x * 0.5,
+		e.y - FIN_BANDE_COMMANDES + (FIN_BANDE_COMMANDES - FIN_PAUSE_TAILLE.y) * 0.5), FIN_PAUSE_TAILLE)
+	var t := _taille_bouton_icone()
+	var largeur_paire: float = t.x * 3.0                       # bouton · écart d'une largeur · bouton
+	var hg := r_video.get_center() - Vector2(largeur_paire * 0.5, t.y * 0.5)
+	return {"stop": r_stop, "picto": r_picto, "jauge": r_jauge, "video": r_video, "pause": r_pause,
+		"rejouer": Rect2(hg, t), "maison": Rect2(hg + Vector2(t.x * 2.0, 0.0), t)}
+
+# Pause/lecture — le geste de la télé (`_LecteurVideo._basculer_pause`). Ne touche PAS `fin_etat` : aucun bouton
+# de fin n'apparaît en pause.
+func _basculer_pause_fin() -> void:
+	if fin_etat != "joue" or not is_instance_valid(_fin_video):
+		return
+	_fin_video.paused = not _fin_video.paused
+	_fin_pause.get_node("IconePause").queue_redraw()
+
+# Triangle rouge = ARRÊT TOTAL (puzzle `_musique_stop`) : image figée, son coupé, rien ne relance la lecture.
+func _stop_fin() -> void:
+	if fin_etat != "joue":
+		return
+	_fin_video.paused = true
+	fin_etat = "stoppee"
+	_montrer_boutons_fin()
+
+func _video_fin_finie() -> void:
+	if fin_etat != "joue":
+		return
+	fin_etat = "finie"
+	_montrer_boutons_fin()
+
+# STOP, haut-parleur, jauge et pause partent ENSEMBLE ; rejouer + maison paraissent ENSEMBLE (puzzle
+# `_montrer_boutons_fin`).
+func _montrer_boutons_fin() -> void:
+	for n in [_fin_stop, _fin_picto, _fin_jauge, _fin_pause]:
+		if is_instance_valid(n):
+			n.visible = false
+	if is_instance_valid(_fin_rejouer):
+		_fin_rejouer.visible = true
+	if is_instance_valid(_fin_maison):
+		_fin_maison.visible = true
+
+# La jauge baisse le son de la VIDÉO seule (Pousse-Pollen n'a pas de bus de jeu) ; la vidéo continue.
+func _volume_fin_change(valeur: float) -> void:
+	fin_volume = clampf(valeur / 100.0, 0.0, 1.0)
+	_regler_volume_fin()
+
+func _regler_volume_fin() -> void:
+	if not is_instance_valid(_fin_video):
+		return
+	var base: float = db_to_linear(SON_VOLUME_DB) if SON_ACTIF else 0.0
+	_fin_video.volume = base * fin_volume
+
+# Pastille de la poignée — `puzzle.gd:_pastille_volume_fin`, recopiée (méthode d'instance du puzzle, donc non
+# appelable d'ici ; le puzzle l'a lui-même recopiée de l'accueil).
+func _pastille_volume_fin(diametre: float) -> ImageTexture:
+	var d: int = maxi(8, int(roundf(diametre)))
+	var img := Image.create(d, d, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rr: float = float(d) * 0.5
+	var c := Vector2(rr, rr)
+	for yy in d:
+		for xx in d:
+			var dist: float = (Vector2(float(xx) + 0.5, float(yy) + 0.5) - c).length()
+			if dist <= rr - 3.0:
+				img.set_pixel(xx, yy, PuzzleScript.COL_ETIQUETTE)
+			elif dist <= rr - 0.5:
+				img.set_pixel(xx, yy, PuzzleScript.COL_ROUGE)
+	return ImageTexture.create_from_image(img)
+
+# Retire l'écran de fin (vidéo coupée) et rend l'UI de jeu. Appelé par `_aller_a_niveau` (toute sortie y passe).
+func _fermer_ecran_fin() -> void:
+	if is_instance_valid(_fin_video):
+		_fin_video.stop()
 	if is_instance_valid(_couche_fin):
 		_couche_fin.queue_free()
-		_couche_fin = null
-	_aller_a_niveau(0)
+	_couche_fin = null
+	_fin_porteur = null
+	_fin_video = null
+	fin_etat = ""
+	if not _en_accueil:
+		for c in _couches_jeu:
+			if is_instance_valid(c):
+				c.visible = true
+
+# REJOUER — « il relance directement […] le dernier tableau joué » (Fabrice) : `_niveau_courant`, jamais un numéro
+# écrit en dur → la règle tient quand on ajoute des tableaux.
+func _rejouer_depuis_fin() -> void:
+	_aller_a_niveau(_niveau_courant)
+
+# MAISON — retour à l'accueil (le geste du bouton maison en jeu). Le dernier tableau est rechargé DESSOUS : « Jouer »
+# repart de lui, prêt à jouer (et non figé sur sa victoire).
+func _maison_depuis_fin() -> void:
+	_aller_a_niveau(_niveau_courant)
+	_afficher_accueil()
 
 # ---------------------------------------------------------------------------
 # ÉCRAN D'ACCUEIL + CHOIX D'AVATAR / CURSEUR (balle 49, GDD §2.3 l.60 / l.72)
@@ -3939,6 +4217,8 @@ func _quitter_coccos() -> void:
 func _retour_ou_quitter() -> void:
 	if _en_accueil:
 		_quitter_coccos()
+	elif is_instance_valid(_couche_fin):
+		_maison_depuis_fin()                           # (P2) écran de fin vidéo : même geste que la maison
 	else:
 		_afficher_accueil()
 
