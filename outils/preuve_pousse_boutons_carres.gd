@@ -103,6 +103,9 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 	for n: int in jeu.NIVEAUX.size():
 		jeu._aller_a_niveau(n)
 		await _trames(3)
+		r1 = rc.get_global_rect()                      # (02-11, REQ P1c) la colonne suit le plateau en x → boutons relus à chaque niveau
+		r2 = ac.get_global_rect()
+		autres = _rects_couches(jeu, AUTRES)
 		var xf: Transform2D = jeu.get_viewport().get_canvas_transform()
 		var z: float = xf.get_scale().x
 		var ky: float = jeu._plonge_ky
