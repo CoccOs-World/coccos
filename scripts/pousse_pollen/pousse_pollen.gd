@@ -1235,7 +1235,8 @@ var _ancrages: Array = []        # [nœud, position dans le repère de conceptio
 #   Bandeau « Niveau difficile » (haut-centre) : pos (192,120) taille (640,100) → y[120,220] — TRANSITOIRE :
 #       il s'auto-efface en ~3 s (voir _afficher_annonce_pic) → JAMAIS pris en compte par l'évitement caméra
 #       (il peut couvrir brièvement les rangées hautes à l'entrée d'un pic : c'est son rôle d'annonce).
-#   TIRER (bas-gauche)         : logo sans mot, _rect_tirer() (TIRER_TAILLE, coin bas-gauche TIRER_COIN_BG) — 02-11 : agrandi.
+#   TIRER (bas-gauche)         : logo sans mot, _rect_tirer() (TIRER_TAILLE, bas TIRER_COIN_BG.y) — 02-11 : agrandi ; P1c : carré.
+#   (P1c) Recommencer, Accueil et TIRER : centres en x sur _axe_colonne (milieu bord de fenêtre ↔ plateau), y inchangés.
 #   D-pad (bas-droite)         : centre (DPAD_CENTRE_X,DPAD_CENTRE_Y), flèches DPAD_TAILLE_FLECHE à ±DPAD_ECART.
 #       Balle 28 : flèches réduites 96→80. Boîte englobante = centre ± DPAD_DEMI.
 # Balle 28 — RÈGLE DÉFINITIVE Fabrice : « les flèches peuvent être PAR-DESSUS la TERRE ; c'est le TUNNEL qui
@@ -1301,12 +1302,21 @@ const DPAD_BAS_DEMI := DPAD_TAILLE_FLECHE * 0.5           # balle 63 : sous le c
 # Et il ne faut pas non plus qu'il devienne gênant. » · « C'est un bouton atypique au jeu ») : le mot « Agripper » cède la
 # place au LOGO TIRER (`LogoTirer` en fin de fichier ; P1b : empilé boule de pollen · avatar · flèche pointe en bas).
 # Bouton PLUS GRAND, ×1,25 au doigt, ancré par son coin BAS-GAUCHE : bord gauche aligné sur la colonne
-# Recommencer/Accueil (x 28), bord bas inchangé (730, bas de la rangée « < v > » du D-pad). Taille choisie par MESURE du
+# Recommencer/Accueil (x 28 en P1 ; P1c : centres alignés sur _axe_colonne), bord bas inchangé (730, bas de la rangée « < v > » du D-pad). Taille choisie par MESURE du
 # zoom des 38 tableaux × 3 formats × souris/doigt (cf. RES P1). L'AVATAR ENTIER l'évite aussi (_zones_avatar) : le
 # bouton ne passe jamais sur lui. Nœuds et mécanique gardent le nom « agripper » (maintien, espace, guide N4 inchangés).
-const TIRER_TAILLE := Vector2(176, 112)             # à la souris (PC), repère 1024×768 — l'ancien mot tenait dans 150×72
-const TIRER_FACTEUR_TACTILE := 1.25                 # au doigt (Android) → 220×140
-const TIRER_COIN_BG := Vector2(28, 730)             # coin BAS-GAUCHE du bouton (repère de conception, ancre ANCRE_BG)
+# (02-11, REQ P1c — Fabrice après essai P1b : « le bouton est beaucoup plus trop large. Il devrait être de la même largeur
+# que la maison de l'accueil. Le bouton rejouer. Tous les trois alignés. […] Et centré sur l'espace qu'il y a entre le
+# tableau du jeu et le bord de la fenêtre. » · « La hauteur, on ne la change pas. Sur aucun bouton. […] que ce bouton
+# soit un carré ») : TIRER CARRÉ (largeur = hauteur, hauteur P1b inchangée : 112 souris, 140 doigt). RIEN en vertical.
+# Les trois boutons (Recommencer, Accueil, TIRER) partagent UN AXE vertical (_axe_colonne) recalculé à CHAQUE cadrage :
+# milieu de l'espace entre le bord gauche de la fenêtre et le bord gauche du PLATEAU (grille entière, terre comprise =
+# ce que l'enfant voit). Si le plateau descend sous la colonne (espace < plus large bouton + 2 marges), la colonne se
+# serre au bord gauche (marge COLONNE_MARGE_MIN). Cf. _cadrer_camera / _placer_colonne.
+const TIRER_TAILLE := Vector2(112, 112)             # à la souris (PC), repère 1024×768 — P1c : carré, hauteur P1b inchangée
+const TIRER_FACTEUR_TACTILE := 1.25                 # au doigt (Android) → 140×140
+const TIRER_COIN_BG := Vector2(28, 730)             # coin BAS-GAUCHE de conception (seul le BAS sert depuis P1c : x = _axe_colonne)
+const COLONNE_MARGE_MIN := 8.0                      # (P1c) marge minimale entre le bord gauche de la fenêtre et le plus large bouton
 # Cadrage (balle 28, RÈGLE DÉFINITIVE Fabrice) : « seul le TUNNEL évite les boutons ; la TERRE peut passer
 # dessous ». On cadre sur les seules cases PRATICABLES (glyphe ≠ '#'), au zoom RÉELLEMENT MAXIMAL (plafond 1.4) :
 # les murs '#' (couleur du décor) débordent librement sous les 4 boutons. Balle 33 (grief Fabrice répété : les
@@ -1583,6 +1593,10 @@ var _visuel_gauche: Control = null
 var _visuel_bas: Control = null                # flèche BAS : pulsée par le guide du tirer (N4)
 var _visuel_agripper: ColorRect = null
 var _logo_tirer: Control = null                # (02-11) logo du bouton TIRER, redessiné quand l'avatar change
+var _touche_tirer: TouchScreenButton = null     # (P1c) zone tactile du TIRER, replacée en x avec la colonne
+var _bouton_recommencer: Button = null          # (P1c) replacé en x avec la colonne
+var _bouton_accueil: Button = null              # (P1c) replacé en x avec la colonne
+var _axe_colonne := -1.0                        # (P1c) x de l'axe commun des 3 boutons de gauche ; < 0 = axe minimal
 var _couche_reussite: CanvasLayer = null
 var _couche_fin: CanvasLayer = null            # écran de fin / félicitations après le dernier niveau (balle 24)
 # Balle 71 — un AudioStreamPlayer RÉUTILISABLE par son (créés dans _ready, joués par _jouer_son). Réutilisés →
@@ -2013,7 +2027,19 @@ func _taille_bouton_icone() -> Vector2:
 # largeur, 124 au doigt, est la plus grande des deux dimensions → l'écart vaut bien « au moins une largeur »).
 func _pos_accueil() -> Vector2:
 	var t := _taille_bouton_icone()
-	return RECOMMENCER_POS + Vector2(0.0, t.y + t.x * ECART_BOUTONS_ICONES)
+	return _pos_recommencer() + Vector2(0.0, t.y + t.x * ECART_BOUTONS_ICONES)
+
+# (P1c) Coin haut-gauche de Recommencer : y = RECOMMENCER_POS.y (inchangé), x centré sur l'axe de la colonne.
+func _pos_recommencer() -> Vector2:
+	return Vector2(_axe() - _taille_bouton_icone().x * 0.5, RECOMMENCER_POS.y)
+
+# (P1c) Axe le plus à gauche permis : le plus large des boutons (TIRER, carré) à COLONNE_MARGE_MIN du bord gauche.
+func _axe_colonne_min() -> float:
+	return COLONNE_MARGE_MIN + maxf(_taille_tirer().x, _taille_bouton_icone().x) * 0.5
+
+# (P1c) Axe courant de la colonne (x des centres des trois boutons de gauche).
+func _axe() -> float:
+	return _axe_colonne if _axe_colonne >= 0.0 else _axe_colonne_min()
 
 # (21-10) ZONE haut-gauche réservée à l'évitement caméra : l'enveloppe des DEUX boutons, ÉCART COMPRIS (le tunnel ne
 # passe pas entre eux non plus — un avatar coincé entre deux boutons serait injouable au doigt). Le repère de conception
@@ -2021,7 +2047,8 @@ func _pos_accueil() -> Vector2:
 # ENTIER doit éviter (cf. _zones_avatar / _cadrage_ok).
 func _zone_boutons_icones() -> Rect2:
 	var t := _taille_bouton_icone()
-	return Rect2(RECOMMENCER_POS, _pos_accueil() - RECOMMENCER_POS + t)
+	var hg := _pos_recommencer()
+	return Rect2(hg, _pos_accueil() - hg + t)
 
 # (21-10, REQ_pousse_boutons_carres_gros) Zones que l'AVATAR ENTIER (_enveloppe_avatar : tête au-dessus de sa case, bras
 # sur les côtés) ne doit JAMAIS recouvrir — en plus des cases praticables : Recommencer + Accueil. Mesurée au zoom RÉEL
@@ -2039,7 +2066,24 @@ func _taille_tirer() -> Vector2:
 # caméra (_rects_boutons) et évitement de l'avatar (_zones_avatar).
 func _rect_tirer() -> Rect2:
 	var t := _taille_tirer()
-	return Rect2(TIRER_COIN_BG - Vector2(0.0, t.y) + _decalage_ancre(ANCRE_BG), t)
+	return Rect2(Vector2(_axe() - t.x * 0.5, TIRER_COIN_BG.y - t.y) + _decalage_ancre(ANCRE_BG), t)
+
+# (P1c) Bord gauche ÉCRAN du plateau (colonne 0 de la grille, terre comprise) pour une caméra donnée — même projection
+# que _cadrage_ok : sx = (x·CELL - cam.x)·z + _ecran.x/2, avec x = 0.
+func _bord_gauche_plateau(cam_pos: Vector2, z: float) -> float:
+	return (0.0 - cam_pos.x) * z + _ecran.x * 0.5
+
+# (P1c) Replace en x les trois boutons de gauche sur l'axe courant (rien en y : position verticale et hauteur inchangées).
+func _placer_colonne() -> void:
+	if is_instance_valid(_bouton_recommencer):
+		_bouton_recommencer.position.x = _pos_recommencer().x
+	if is_instance_valid(_bouton_accueil):
+		_bouton_accueil.position.x = _pos_accueil().x
+	var r := _rect_tirer()
+	if is_instance_valid(_visuel_agripper):
+		_visuel_agripper.position.x = r.position.x
+	if is_instance_valid(_touche_tirer):
+		_touche_tirer.position.x = r.get_center().x
 
 # (21-10) Décalage d'un contrôle ancré au coin `ancre` : 0 sur un écran visible 1024×768 (repère de conception).
 func _decalage_ancre(ancre: Vector2) -> Vector2:
@@ -2142,6 +2186,7 @@ func _placement_le_plus_proche(z: float, a_ideal: Vector2, boutons: Array[Rect2]
 #      la boucle termine toujours.
 # La caméra est STATIQUE en jeu : ce centrage est fait à l'ENTRÉE, elle ne défile pas quand l'avatar bouge.
 func _cadrer_camera() -> void:
+	_axe_colonne = -1.0                                             # (P1c) cadrage fait avec la colonne serrée à gauche (axe minimal)
 	var boutons := _rects_boutons()
 	_plonge_ky = PLONGE_KY                                          # base (plongée normale) — repris pour tout tableau non-plat
 	var z := ZOOM_PLAFOND
@@ -2187,6 +2232,18 @@ func _cadrer_camera() -> void:
 			break
 		t += 0.02
 	_cam.position = cam_pos
+	# (P1c) La colonne de gauche se centre dans l'espace bord de fenêtre ↔ bord gauche du plateau (caméra désormais fixée).
+	# Sur l'axe L/2 ≥ axe minimal, le plus large bouton finit à ≥ COLONNE_MARGE_MIN du plateau → rien ne peut passer dessous ;
+	# garde-fou quand même (_cadrage_ok avec la colonne déplacée) : sinon on rapproche l'axe du bord, au pixel.
+	var axe_min := _axe_colonne_min()
+	var axe := maxf(axe_min, _bord_gauche_plateau(cam_pos, z) * 0.5)
+	while axe > axe_min:
+		_axe_colonne = axe
+		if _cadrage_ok(cam_pos, z, _rects_boutons()):
+			break
+		axe = maxf(axe_min, axe - 1.0)
+	_axe_colonne = axe
+	_placer_colonne()
 	# La caméra est STATIQUE en jeu (l'avatar bouge, pas la vue) → les limites ne servent qu'à éviter un
 	# scroll parasite ; on les ouvre largement pour ne pas ré-annuler le placement calculé ci-dessus.
 	_cam.limit_left = -100000
@@ -2708,10 +2765,11 @@ func _construire_bouton_agripper() -> void:
 	add_child(couche)
 	_couches_jeu.append(couche)          # balle 49 : masquée pendant l'écran d'accueil
 	var taille := _taille_tirer()                     # (02-11) plus grand, ×1,25 au doigt
-	var centre := TIRER_COIN_BG + Vector2(taille.x, -taille.y) * 0.5   # coin bas-gauche fixe (repère de conception)
+	var centre := Vector2(_axe(), TIRER_COIN_BG.y - taille.y * 0.5)   # (P1c) bas fixe (repère de conception), x sur l'axe de la colonne
 	# (02-11) AUCUN mot : le libellé est vide et le LOGO TIRER (boule · avatar · flèche vers le bas) remplit le bouton.
 	var touche := _creer_touche_ecran(couche, "agripper", "", centre, taille, 34, ANCRE_BG)   # coin bas-gauche
 	var tsb: TouchScreenButton = touche["tsb"]
+	_touche_tirer = tsb                               # (P1c) replacée en x avec la colonne (_placer_colonne)
 	_visuel_agripper = touche["visuel"]               # gardé : vire au doré tant qu'on tient, remis au repos par « Recommencer »
 	(touche["label"] as Label).queue_free()           # pas de texte sur ce bouton (Fabrice 08-10 : « logo illustré SANS MOT »)
 	_logo_tirer = LogoTirer.new()
@@ -2753,7 +2811,8 @@ func _construire_bouton_recommencer() -> void:
 	bouton.name = "Recommencer"
 	bouton.text = ""                                   # (21-10) plus de mot : l'icône « rejouer » (flèche tournante) dit « recommence »
 	bouton.tooltip_text = "Recommencer le niveau (sans perdre)"
-	bouton.position = RECOMMENCER_POS                  # haut-gauche, 1er des deux boutons carrés (Accueil dessous)
+	bouton.position = _pos_recommencer()               # haut-gauche, 1er des deux boutons carrés (Accueil dessous) ; P1c : x sur l'axe
+	_bouton_recommencer = bouton
 	bouton.size = _taille_bouton_icone()               # 62×58 (7-diff) à la souris, 124×116 au doigt ; la zone caméra en dérive
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
 	_styler_bouton_icone(bouton)                       # (21-10) fond clair cerné de sombre, comme au jeu des 7 différences
@@ -2775,6 +2834,7 @@ func _construire_bouton_accueil() -> void:
 	bouton.text = ""                                   # (21-10) plus de mot : l'icône « maison » dit « retour à l'accueil »
 	bouton.tooltip_text = "Changer d'avatar / de curseur" if _curseur_pc else "Changer d'avatar"
 	bouton.position = _pos_accueil()                   # sous Recommencer, séparé d'une largeur de bouton (jamais collés)
+	_bouton_accueil = bouton
 	bouton.size = _taille_bouton_icone()               # même taille que Recommencer (source unique)
 	bouton.focus_mode = Control.FOCUS_NONE             # ne vole pas le focus au clavier
 	_styler_bouton_icone(bouton)                       # (21-10) même fond que Recommencer (7 différences)

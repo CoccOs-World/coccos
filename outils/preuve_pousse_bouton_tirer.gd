@@ -9,6 +9,12 @@
 #   ③ entier dans l'écran visible ; ne touche ni le D-pad, ni Recommencer/Accueil, ni ◄ N ► ;
 #   ④ sur les 38 niveaux : AUCUNE case praticable sous le bouton, l'AVATAR ENTIER (posé sur chaque case praticable,
 #      projeté par la VRAIE transformée caméra) jamais sous le bouton ;
+#   ⑥ (P1c, 02-11) « le bouton est beaucoup plus trop large […] Tous les trois alignés […] centré sur l'espace qu'il y a entre
+#      le tableau du jeu et le bord de la fenêtre » · « La hauteur, on ne la change pas » · « que ce bouton soit un carré » :
+#      sur CHAQUE niveau × format × doigt/souris, relu sur les NŒUDS : TIRER carré, hauteur P1b (112/140) ; y de Recommencer,
+#      d'Accueil et du bas de TIRER = ceux de P1b ; centres x des trois égaux ; axe = milieu entre x 0 et le bord gauche du
+#      plateau (colonne 0 de la grille, projetée par la VRAIE transformée caméra) — ou, si le plateau passe sous la colonne,
+#      axe minimal (plus large bouton à COLONNE_MARGE_MIN du bord) ; garde-fou du jeu jamais déclenché (compté) ;
 #   ⑤ rien d'autre ne change : maintien (pressed → tirer actif + doré, released → relâché), guide N4 qui PULSE le bouton
 #      (le logo est enfant du visuel pulsé), espace = maintien PC.
 # Lancement (user:// ISOLÉ) :
@@ -20,6 +26,7 @@ const SCENE := "res://scenes/pousse_pollen.tscn"
 const FORMATS := [Vector2i(1024, 768), Vector2i(1366, 768), Vector2i(2400, 1080)]
 const NOMS_FORMAT := ["4:3", "16:9", "20:9"]
 const ANCIEN := Vector2(150, 72)           # l'ancien bouton « Agripper » (main 3554d47)
+const HAUTEUR_P1B := 112.0                 # hauteur du TIRER en P1b (souris) — « La hauteur, on ne la change pas »
 
 var _echecs := 0
 
@@ -97,8 +104,10 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 		_disposition(logo, etiquette)
 	var textes := _textes(visuel)
 	_verifier("① %s aucun texte sur le bouton" % etiquette, textes.is_empty(), str(textes))
-	_verifier("② %s taille %s plus grande que l'ancien %s" % [etiquette, r.size, ANCIEN], r.size.x > ANCIEN.x and r.size.y > ANCIEN.y)
+	_verifier("② %s taille %s plus HAUTE que l'ancien %s (P1c : largeur ramenée au carré)" % [etiquette, r.size, ANCIEN], r.size.y > ANCIEN.y)
 	_verifier("② %s taille = TIRER_TAILLE ×%.2f" % [etiquette, k], r.size.is_equal_approx(jeu.TIRER_TAILLE * k))
+	_verifier("⑥ %s CARRÉ %s, hauteur P1b inchangée (%.0f)" % [etiquette, r.size, HAUTEUR_P1B * k],
+		is_equal_approx(r.size.x, r.size.y) and is_equal_approx(r.size.y, HAUTEUR_P1B * k))
 	_verifier("② %s zone tactile = visuel" % etiquette, _rect_tsb(tsb).is_equal_approx(r), "%s / %s" % [_rect_tsb(tsb), r])
 	_verifier("③ %s entier dans l'écran visible %s" % [etiquette, vis.size], vis.grow(0.5).encloses(r), str(r))
 	var gene := []
@@ -118,10 +127,59 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 	# ④ 38 niveaux
 	var cell: float = jeu.CELL
 	var pires := 0
+	var ko6 := 0
+	var nb_centre := 0
+	var nb_serre := 0
+	var garde_fou := 0
+	var rec: Button = jeu.get_node_or_null("BoutonRecommencer/Recommencer")
+	var acc: Button = jeu.get_node_or_null("BoutonAccueil/Accueil")
+	var ti: Vector2 = jeu._taille_bouton_icone()
+	var y_rec := 24.0                                   # P1b : RECOMMENCER_POS.y
+	var y_acc := 24.0 + ti.y + ti.x                     # P1b : sous Recommencer, une largeur d'écart
+	var bas_tirer := 730.0 + vis.size.y - 768.0         # P1b : bas TIRER_COIN_BG ancré bas
 	for n: int in jeu.NIVEAUX.size():
 		jeu._aller_a_niveau(n)
 		await _trames(3)
+		r = visuel.get_global_rect()                    # (P1c) la colonne bouge avec le cadrage → relue à chaque niveau
 		var xf: Transform2D = jeu.get_viewport().get_canvas_transform()
+		# ⑥ colonne : carré, rien en vertical, centres alignés, axe centré dans l'espace bord ↔ plateau
+		var rr: Rect2 = rec.get_global_rect()
+		var ra: Rect2 = acc.get_global_rect()
+		var L: float = (xf * Vector2.ZERO).x                # bord gauche ÉCRAN du plateau (colonne 0 de la grille)
+		var axe: float = r.get_center().x
+		var axe_min: float = jeu._axe_colonne_min()
+		var detail := []
+		if not (is_equal_approx(r.size.x, r.size.y) and is_equal_approx(r.size.y, HAUTEUR_P1B * k)):
+			detail.append("TIRER %s pas carré/hauteur" % r.size)
+		if absf(rr.position.y - y_rec) > 0.5 or absf(ra.position.y - y_acc) > 0.5 or absf(r.end.y - bas_tirer) > 0.5:
+			detail.append("vertical bougé rec %.1f acc %.1f bas TIRER %.1f" % [rr.position.y, ra.position.y, r.end.y])
+		if not rr.size.is_equal_approx(ti) or not ra.size.is_equal_approx(ti):
+			detail.append("taille icônes %s %s" % [rr.size, ra.size])
+		if absf(rr.get_center().x - axe) > 0.5 or absf(ra.get_center().x - axe) > 0.5 or absf(_rect_tsb(tsb).get_center().x - axe) > 0.5:
+			detail.append("centres x rec %.1f acc %.1f TIRER %.1f" % [rr.get_center().x, ra.get_center().x, axe])
+		if L * 0.5 >= axe_min:
+			if absf(axe - L * 0.5) <= 0.5:
+				nb_centre += 1
+				if r.end.x > L - jeu.COLONNE_MARGE_MIN + 0.5:
+					detail.append("TIRER déborde sur le plateau (%.1f > %.1f)" % [r.end.x, L])
+			elif axe < L * 0.5 and axe >= axe_min - 0.5:
+				garde_fou += 1
+			else:
+				detail.append("axe %.1f ≠ milieu %.1f (plateau à %.1f)" % [axe, L * 0.5, L])
+		else:
+			if absf(axe - axe_min) <= 0.5:
+				nb_serre += 1
+			else:
+				detail.append("plateau sous la colonne (L %.1f) mais axe %.1f ≠ minimal %.1f" % [L, axe, axe_min])
+		if r.position.x < -0.5:
+			detail.append("TIRER sort à gauche (%.1f)" % r.position.x)
+		if r.grow(jeu.GARDE_BOUTON).intersects(ra):
+			detail.append("TIRER touche Accueil")
+		if not detail.is_empty():
+			ko6 += 1
+			_verifier("⑥ %s N%d (plateau à x %.1f, axe %.1f)" % [etiquette, n + 1, L, axe], false, " ; ".join(detail))
+		else:
+			print("  info ⑥ %s N%d plateau x %.1f → axe %.1f (%s)" % [etiquette, n + 1, L, axe, "centré" if L * 0.5 >= axe_min else "serré"])
 		var z: float = xf.get_scale().x
 		var ky: float = jeu._plonge_ky
 		var env: Rect2 = jeu._enveloppe_avatar()
@@ -138,14 +196,18 @@ func _controler(jeu: Node, etiquette: String, k: float) -> void:
 				var cas := Rect2(a, b - a)
 				var centre: Vector2 = xf * Vector2((x + 0.5) * cell, (y + 0.5) * cell * ky)
 				var av := Rect2(centre + env.position * z, env.size * z)
-				if r.grow(-1.0).intersects(cas):
-					sous_case += 1
-				if r.grow(-1.0).intersects(av):
-					sous_avatar += 1
+				for bt: Rect2 in [r, rr, ra]:             # (P1c) Recommencer et Accueil bougent aussi en x → vérifiés pareil
+					if bt.grow(-1.0).intersects(cas):
+						sous_case += 1
+					if bt.grow(-1.0).intersects(av):
+						sous_avatar += 1
 		if sous_case + sous_avatar > 0:
 			pires += 1
-			_verifier("④ %s N%d (zoom %.2f)" % [etiquette, n + 1, z], false, "cases sous TIRER=%d, avatar sous TIRER=%d" % [sous_case, sous_avatar])
-	_verifier("④ %s 38 niveaux : tunnel et avatar entier jamais sous le bouton TIRER" % etiquette, pires == 0)
+			_verifier("④ %s N%d (zoom %.2f)" % [etiquette, n + 1, z], false, "cases sous la colonne=%d, avatar sous la colonne=%d" % [sous_case, sous_avatar])
+	_verifier("④ %s 38 niveaux : tunnel et avatar entier jamais sous TIRER, Recommencer ni Accueil" % etiquette, pires == 0)
+	_verifier("⑥ %s 38 niveaux : carré, rien en vertical, 3 centres alignés, axe = milieu bord ↔ plateau (%d centrés, %d serrés : plateau sous la colonne)" % [etiquette, nb_centre, nb_serre],
+		ko6 == 0 and nb_centre + nb_serre + garde_fou == jeu.NIVEAUX.size())
+	_verifier("⑥ %s garde-fou « rapprocher l'axe » jamais déclenché (%d)" % [etiquette, garde_fou], garde_fou == 0)
 
 
 func _mecanique(jeu: Node, etiquette: String) -> void:

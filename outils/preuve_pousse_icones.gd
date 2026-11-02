@@ -67,7 +67,7 @@ func _controler(jeu: Node, etiquette: String) -> void:
 				ic.get_global_rect().is_equal_approx(b.get_global_rect()) and ic.anchor_right == 1.0 and ic.anchor_bottom == 1.0)
 			_verifier("② %s %s : icône transparente aux clics" % [etiquette, nom], ic.mouse_filter == Control.MOUSE_FILTER_IGNORE)
 			_verifier("② %s %s : icône reliée au jeu (ov)" % [etiquette, nom], ic.ov == jeu)
-		var pos_attendue: Vector2 = jeu.RECOMMENCER_POS if nom == "Recommencer" else jeu._pos_accueil()
+		var pos_attendue: Vector2 = jeu._pos_recommencer() if nom == "Recommencer" else jeu._pos_accueil()
 		_verifier("③ %s %s : position %s et taille %s = source unique du jeu" % [etiquette, nom, b.position, b.size],
 			b.position.is_equal_approx(pos_attendue) and b.size.is_equal_approx(jeu._taille_bouton_icone()))
 		_verifier("③ %s %s : rappel %s toujours branché" % [etiquette, nom, a[2]], b.pressed.is_connected(Callable(jeu, a[2])))

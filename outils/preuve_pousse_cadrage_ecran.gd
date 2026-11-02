@@ -90,10 +90,12 @@ func _derouler() -> void:
 		var vd: Rect2 = ctl.get("Visuel_droite", Rect2())
 		_verifier("② D-pad ancré bas-droite", absf(bas - vb.end.y - 36.0) <= 4.0 and absf(droite - vd.end.x - 20.0) <= 24.0, "%s %s" % [vb, vd])
 		var ag: Rect2 = ctl.get("Visuel_agripper", Rect2())
-		# (02-11, REQ P1) bouton TIRER agrandi : bord gauche 80 → 28 (aligné sur Recommencer/Accueil), marge basse 38 inchangée.
-		_verifier("② Agripper ancré bas-gauche", absf(ag.position.x - 28.0) <= 4.0 and absf(bas - ag.end.y - 38.0) <= 4.0, str(ag))
+		# (02-11, REQ P1) bouton TIRER agrandi, marge basse 38 inchangée. (P1c) x : centres de TIRER et Recommencer sur l'axe
+		# de la colonne (_axe), lui-même au bord gauche (≤ milieu de l'écran) — l'axe centré est prouvé par preuve_pousse_bouton_tirer ⑥.
+		var axe: float = jeu._axe()
+		_verifier("② Agripper ancré bas-gauche", absf(ag.get_center().x - axe) <= 0.5 and axe < droite * 0.5 and absf(bas - ag.end.y - 38.0) <= 4.0, str(ag))
 		var rc: Rect2 = ctl.get("Recommencer", Rect2())
-		_verifier("② Recommencer haut-gauche", rc.position.is_equal_approx(Vector2(28, 24)), str(rc))
+		_verifier("② Recommencer haut-gauche", absf(rc.get_center().x - axe) <= 0.5 and is_equal_approx(rc.position.y, 24.0), str(rc))
 		for n: int in jeu.NIVEAUX.size():
 			jeu._aller_a_niveau(n)
 			await _trames(3)
