@@ -6,16 +6,17 @@
 # Chaque cas est DISCRIMINANT : la pointe et le doigt tombent sur deux choses differentes.
 #   T  (tous)    un tap POSE le curseur : pointe = la ou le doigt l'amene, pas sous le doigt ;
 #   B  ballons   doigt sur le ballon / pointe dehors → intact ; pointe dessus / doigt dehors → eclate ;
-#   S  souris    fleurs du clic nees a la pointe ; croix : pointe dessus / doigt dehors → quitte,
-#                doigt dessus / pointe dehors → reste ;
-#   L  lettres   touche sous la POINTE tapee (≠ touche sous le doigt), lettre affichee ; curseur sans facteur propre ;
+#   S  souris    fleurs du clic nees a la pointe ; croix AU DOIGT depuis A2 (Fabrice 04-11) : pointe dessus /
+#                doigt dehors → reste, doigt dessus → quitte (inverse de l'attente du 07-10, par decision) ;
+#   L  lettres   touche sous le DOIGT tapee depuis A2 (≠ touche sous la pointe), lettre affichee ; curseur sans
+#                facteur propre ; (07-10 : c'etait la touche de la pointe — inverse par decision A2) ;
 #   C  chasse    bulle sous la pointe attrapee (doigt dehors), l'inverse → non (jeu SOURIS, sans clavier) ;
 #   Mots : PLUS de visee a la pointe (decision Fabrice 07-10, retour a l'origine) — sa preuve, avec
 #   Chasse sans clavier : outils/preuve_chasse_mots_android.gd ;
 #   P  souris PC INCHANGEE (ballons, lettres) : clic et curseur au pointeur, aucun decalage.
-#   R  (lettres) PORTEE : chaque touche du clavier dessine doit etre atteignable par la pointe
-#      sur au moins la moitie de sa hauteur. Vert depuis la REMONTEE du clavier (decision Fabrice,
-#      REQ_261007_android_clavier_remonte) ; portee stricte et 4 cibles : outils/preuve_clavier_remonte.gd.
+#   R  (lettres) PORTEE de la pointe sur le clavier : RETIRE par A2 (touches au doigt, clavier remis a sa
+#      place, plus de remontee) — la place du clavier est verifiee par outils/preuve_clavier_remonte.gd (R)
+#      et outils/preuve_a2_doigt_claviers_croix.gd (Kp). Croix et touches au doigt : preuve A2.
 # Lancement :
 #   XDG_DATA_HOME=$(mktemp -d) Godot_v4.7.2 --headless --path . --script res://outils/preuve_visee_pointe_jeux.gd
 # Code de sortie 0 = tout vert, 1 = au moins un echec.
@@ -153,28 +154,28 @@ func _espionner_touches() -> Array:
 
 
 ## Clavier : pointe sur une touche-lettre, doigt sur une AUTRE touche-lettre → c'est la touche
-## de la pointe qui est tapee. Rend [lettre visee, lettre sous le doigt] ou [] si echec.
+## du DOIGT qui est tapee (A2). Rend [lettre sous le doigt, lettre de la pointe] ou [] si echec.
 func _cas_touche(nom: String, tapees: Array, cible := "") -> Array:
 	var clavier: Control = _jeu.get("_clavier")
 	var autour := clavier.get_global_rect().get_center()
 	var p := _chercher(autour,
 		func(q: Vector2) -> bool: return _est_lettre(q, cible),
-		# doigt sur une AUTRE touche, ou (rangee du bas) sur la bande de remontee du clavier
-		func(q: Vector2) -> bool: return clavier.contient(q) and _touche_sous(q) != _touche_sous(_pointe_pour(q)),
+		# doigt franc sur une AUTRE touche-lettre
+		func(q: Vector2) -> bool: return _est_lettre(q) and _touche_sous(q) != _touche_sous(_pointe_pour(q)),
 		clavier.size.x / 2.0)
 	if p == Vector2.INF:
 		_verifier("K[%s] mise en place : pointe et doigt sur deux touches differentes" % nom, false)
 		return []
 	var d := _doigt_pour(p)
 	var visee: String = _touche_sous(p).text
-	var sous_doigt: String = "(bande de remontee)" if _touche_sous(d) == null else _touche_sous(d).text
+	var sous_doigt: String = _touche_sous(d).text
 	_verifier("K[%s] mise en place : pointe sur « %s », doigt sur « %s »" % [nom, visee, sous_doigt],
 		visee != sous_doigt, "pointe %s, doigt %s" % [p, d])
 	tapees.clear()
 	await _tap_doigt(d)
-	_verifier("K[%s] la touche tapee est celle de la POINTE (« %s »), pas celle du doigt" % [nom, visee],
-		tapees == [visee], "tapees %s" % [tapees])
-	return [visee, sous_doigt]
+	_verifier("K[%s] la touche tapee est celle du DOIGT (« %s »), pas celle de la pointe (A2)" % [nom, sous_doigt],
+		tapees == [sous_doigt], "tapees %s" % [tapees])
+	return [sous_doigt, visee]
 
 
 ## R : part de chaque rangee du clavier que la pointe peut viser (doigt au plus bas = bord de l'ecran).
@@ -294,24 +295,26 @@ func _souris() -> void:
 	var appuis := [0]
 	croix.pressed.connect(func() -> void: appuis[0] += 1)
 	var r := croix.get_global_rect()
-	var sur := func(q: Vector2) -> bool: return r.has_point(q)
+	var sur := func(q: Vector2) -> bool: return r.grow(-4.0).has_point(q)
 	var hors := func(q: Vector2) -> bool: return not r.grow(4.0).has_point(q)
-	p = _chercher(r.get_center(), hors, sur)
-	if p == Vector2.INF:
-		print("  (croix : aucun point « doigt dessus / pointe dehors » — bords fondus au coin, cas sans objet)")
-	else:
-		d = _doigt_pour(p)
-		await _tap_doigt(d)
-		_verifier("Sa croix : doigt dessus, pointe dehors → le jeu RESTE", appuis[0] == 0,
-			"doigt %s, pointe %s, croix %s" % [d, p, r])
+	# A2 : la croix se prend au DOIGT ; la pointe ne la prend plus. Pointe d'abord (le jeu reste).
 	p = _chercher(r.get_center(), sur, hors)
 	if p == Vector2.INF:
-		_verifier("Sb mise en place : pointe sur la croix, doigt dehors", false)
+		_verifier("Sa mise en place : pointe sur la croix, doigt dehors", false)
 	else:
 		d = _doigt_pour(p)
 		await _tap_doigt(d)
-		_verifier("Sb croix : pointe dessus, doigt dehors → QUITTE", appuis[0] == 1,
+		_verifier("Sa croix (A2) : pointe dessus, doigt dehors → le jeu RESTE", appuis[0] == 0,
 			"doigt %s, pointe %s, croix %s" % [d, p, r])
+	p = _chercher(r.get_center(), hors, sur)
+	if p == Vector2.INF:
+		d = r.get_center()
+		print("  (croix : aucun point « doigt dessus / pointe dehors » — bords fondus au coin ; doigt au centre)")
+	else:
+		d = _doigt_pour(p)
+	await _tap_doigt(d)
+	_verifier("Sb croix (A2) : doigt dessus → QUITTE", appuis[0] == 1,
+		"doigt %s, pointe %s, croix %s" % [d, _pointe_pour(d), r])
 	await _demonter()
 
 
@@ -323,13 +326,12 @@ func _lettres() -> void:
 	_mesurer_decalage("lettres")
 	_verifier("L curseur sans facteur propre (meme taille que les autres jeux)", not ("facteur" in _curseur))
 	await _cas_tap("lettres", Vector2(400, 200))
-	_cas_portee("lettres")
 	var tapees := _espionner_touches()
 	var paire := await _cas_touche("lettres", tapees)
 	if not paire.is_empty():
 		await _trames(3)
 		var affiche: String = (_jeu.get("_label_lettre") as Label).text
-		_verifier("L la bulle affiche « %s » (pointe), pas « %s » (doigt)" % [paire[0], paire[1]],
+		_verifier("L la bulle affiche « %s » (doigt, A2), pas « %s » (pointe)" % [paire[0], paire[1]],
 			affiche == paire[0], "bulle « %s », mot « %s »" % [affiche, _jeu.get("_mot")])
 	await _demonter()
 
