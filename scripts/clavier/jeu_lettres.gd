@@ -232,6 +232,7 @@ func _creer_bulle_et_mot() -> void:
 	bouche.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_dire.add_child(bouche)
 	btn_dire.pressed.connect(_dire_mot)
+	btn_dire.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A3, cf. visee_pointe.gd)
 	ligne_tableau.add_child(btn_dire)
 
 	var tableau := PanelContainer.new()
@@ -276,6 +277,7 @@ func _creer_bulle_et_mot() -> void:
 	croix.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_effacer.add_child(croix)
 	btn_effacer.pressed.connect(_effacer_tout)
+	btn_effacer.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A3, cf. visee_pointe.gd)
 	ligne_tableau.add_child(btn_effacer)
 
 
@@ -306,8 +308,9 @@ func _ajuster_au_clavier(hauteur: float) -> void:
 	_label_lettre.add_theme_font_size_override("font_size", int(cote * 0.65))
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (caret, boutons) ; touches du clavier dessiné
-## et croix de fermeture au DOIGT du joueur (A2) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (caret, retour arrière du tableau) ; touches du
+## clavier dessiné, croix de fermeture (A2), croix « tout effacer » et « dire le mot » (A3) au DOIGT du
+## joueur — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur

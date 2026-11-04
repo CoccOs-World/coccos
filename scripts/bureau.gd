@@ -41,6 +41,7 @@ const Registre := preload("res://scripts/registre_jeux.gd")
 
 const HAUTEUR_BARRE := 76  # barre des tâches sur PC (Linux/Windows)
 const AGRANDI_BARRE_ANDROID := 1.495  # +30 % puis encore +15 % (1,30 × 1,15) au doigt (décisions Fabrice 07-10)
+const ECHELLE_FENETRES_ANDROID := 1.15  # barre des fenêtres + rond de la croix (A3, Fabrice 04-11)
 const COULEUR_BARRE := Color(0.13, 0.17, 0.28, 0.92)
 const COULEUR_MENU := Color(0.95, 0.72, 0.15)  # bouton Menu jaune soleil
 const COULEUR_ENGRENAGE := Color(0.45, 0.45, 0.50)
@@ -61,6 +62,9 @@ const COULEURS_FLEURS: Array[Color] = [
 ## Épaisseur EFFECTIVE de la barre (76 sur PC, 114 sur Android) — tout ce qui
 ## réserve le bas de l'écran la lit (fenêtres, icônes, centrage, volume).
 var hauteur_barre: int = hauteur_barre_pour(OS.has_feature("android"))
+## Fenêtres CoccOs (dossiers, boîte à icônes) : barre de titre et rond de la croix à
+## l'échelle — 1 sur PC, +15 % sur Android (A3, Fabrice 04-11).
+var echelle_fenetres: float = ECHELLE_FENETRES_ANDROID if OS.has_feature("android") else 1.0
 var _menu: Control = null  # voile plein écran portant la boîte à icônes (null = fermé)
 var _horloge: Label
 var _panneau_volume: PanelContainer = null
@@ -84,7 +88,6 @@ var _menu_contextuel := false  # option parent : appui long sur le bureau nu = b
 var _bulle: Control = null  # voile plein écran portant la bulle de menu (null = fermée)
 var _couche_bulle: CanvasLayer  # au-dessus des effets (5), sous le curseur (10)
 var _appui_sur_bureau := false  # le dernier appui gauche est tombé sur le bureau nu
-var _boutons_au_doigt: Array[Control] = []  # roue des réglages + éteindre : au doigt BRUT (#224)
 var _doigt_sur_bouton := false  # le doigt posé l'a été sur l'un d'eux : brut jusqu'au relâché
 var _croix_ecartees: Array = []  # croix sous la pointe, écartées le temps de l'appui (A2)
 
@@ -259,7 +262,11 @@ func _gui_input(event: InputEvent) -> void:
 ## jusqu'au relâché du vrai doigt (une petite dérive du doigt ne rebascule pas en visée).
 ## EXCEPTION A2 (Fabrice, 04-11) : même règle pour toutes les CROIX DE FERMETURE (fenêtres des
 ## dossiers, boîte à icônes — groupe ViseePointe.AU_DOIGT) ; et la pointe ne les prend plus.
-## Tout le reste du bureau garde la visée à la pointe.
+## A3 (Fabrice, 04-11) : roue et éteindre rejoignent le groupe (au doigt SEUL : la pointe ne
+## les prend plus), ainsi que les ICÔNES du bureau et des fenêtres-dossiers (dossiers et
+## jeux) — l'appui long qui les soulève, le glissé et le dépôt suivent alors le DOIGT, tenus
+## jusqu'au relâché. Rien de ce groupe ne s'allume au survol (ViseePointe.eteindre_survols).
+## Tout le reste du bureau garde la visée à la pointe (bouton Menu, boîte à icônes, bureau nu).
 func _enter_tree() -> void:
 	get_tree().root.window_input.connect(_viser_a_la_pointe)
 
@@ -280,8 +287,8 @@ func _viser_a_la_pointe(event: InputEvent) -> void:
 		return
 	var appui: bool = event is InputEventMouseButton or event is InputEventScreenTouch
 	if appui and event.pressed:
-		_doigt_sur_bouton = _bouton_au_doigt(event.position) \
-				or ViseePointe.sous_le_doigt(get_tree(), event.position)
+		ViseePointe.eteindre_survols(get_tree())
+		_doigt_sur_bouton = ViseePointe.sous_le_doigt(get_tree(), event.position, _recouvert)
 	if _doigt_sur_bouton:
 		# #224 : position BRUTE conservée, le bouton sous le doigt reçoit le tap. Le vrai
 		# doigt se relâche en dernier (le moteur livre d'abord le clic émulé) : c'est lui
@@ -291,7 +298,7 @@ func _viser_a_la_pointe(event: InputEvent) -> void:
 		return
 	var pointe: Vector2 = _pointe_fenetre(event.position)
 	if appui and event.pressed:
-		# A2 : la pointe ne prend pas les croix (doigt ailleurs) — cf. visee_pointe.gd
+		# A2/A3 : la pointe ne prend rien du groupe au doigt (doigt ailleurs) — cf. visee_pointe.gd
 		ViseePointe.neutraliser(get_tree(), pointe, _croix_ecartees)
 	if event is InputEventMouseMotion or event is InputEventScreenDrag:
 		event.relative = pointe - _pointe_fenetre(event.position - event.relative)
@@ -309,12 +316,20 @@ func _pointe_fenetre(doigt: Vector2) -> Vector2:
 	return vers_fenetre * _curseur.pointe_pour_doigt(dans_viewport, get_viewport().get_visible_rect())
 
 
-## Le doigt BRUT (coordonnées de la fenêtre) tombe-t-il sur la roue des réglages ou sur éteindre ?
-func _bouton_au_doigt(doigt_fenetre: Vector2) -> bool:
-	var dans_viewport: Vector2 = get_tree().root.get_final_transform().affine_inverse() * doigt_fenetre
-	for bouton in _boutons_au_doigt:
-		if is_instance_valid(bouton) and bouton.is_visible_in_tree() \
-				and bouton.get_global_rect().has_point(dans_viewport):
+## A3 : un élément au doigt est-il recouvert, à ce point, par ce qui est dessiné au-dessus de
+## lui (une fenêtre-dossier ouverte plus haut, ou le voile de la boîte à icônes) ? Le doigt
+## posé sur une fenêtre au-dessus d'une icône du bureau ne la prend pas.
+func _recouvert(noeud: Node, point: Vector2) -> bool:
+	var etage: Node = noeud
+	while etage != null and etage.get_parent() != self:
+		etage = etage.get_parent()
+	if etage == null:
+		return false
+	if _menu != null and etage != _menu:
+		return true
+	for fenetre in _fenetres_ouvertes.values():
+		if is_instance_valid(fenetre) and fenetre != etage and fenetre.get_index() > etage.get_index() \
+				and fenetre.get_global_rect().has_point(point):
 			return true
 	return false
 
@@ -490,6 +505,7 @@ func _creer_icones() -> void:
 		icone.deplacee.connect(_memoriser_place_icone)
 		icone.survol.connect(_viser_dossier)
 		icone.lachee.connect(_ranger_dans_dossier)
+		icone.add_to_group(ViseePointe.AU_DOIGT)  # Android : prise au doigt du joueur (A3)
 		add_child(icone)
 		if reconstruction:
 			move_child(icone, _index_icones + i)  # reste sous les fenêtres et la barre
@@ -640,6 +656,7 @@ func _ouvrir_fenetre(id: String, titre: String, couleur: Color) -> void:
 	fenetre.titre = titre
 	fenetre.couleur = couleur
 	fenetre.limite_basse = hauteur_barre
+	fenetre.echelle = echelle_fenetres
 	# Réglage adulte : fenêtres fixes par défaut, déplaçables si l'option est cochée
 	fenetre.deplacable = PinConfig.lire_option("bureau", "fenetres_deplacables", false)
 	add_child(fenetre)  # dernier enfant = dessiné au-dessus du reste
@@ -671,6 +688,7 @@ func _remplir_fenetre(fenetre: Control, id: String) -> void:
 		icone.par_appui_long = Tactile.actif()
 		icone.lancee.connect(_lancer_jeu)
 		icone.lachee.connect(_ressortir_du_dossier.bind(id))
+		icone.add_to_group(ViseePointe.AU_DOIGT)  # Android : prise au doigt du joueur (A3)
 		fenetre.contenu.add_child(icone)
 
 
@@ -800,8 +818,10 @@ func _creer_barre_taches() -> void:
 	btn_eteindre.add_child(picto_eteindre)
 	btn_eteindre.pressed.connect(_eteindre)
 	ligne.add_child(btn_eteindre)
-	# #224 : ces deux boutons répondent au doigt BRUT (décalage annulé), cf. _viser_a_la_pointe
-	_boutons_au_doigt = [btn_reglages, btn_eteindre]
+	# #224 puis A3 : ces deux boutons répondent au doigt BRUT SEUL (décalage annulé, la pointe ne
+	# les prend plus), cf. _viser_a_la_pointe
+	btn_reglages.add_to_group(ViseePointe.AU_DOIGT)
+	btn_eteindre.add_to_group(ViseePointe.AU_DOIGT)
 
 
 func _mettre_a_jour_horloge() -> void:
@@ -971,6 +991,7 @@ func _basculer_menu() -> void:
 	fenetre.titre = Lang.t("bureau_menu_titre")
 	fenetre.couleur = COULEUR_TITRE_MENU
 	fenetre.limite_basse = hauteur_barre
+	fenetre.echelle = echelle_fenetres
 	voile.add_child(fenetre)
 	# La croix de la fenêtre la libère elle-même (comportement Fenetre) : le
 	# voile doit suivre — sans double libération quand c'est nous qui fermons

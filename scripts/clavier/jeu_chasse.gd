@@ -146,7 +146,8 @@ func _attraper(bulle: Node2D) -> void:
 	bulle.queue_free()
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (bulles, boutons du tableau) ; la croix de fermeture au DOIGT (A2) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (bulles, retour arrière du tableau) ; la croix de
+## fermeture (A2) et la croix « tout effacer » (A3) au DOIGT — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur
@@ -272,6 +273,7 @@ func _creer_tableau() -> void:
 	btn_effacer.pressed.connect(func() -> void:
 		_mot = ""
 		_label_mot.text = "")
+	btn_effacer.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A3, cf. visee_pointe.gd)
 	ligne.add_child(btn_effacer)
 
 

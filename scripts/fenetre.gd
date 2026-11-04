@@ -11,11 +11,14 @@ const UIStyle := preload("res://scripts/ui_style.gd")
 const PinConfig := preload("res://scripts/pin_config.gd")
 
 const COULEUR_FOND_DEFAUT := Color(0.98, 0.97, 0.93, 0.98)
+const HAUTEUR_BARRE := 60  # barre de titre à l'échelle 1 : marge 8 + croix 44 + marge 8
+const COTE_CROIX := 44
 
 var titre := ""
 var couleur := Color(0.25, 0.45, 0.75)
 var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches du bureau)
 var deplacable := false  # réglage adulte : fixe par défaut, déplaçable si activé
+var echelle := 1.0  # barre de titre + rond de la croix (1,15 sur Android — A3, posé par le bureau)
 var contenu: HBoxContainer
 
 var _glisse := false
@@ -54,11 +57,15 @@ func _ready() -> void:
 		barre.gui_input.connect(_sur_saisie_barre)
 	colonne.add_child(barre)
 
+	# Épaisseur et croix à l'échelle (60 / 44 px sur PC, 69 / 51 sur Android) ; le titre garde sa taille
+	var cote_croix := roundi(COTE_CROIX * echelle)
+	@warning_ignore("integer_division")
+	var marge_verticale := (roundi(HAUTEUR_BARRE * echelle) - cote_croix) / 2
 	var marge_barre := MarginContainer.new()
 	marge_barre.add_theme_constant_override("margin_left", 18)
 	marge_barre.add_theme_constant_override("margin_right", 10)
-	marge_barre.add_theme_constant_override("margin_top", 8)
-	marge_barre.add_theme_constant_override("margin_bottom", 8)
+	marge_barre.add_theme_constant_override("margin_top", marge_verticale)
+	marge_barre.add_theme_constant_override("margin_bottom", marge_verticale)
 	barre.add_child(marge_barre)
 
 	var ligne := HBoxContainer.new()
@@ -74,9 +81,9 @@ func _ready() -> void:
 
 	# Croix de fermeture — le geste universel des fenêtres
 	var btn_fermer := Button.new()
-	btn_fermer.custom_minimum_size = Vector2(44, 44)
+	btn_fermer.custom_minimum_size = Vector2(cote_croix, cote_croix)
 	btn_fermer.focus_mode = Control.FOCUS_NONE
-	UIStyle.styliser(btn_fermer, Color(0.85, 0.30, 0.25), 22)
+	UIStyle.styliser(btn_fermer, Color(0.85, 0.30, 0.25), ceili(cote_croix / 2.0))
 	var croix := _IconeCroix.new()
 	croix.set_anchors_preset(Control.PRESET_FULL_RECT)
 	croix.mouse_filter = Control.MOUSE_FILTER_IGNORE
