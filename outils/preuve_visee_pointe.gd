@@ -4,11 +4,11 @@
 # du moteur (outils/doigt_moteur.gd : ScreenTouch → clic emule fabrique par Godot). Chaque
 # cas est DISCRIMINANT : la pointe et le doigt tombent sur deux choses differentes, et l'on
 # verifie que c'est la chose sous la POINTE qui agit :
-#   V1 lancer une icone      : pointe SUR le bouton, doigt dehors → lancee ;
-#                              pointe dehors, doigt SUR le bouton → rien ;
-#                              le clic recu par le bouton porte la position de la pointe ;
-#   V2 attraper (appui long) : pointe sur l'icone, doigt dehors → soulevee ; l'inverse → non ;
-#   V3 deposer dans un dossier : pointe sur le dossier, doigt dehors → rangee ; l'inverse → non ;
+#   A3 (Fabrice 04-11) : les ICONES (V1 a V3) se prennent desormais au DOIGT du joueur — inverse :
+#   V1 lancer une icone      : pointe SUR le bouton, doigt dehors → rien ;
+#                              doigt SUR le bouton, pointe dehors → lancee, le clic porte le DOIGT ;
+#   V2 attraper (appui long) : pointe sur l'icone, doigt dehors → non ; doigt sur l'icone → soulevee ;
+#   V3 deposer dans un dossier : doigt sur le dossier, pointe dehors → rangee ; l'inverse → non ;
 #   V4 bouton de la barre    : pointe sur « Menu », doigt dehors → boite a icones ouverte ;
 #                              pointe dehors, doigt sur « Menu » → rien ;
 #   V5 bulle de menu         : tap pointe DANS la bulle, doigt dehors → elle reste ;
@@ -70,18 +70,16 @@ func _appui_long_pointe(pointe: Vector2) -> Vector2:
 	return d
 
 
-## Glisse le doigt tenu pour amener la pointe de `de` a `a`, puis le leve.
-func _glisser_pointe(de: Vector2, a: Vector2) -> Vector2:
-	var precedent := _doigt_pour(de)
-	var d := precedent
+## Glisse le doigt tenu de `de` a `a` (positions du DOIGT, A3), puis le leve.
+func _glisser_doigt(de: Vector2, a: Vector2) -> void:
+	var precedent := de
 	for i in range(1, 9):
-		d = _doigt_pour(de.lerp(a, i / 8.0))
+		var d := de.lerp(a, i / 8.0)
 		Doigt.glisser(root, precedent, d)
 		precedent = d
 		await _trames(1)
-	Doigt.toucher(root, d, false)
+	Doigt.toucher(root, a, false)
 	await _trames(4)
-	return d
 
 
 func _monter_bureau() -> void:
@@ -158,30 +156,32 @@ func _derouler() -> void:
 		if e is InputEventMouseButton and e.pressed:
 			recus.append(e.global_position))
 
-	# V1a pointe DEHORS (au-dessus), doigt SUR le bouton → rien
+	# A3 (Fabrice 04-11) : les ICONES se prennent au DOIGT du joueur — V1 a V3 inverses.
+	# V1a pointe SUR le bouton (bas), doigt dehors (dessous) → rien
 	var r := _rect_bouton(jeu)
-	var pointe := _pointe_dehors_haut(r)
+	var pointe := _pointe_dedans_bas(r)
 	var d := await _tap_pointe(pointe)
-	_verifier("V1a mise en place : doigt SUR le bouton, pointe dehors",
-		r.has_point(d) and not r.has_point(pointe), "doigt %s, pointe %s, bouton %s" % [d, pointe, r])
-	_verifier("V1a pointe dehors : AUCUN lancement (le doigt ne clique plus)", lancements.is_empty(), str(lancements))
-	_verifier("V1a la coccinelle est posee a la pointe", curseur.position.distance_to(pointe) < 0.6,
-		"%s / %s" % [curseur.position, pointe])
+	_verifier("V1a mise en place : pointe SUR le bouton, doigt dehors",
+		r.has_point(pointe) and not r.has_point(d), "doigt %s, pointe %s, bouton %s" % [d, pointe, r])
+	_verifier("V1a pointe sur l'icone, doigt dehors : AUCUN lancement (au doigt, A3)", lancements.is_empty(), str(lancements))
+	_verifier("V1a l'icone n'a recu aucun clic", recus.is_empty(), str(recus))
 
-	# V1b pointe SUR le bouton (bas), doigt dehors (dessous) → lancee
+	# V1b doigt SUR le bouton (haut), pointe dehors (au-dessus) → lancee, clic au DOIGT
 	recus.clear()
-	pointe = _pointe_dedans_bas(r)
+	pointe = _pointe_dehors_haut(r)
 	d = _doigt_pour(pointe)
-	_verifier("V1b mise en place : pointe SUR le bouton, doigt dehors",
-		r.has_point(pointe) and not r.has_point(d), "doigt %s (sur icone « %s »), pointe %s" % [d, _sur_une_icone(d), pointe])
+	_verifier("V1b mise en place : doigt SUR le bouton, pointe dehors",
+		r.has_point(d) and not r.has_point(pointe), "doigt %s, pointe %s, bouton %s" % [d, pointe, r])
 	var scene_avant := current_scene
 	Doigt.toucher(root, d, true)
 	await _trames(2)
-	_verifier("V1b le clic recu par le bouton porte la POINTE",
-		recus.size() == 1 and (recus[0] as Vector2).distance_to(pointe) < 0.6, "%s" % [recus])
+	_verifier("V1b le clic recu par le bouton porte le DOIGT",
+		recus.size() == 1 and (recus[0] as Vector2).distance_to(d) < 0.6, "%s / doigt %s" % [recus, d])
+	_verifier("V1b la coccinelle est posee au doigt", curseur.position.distance_to(d) < 0.6,
+		"%s / %s" % [curseur.position, d])
 	Doigt.toucher(root, d, false)
 	await _trames(6)
-	_verifier("V1b pointe sur l'icone : « %s » lancee" % id_jeu,
+	_verifier("V1b doigt sur l'icone : « %s » lancee" % id_jeu,
 		lancements == [id_jeu] or current_scene != scene_avant,
 		"lancements %s, scene %s" % [lancements, current_scene.scene_file_path if current_scene else "?"])
 	if current_scene != scene_avant:
@@ -194,44 +194,50 @@ func _derouler() -> void:
 	jeu = _icone(id_jeu)
 	dossier = _icone("clavier")
 
-	# V2a appui long : pointe dehors, doigt sur l'icone → elle ne se souleve pas
+	# V2a appui long : pointe sur l'icone, doigt dehors → elle ne se souleve pas
 	r = _rect_bouton(jeu)
-	pointe = _pointe_dehors_haut(r)
+	pointe = _pointe_dedans_bas(r)
 	d = await _appui_long_pointe(pointe)
-	_verifier("V2a appui long pointe DEHORS (doigt sur l'icone) : pas soulevee",
-		jeu.scale == Vector2.ONE, "doigt %s dans %s : %s" % [d, r, r.has_point(d)])
+	_verifier("V2a appui long pointe SUR l'icone (doigt dehors) : PAS soulevee (au doigt, A3)",
+		jeu.scale == Vector2.ONE and not r.has_point(d), "doigt %s, echelle %.2f" % [d, jeu.scale.x])
 	Doigt.toucher(root, d, false)
 	await _trames(3)
 
-	# V2b appui long : pointe sur l'icone, doigt dehors → soulevee
-	pointe = _pointe_dedans_bas(r)
-	d = await _appui_long_pointe(pointe)
-	_verifier("V2b appui long pointe SUR l'icone (doigt dehors) : soulevee",
-		jeu.scale.x > 1.0 and not r.has_point(d), "doigt %s, echelle %.2f" % [d, jeu.scale.x])
+	# V2b appui long : doigt sur l'icone, pointe dehors → soulevee
+	d = Vector2(r.get_center().x, r.position.y + MARGE)
+	Doigt.toucher(root, d, true)
+	await create_timer(0.8).timeout
+	await _trames(2)
+	_verifier("V2b appui long DOIGT sur l'icone (pointe dehors) : soulevee",
+		jeu.scale.x > 1.0 and not r.has_point(curseur.pointe_pour_doigt(d, _zone())), "doigt %s, echelle %.2f" % [d, jeu.scale.x])
 
-	# V3a deposer : pointe finit JUSTE AU-DESSUS du dossier (doigt dedans) → pas rangee
+	# V3a deposer : le DOIGT finit juste SOUS le dossier (pointe dedans) → pas rangee
 	var rd := _rect_bouton(dossier)
-	var arrivee := _pointe_dehors_haut(rd)
+	var arrivee := Vector2(rd.get_center().x, rd.end.y + MARGE)
 	var avant := jeu.position
-	d = await _glisser_pointe(pointe, arrivee)
-	_verifier("V3a mise en place : doigt leve SUR le dossier, pointe dehors",
-		rd.has_point(d) and not rd.has_point(arrivee), "doigt %s, pointe %s, dossier %s" % [d, arrivee, rd])
-	_verifier("V3a pointe hors du dossier : PAS rangee",
+	await _glisser_doigt(d, arrivee)
+	var p_arrivee: Vector2 = curseur.pointe_pour_doigt(arrivee, _zone())
+	_verifier("V3a mise en place : doigt leve HORS du dossier, pointe dedans",
+		not rd.has_point(arrivee) and rd.has_point(p_arrivee), "doigt %s, pointe %s, dossier %s" % [arrivee, p_arrivee, rd])
+	_verifier("V3a doigt hors du dossier : PAS rangee",
 		PinConfig.lire_option("bureau_rangement", id_jeu, null) == null and _icone(id_jeu) != null)
 	jeu = _icone(id_jeu)
-	_verifier("V3a l'icone a suivi la POINTE", jeu != null and jeu.position.distance_to(avant + (arrivee - pointe)) < 1.5,
-		"%s → %s (attendu %s)" % [avant, jeu.position if jeu else "?", avant + (arrivee - pointe)])
+	_verifier("V3a l'icone a suivi le DOIGT", jeu != null and jeu.position.distance_to(avant + (arrivee - d)) < 1.5,
+		"%s → %s (attendu %s)" % [avant, jeu.position if jeu else "?", avant + (arrivee - d)])
 
-	# V3b deposer : pointe finit DANS le bas du dossier (doigt dessous, dehors) → rangee
+	# V3b deposer : le DOIGT finit DANS le haut du dossier (pointe au-dessus, dehors) → rangee
 	r = _rect_bouton(jeu)
-	pointe = r.get_center()
-	await _appui_long_pointe(pointe)
+	d = r.get_center()
+	Doigt.toucher(root, d, true)
+	await create_timer(0.8).timeout
+	await _trames(2)
 	rd = _rect_bouton(dossier)
-	arrivee = _pointe_dedans_bas(rd)
-	d = await _glisser_pointe(pointe, arrivee)
-	_verifier("V3b mise en place : pointe SUR le dossier, doigt dehors",
-		rd.has_point(arrivee) and not rd.has_point(d), "doigt %s, pointe %s, dossier %s" % [d, arrivee, rd])
-	_verifier("V3b pointe sur le dossier : rangee dans « clavier »",
+	arrivee = Vector2(rd.get_center().x, rd.position.y + MARGE)
+	await _glisser_doigt(d, arrivee)
+	p_arrivee = curseur.pointe_pour_doigt(arrivee, _zone())
+	_verifier("V3b mise en place : doigt SUR le dossier, pointe dehors",
+		rd.has_point(arrivee) and not rd.has_point(p_arrivee), "doigt %s, pointe %s, dossier %s" % [arrivee, p_arrivee, rd])
+	_verifier("V3b doigt sur le dossier : rangee dans « clavier »",
 		PinConfig.lire_option("bureau_rangement", id_jeu, null) == "clavier" and _icone(id_jeu) == null,
 		"[bureau_rangement] %s = %s" % [id_jeu, PinConfig.lire_option("bureau_rangement", id_jeu, null)])
 
