@@ -268,6 +268,7 @@ func _creer_bulle_et_mot() -> void:
 	fleche.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_retour_arriere.add_child(fleche)
 	btn_retour_arriere.pressed.connect(_effacer_derniere)
+	btn_retour_arriere.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A4, cf. visee_pointe.gd)
 	ligne_tableau.add_child(btn_retour_arriere)
 
 	# Bouton croix : efface tout le tableau (croix = symbole qu'elle connaît)

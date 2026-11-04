@@ -266,7 +266,9 @@ func _gui_input(event: InputEvent) -> void:
 ## les prend plus), ainsi que les ICÔNES du bureau et des fenêtres-dossiers (dossiers et
 ## jeux) — l'appui long qui les soulève, le glissé et le dépôt suivent alors le DOIGT, tenus
 ## jusqu'au relâché. Rien de ce groupe ne s'allume au survol (ViseePointe.eteindre_survols).
-## Tout le reste du bureau garde la visée à la pointe (bouton Menu, boîte à icônes, bureau nu).
+## A4 (Fabrice, 04-11) : les icônes de la BOÎTE À ICÔNES rejoignent le groupe (tap seul : la
+## boîte ne les soulève ni ne les range).
+## Tout le reste du bureau garde la visée à la pointe (bouton Menu, bureau nu).
 func _enter_tree() -> void:
 	get_tree().root.window_input.connect(_viser_a_la_pointe)
 
@@ -1013,6 +1015,7 @@ func _basculer_menu() -> void:
 		icone.picto = appli.get("picto", "")
 		icone.chemin_image = appli.get("image", "")
 		icone.lancee.connect(_lancer_depuis_menu)
+		icone.add_to_group(ViseePointe.AU_DOIGT)  # Android : prise au doigt du joueur (A4)
 		grille.add_child(icone)
 		if premiere == null:
 			premiere = icone

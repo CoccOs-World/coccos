@@ -14,6 +14,8 @@
 ## A3 (Fabrice 04-11) : le groupe s'étend (roue / éteindre, croix « tout effacer », bouton
 ## « dire le mot », icônes du bureau et des dossiers) ; et ce qui se prend au doigt ne
 ## S'ALLUME PLUS au survol (`eteindre_survols`) — seul l'appui du doigt le fait réagir.
+## A4 (Fabrice 04-11) : s'y ajoutent les icônes de la boîte à icônes et la flèche « retour
+## arrière » des tableaux de Lettres et de Chasse.
 ## Usage (après la création du curseur) :
 ##   var visee := ViseePointe.new()
 ##   visee.curseur = _curseur

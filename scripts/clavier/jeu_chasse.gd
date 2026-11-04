@@ -263,6 +263,7 @@ func _creer_tableau() -> void:
 	fleche.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_retour_arriere.add_child(fleche)
 	btn_retour_arriere.pressed.connect(_effacer_derniere)
+	btn_retour_arriere.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A4, cf. visee_pointe.gd)
 	ligne.add_child(btn_retour_arriere)
 
 	var btn_effacer := _creer_bouton_rond(Color(0.85, 0.45, 0.30))
