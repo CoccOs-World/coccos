@@ -4,11 +4,15 @@
 # 4 cibles (fenetre redimensionnee : le headless l'accepte) et les 3 tailles. Mots et Chasse ne sont plus
 # remontes (decision Fabrice 07-10 : Mots revient a l'origine, Chasse n'a pas de clavier) — leur preuve :
 # outils/preuve_chasse_mots_android.gd ; ils restent dans la signature desktop D.
-#   R  PORTEE : chaque touche ENTIERE est visable par la pointe avec le doigt a GARDE_DOIGT px
-#      au-dessus du bord bas (on ne demande jamais le dernier pixel : bande des gestes Android) ;
-#   K  rangee du bas TAPEE A LA POINTE (doigt moteur) : W, N et ⌫ — la touche tapee est celle de
-#      la pointe, le doigt est plus bas (sur la bande de remontee ou une autre touche) ;
-#   E  ⌫ efface reellement (Lettres : mot raccourci) ;
+# A2 (Fabrice 04-11) : « Tous les claviers virtuels qui sont sur Android doivent etre cliquables avec
+# le doigt » ; clavier des Lettres « le remettre a sa place ». La remontee est ANNULEE et les touches
+# se prennent au DOIGT du joueur → R et K/E sont reecrits (l'ancienne attente, portee de la POINTE
+# et touche tapee a la pointe, est devenue fausse par decision) ; G et D inchanges.
+#   R  A SA PLACE : remontee 0, bas du clavier = bas de l'ecran, chaque touche ENTIERE dans l'ecran
+#      (donc sous le doigt) ;
+#   K  rangee du bas TAPEE AU DOIGT (doigt moteur) : W, N et ⌫ — doigt au centre de la touche, la
+#      pointe tombe ailleurs ; la touche tapee est celle du DOIGT ;
+#   E  ⌫ au doigt efface reellement (Lettres : mot raccourci) ;
 #   G  mise en page : rien ne deborde de l'ecran, rien ne chevauche le clavier ni la croix ;
 #   D  desktop (mode tactile decoche) : pas de clavier, signature de mise en page imprimee
 #      (a comparer a la meme preuve rejouee sur le commit d'origine).
@@ -118,38 +122,33 @@ func _rect(n: Control) -> Rect2:
 	return n.get_global_rect()
 
 
-## R : chaque touche entiere sous la pointe la plus basse permise.
+## R (A2) : clavier a sa place, chaque touche entiere dans l'ecran.
 func _portee(nom: String) -> void:
 	var z := _zone()
-	var bas_max: float = _curseur.pointe_pour_doigt(Vector2(z.get_center().x, z.end.y - GARDE_DOIGT), z).y
-	var pire := INF
-	var pire_touche := ""
-	for t in _touches():
-		var marge: float = bas_max - _rect(t).end.y
-		if marge < pire:
-			pire = marge
-			pire_touche = (t as Button).text if (t as Button).text != "" else "⌫"
 	var clavier: Control = _jeu.get("_clavier")
-	_verifier("R[%s] toutes les touches ENTIERES a portee de la pointe (doigt a %d px du bas)" % [nom, int(GARDE_DOIGT)],
-		pire >= 0.0, "pointe la plus basse y=%.0f, pire touche « %s » (marge %.1f px) ; remontee %.0f px, decalage %.1f px" \
-			% [bas_max, pire_touche, pire, float(clavier.get("remontee")), -float(_curseur.decalage_doigt().y)])
+	var rc := _rect(clavier)
+	var hors := []
+	for t in _touches():
+		if not z.encloses(_rect(t)):
+			hors.append((t as Button).text if (t as Button).text != "" else "⌫")
+	_verifier("R[%s] clavier A SA PLACE (remontee 0, bas = bas de l'ecran), %d touches entieres dans l'ecran" % [nom, _touches().size()],
+		is_zero_approx(float(clavier.get("remontee"))) and absf(rc.end.y - z.end.y) < 0.6 and hors.is_empty(),
+		"remontee %.0f px, clavier y%.0f→%.0f, ecran → %.0f, hors ecran %s" % [float(clavier.get("remontee")), rc.position.y, rc.end.y, z.end.y, hors])
 
 
-## K : la touche `texte` de la rangee du bas, tapee par la pointe (doigt plus bas).
+## K (A2) : la touche `texte` de la rangee du bas, tapee AU DOIGT (doigt au centre, pointe ailleurs).
 func _taper_a_la_pointe(nom: String, texte: String, tapees: Array) -> bool:
 	var t := _touche(texte)
-	var cible := _rect(t).get_center()
-	var d := Doigt.doigt_pour_pointe(_curseur, cible, _zone())
+	var d := _rect(t).get_center()
 	var pointe: Vector2 = _curseur.pointe_pour_doigt(d, _zone())
-	var sous_doigt := _touche_sous(d)
+	var sous_pointe := _touche_sous(pointe)
 	var libelle := "« %s »" % (texte if texte != "" else "⌫")
-	var mise_en_place: bool = pointe.distance_to(cible) < 1.0 and _zone().has_point(d) and sous_doigt != t
-	_verifier("K[%s] %s : pointe dessus, doigt %.0f px plus bas, sur %s" % [nom, libelle, d.y - pointe.y,
-			"la bande de remontee" if sous_doigt == null else "« %s »" % sous_doigt.text],
-		mise_en_place, "doigt %s, pointe %s, cible %s" % [d, pointe, cible])
+	_verifier("K[%s] %s : doigt au centre, pointe %.0f px plus haut, sur %s" % [nom, libelle, d.y - pointe.y,
+			"rien" if sous_pointe == null else "« %s »" % (sous_pointe.text if sous_pointe.text != "" else "⌫")],
+		sous_pointe != t, "doigt %s, pointe %s" % [d, pointe])
 	tapees.clear()
 	await _tap(d)
-	_verifier("K[%s] %s TAPEE a la pointe" % [nom, libelle], tapees == [texte], "tapees %s" % [tapees])
+	_verifier("K[%s] %s TAPEE au DOIGT" % [nom, libelle], tapees == [texte], "tapees %s" % [tapees])
 	return tapees == [texte]
 
 
@@ -232,12 +231,12 @@ func _bas_de_clavier(nom: String) -> void:
 		await _taper_a_la_pointe(nom, "", tapees)
 		await _trames(2)
 		var apres := String(_jeu.get("_mot"))
-		_verifier("E[lettres] ⌫ a la pointe EFFACE (« %s » → « %s »)" % [avant, apres],
+		_verifier("E[lettres] ⌫ au doigt EFFACE (« %s » → « %s »)" % [avant, apres],
 			avant == "WN" and apres == "W")
 
 
 func _derouler() -> void:
-	print("=== PREUVE CLAVIER REMONTE — Lettres (doigt Android) ===")
+	print("=== PREUVE CLAVIER (remontee annulee A2, touches au doigt) — Lettres (doigt Android) ===")
 	print("  user:// = %s" % OS.get_user_data_dir())
 	PinConfig.ecrire_option("interface", "mode_tactile", true)
 	if OS.get_environment("SEULEMENT_DESKTOP") == "":
@@ -257,7 +256,7 @@ func _tactile() -> void:
 			await _demonter()
 	# 2. Rangee du bas tapee a la pointe (Android 20:9)
 	await _fenetre(CIBLES["Android 20:9"])
-	print("--- rangee du bas TAPEE a la pointe (Android 20:9, « moyen ») ---")
+	print("--- rangee du bas TAPEE au doigt (Android 20:9, « moyen ») ---")
 	for nom in JEUX:
 		await _monter(JEUX[nom], true)
 		await _bas_de_clavier(nom)

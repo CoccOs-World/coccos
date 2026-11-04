@@ -22,6 +22,7 @@ const Anneau := preload("res://scripts/effets/anneau.gd")
 const Doigt := preload("res://outils/doigt_moteur.gd")
 
 var _echecs := 0
+var _vise_au_doigt := false  # A3 : geste sur une icone = le doigt lui-meme
 var _doigt_precedent := Vector2.ZERO
 
 
@@ -43,9 +44,11 @@ func _trames(n: int) -> void:
 ## Un geste de doigt comme sur Android, par le VRAI chemin du moteur (outils/doigt_moteur.gd :
 ## ScreenTouch → clic emule fabrique par Godot). `ou` = la cible de la POINTE (visee a la
 ## pointe, REQ_261007 android_visee_a_la_pointe) : le doigt est pose la ou il faut pour l'y amener.
+## A3 (Fabrice 04-11) : les ICONES se prennent au DOIGT du joueur → pour les gestes sur une icone
+## (`_vise_au_doigt` vrai), `ou` est la place du DOIGT lui-meme. Bureau nu, barre, bulle : pointe.
 func _doigt(type: String, ou: Vector2) -> void:
 	var curseur: Node2D = current_scene.get("_curseur")
-	var doigt := Doigt.doigt_pour_pointe(curseur, ou, root.get_visible_rect())
+	var doigt := ou if _vise_au_doigt else Doigt.doigt_pour_pointe(curseur, ou, root.get_visible_rect())
 	if type == "glisse":
 		Doigt.glisser(root, _doigt_precedent, doigt)
 	else:
@@ -144,6 +147,7 @@ func _derouler() -> void:
 	jeu.lancee.connect(func(id: String) -> void: lancements.append(id))
 
 	# A0 doigt qui derive sans appui long : un tap reste un tap, l'icone ne bouge pas
+	_vise_au_doigt = true  # A3 : gestes sur une icone au doigt
 	var avant := jeu.position
 	var p := _centre_bouton(jeu)
 	await _doigt("pose", p)
@@ -169,7 +173,7 @@ func _derouler() -> void:
 		await _doigt("glisse", p.lerp(cible, i / 8.0))
 	await _doigt("leve", cible)
 	var attendu := avant + (cible - p)
-	_verifier("A1 posee sous la pointe au releve", jeu.position.distance_to(attendu) < 1.5,
+	_verifier("A1 posee sous le DOIGT au releve (A3)", jeu.position.distance_to(attendu) < 1.5,
 		"avant %s → apres %s (attendu %s)" % [avant, jeu.position, attendu])
 	_verifier("A1 : AUCUN lancement", lancements.is_empty(), str(lancements))
 	_verifier("A1 : retombee (echelle 1, opaque)", jeu.scale == Vector2.ONE and jeu.modulate.a == 1.0)
@@ -178,6 +182,7 @@ func _derouler() -> void:
 		ranges.has(id_jeu) and Vector2(ranges[id_jeu]).distance_to(jeu.position) < 0.5, str(ranges))
 
 	# B0 option decochee (defaut) : appui long a cote = etoiles, pas de bulle
+	_vise_au_doigt = false  # bureau nu : pointe
 	libre = _point_libre(bureau)
 	anneaux_avant = _anneaux(bureau)
 	var carillon: AudioStreamPlayer = bureau.get("_lecteurs")["etoiles"]
@@ -190,6 +195,7 @@ func _derouler() -> void:
 	await _doigt("leve", libre)
 
 	# A2 appui long sur le jeu puis depose sur le dossier « clavier » = il y entre
+	_vise_au_doigt = true
 	p = _centre_bouton(jeu)
 	await _appui_long(p)
 	cible = _centre_bouton(dossier)
@@ -203,6 +209,7 @@ func _derouler() -> void:
 		PinConfig.lire_option("bureau_rangement", id_jeu, null) == "clavier",
 		"[bureau_rangement] %s = %s" % [id_jeu, PinConfig.lire_option("bureau_rangement", id_jeu, null)])
 	_verifier("A2 : le jeu a quitte le bureau", _icone(bureau, id_jeu) == null)
+	_vise_au_doigt = false
 	await _demonter(bureau)
 
 	# B1 option COCHEE par le parent
@@ -258,6 +265,7 @@ func _derouler() -> void:
 	await _doigt("leve", sur_barre)
 	# appui long sur une icone : elle se souleve (pas de bulle)
 	var dossier2: Control = _icone(bureau, "clavier")
+	_vise_au_doigt = true
 	p = _centre_bouton(dossier2)
 	await _appui_long(p)
 	_verifier("B1 appui long sur une icone : soulevee, pas de bulle",

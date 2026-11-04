@@ -146,7 +146,8 @@ func _attraper(bulle: Node2D) -> void:
 	bulle.queue_free()
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (bulles, boutons du tableau, croix) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (bulles, retour arrière du tableau) ; la croix de
+## fermeture (A2) et la croix « tout effacer » (A3) au DOIGT — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur
@@ -262,6 +263,7 @@ func _creer_tableau() -> void:
 	fleche.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_retour_arriere.add_child(fleche)
 	btn_retour_arriere.pressed.connect(_effacer_derniere)
+	btn_retour_arriere.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A4, cf. visee_pointe.gd)
 	ligne.add_child(btn_retour_arriere)
 
 	var btn_effacer := _creer_bouton_rond(Color(0.85, 0.45, 0.30))
@@ -272,6 +274,7 @@ func _creer_tableau() -> void:
 	btn_effacer.pressed.connect(func() -> void:
 		_mot = ""
 		_label_mot.text = "")
+	btn_effacer.add_to_group(&"au_doigt")  # Android : pris au doigt du joueur (A3, cf. visee_pointe.gd)
 	ligne.add_child(btn_effacer)
 
 
@@ -347,6 +350,7 @@ func _creer_bouton_quitter() -> void:
 	icone.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(icone)
+	btn.add_to_group(&"au_doigt")  # Android : croix prise au doigt du joueur (A2, cf. visee_pointe.gd)
 	btn.pressed.connect(_quitter)
 	add_child(btn)
 

@@ -5,6 +5,8 @@
 #      Android (gamme x2 reposee puis _ready() rejoue : relit la config comme au lancement sur Android).
 #      Attendu : lettres = MEME echelle que les autres petits jeux, et l'echelle CHANGE avec le reglage.
 #   B  BAS DE L'ECRAN de Lettres en mode tactile : la bande sous les touches (repose-doigt de remontee).
+#      A2 (Fabrice 04-11, clavier REMIS A SA PLACE) : il n'y a plus de bande → B verifie remontee 0, fond
+#      creme des touches jusqu'au bas de l'ecran, prairie sur tout l'ecran au-dessus du clavier.
 #      Ce qui y est peint : fond du panneau du clavier (rect + couleur) vs la prairie (Fond.appliquer) ;
 #      couleur moyenne REELLE de la prairie dans cette bande (pixels de l'image, mise en « couvrir »).
 #   L  lisibilite : les touches gardent leur fond creme de panneau et leur couleur ; aucune touche
@@ -130,6 +132,15 @@ func _rect_peint_clavier(clavier: Control) -> Rect2:
 	return Rect2()
 
 
+## Le fond d'ecran (prairie) monte par Fond.appliquer, ou null.
+func fond_ecran(jeu: Control) -> TextureRect:
+	for n in jeu.find_children("*", "TextureRect", true, false):
+		var t := n as TextureRect
+		if t.texture != null and t.texture.resource_path == IMAGE_FOND:
+			return t
+	return null
+
+
 func _bas_ecran() -> void:
 	# Fenetre de telephone Android 20:9 (le headless accepte le redimensionnement ; a poser deux fois)
 	for i in 2:
@@ -167,14 +178,20 @@ func _bas_ecran() -> void:
 					autres.append("touche « %s »" % (c as Button).text)
 			elif c != _jeu:
 				autres.append("%s %s" % [c.get_class(), c.get_global_rect()])
-		_verifier("B[%s] la prairie (Fond) couvre la bande" % taille,
-			fond != null and fond.get_global_rect().encloses(bande))
+		# A2 (Fabrice 04-11) : clavier REMIS A SA PLACE → plus de bande repose-doigt sous les touches,
+		# donc plus de blanc possible en bas. Prairie et verdure de la bande : sans objet (bande vide).
+		_verifier("B[%s] A2 : clavier a sa place, AUCUNE bande sous les touches (remontee 0)" % taille,
+			is_zero_approx(remontee) and absf(peint.end.y - vue.y) < 0.6, "remontee %.1f, fond creme jusqu'a y=%.0f / %.0f" % [remontee, peint.end.y, vue.y])
+		var au_dessus := Rect2(0.0, 0.0, vue.x, peint.position.y)
+		_verifier("B[%s] la prairie (Fond) couvre tout l'ecran au-dessus du clavier" % taille,
+			fond_ecran(_jeu) != null and fond_ecran(_jeu).get_global_rect().encloses(au_dessus))
 		_verifier("B[%s] le fond creme du clavier ne peint PLUS la bande" % taille, couvre < 1.0,
 			"%.0f px² de la bande sous le creme (%.0f %%)" % [couvre, 100.0 * couvre / maxf(bande.get_area(), 1.0)])
 		_verifier("B[%s] rien d'autre peint dans la bande (aucune touche)" % taille, autres.is_empty(), str(autres))
-		var vert := _couleur_prairie(bande, vue)
-		print("  [%s] prairie dans la bande : moyenne %s (R %.2f V %.2f B %.2f)" % [taille, vert.to_html(false), vert.r, vert.g, vert.b])
-		_verifier("B[%s] la bande montre de la VERDURE (vert dominant)" % taille, vert.g > vert.r and vert.g > vert.b)
+		if bande.size.y > 0.0:
+			var vert := _couleur_prairie(bande, vue)
+			print("  [%s] prairie dans la bande : moyenne %s (R %.2f V %.2f B %.2f)" % [taille, vert.to_html(false), vert.r, vert.g, vert.b])
+			_verifier("B[%s] la bande montre de la VERDURE (vert dominant)" % taille, vert.g > vert.r and vert.g > vert.b)
 		# L : les touches gardent leur fond de panneau et leur place
 		var touches := clavier.find_children("*", "Button", true, false)
 		var hors := 0

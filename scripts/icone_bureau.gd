@@ -42,6 +42,7 @@ var deplacable := false  # bureau seulement (pas les fenêtres ni la boîte à i
 var limite_basse := 0.0  # hauteur réservée en bas (barre des tâches)
 var par_appui_long := false  # mode tactile : seul l'appui long soulève l'icône
 var rangeable := false  # jeu dans une fenêtre-dossier : glissé = le ressortir
+var survol_eteint := false  # Android (A3) : prise au doigt → ne s'allume plus au survol
 
 var _btn: Button
 var _appui := false  # clic gauche maintenu sur le bouton
@@ -96,6 +97,8 @@ func _ready() -> void:
 		_dossier = dossier
 		# Survol : le dossier s'éclaircit (retour visuel du bouton transparent)
 		_btn.mouse_entered.connect(func() -> void:
+			if survol_eteint:
+				return
 			dossier.couleur = couleur_dossier.lightened(0.15)
 			dossier.queue_redraw())
 		_btn.mouse_exited.connect(func() -> void:
@@ -147,7 +150,9 @@ func _ready() -> void:
 		image.set_anchors_preset(Control.PRESET_FULL_RECT)
 		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_btn.add_child(image)
-		_btn.mouse_entered.connect(func() -> void: image.modulate = Color(1.12, 1.12, 1.12))
+		_btn.mouse_entered.connect(func() -> void:
+			if not survol_eteint:
+				image.modulate = Color(1.12, 1.12, 1.12))
 		_btn.mouse_exited.connect(func() -> void: image.modulate = Color.WHITE)
 		return_apres_image = true
 	else:
@@ -276,6 +281,12 @@ func _quitter_la_rangee() -> void:
 	scale = Vector2(ECHELLE_SOULEVEE, ECHELLE_SOULEVEE)
 	modulate = Color(1, 1, 1, OPACITE_SOULEVEE)
 	z_index = 1
+
+
+## Android (A3, cf. ViseePointe.eteindre_survols) : l'icône se prend au doigt, elle ne
+## s'éclaire plus quand la pointe (ou le doigt) passe dessus.
+func eteindre_survol() -> void:
+	survol_eteint = true
 
 
 ## Dossier visé (ou plus) par un jeu en vol : il grossit et s'éclaircit —

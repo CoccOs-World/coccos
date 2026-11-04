@@ -1,7 +1,8 @@
 # Preuve de l'APPUI LONG au doigt DANS une fenetre-dossier (REQ_261007 android_dossier_prendre_icone).
 # Monte le VRAI bureau (scenes/bureau.tscn) en MODE TACTILE (config isolee), ouvre le dossier
 # « souris » au doigt et injecte des doigts par le vrai chemin du moteur (outils/doigt_moteur.gd :
-# ScreenTouch/ScreenDrag → clic souris EMULE par Godot), chaque point vise etant celui de la POINTE :
+# ScreenTouch/ScreenDrag → clic souris EMULE par Godot). Depuis A3 (Fabrice 04-11) les icones du
+# bureau et des dossiers se prennent au DOIGT du joueur : chaque point vise est celui du DOIGT :
 #   D0 mode tactile : les jeux de la fenetre sont prenables, par appui long seulement ;
 #   D1 doigt qui derive SANS appui long sur un jeu = il reste dans sa rangee (un tap reste un tap) ;
 #   D2 appui long sur un jeu puis lache DANS la fenetre = souleve, suit le doigt, reprend sa place,
@@ -36,10 +37,9 @@ func _trames(n: int) -> void:
 		await process_frame
 
 
-## Un geste de doigt comme sur Android ; `ou` = la cible de la POINTE (visee a la pointe).
+## Un geste de doigt comme sur Android ; `ou` = la place du DOIGT (icones au doigt, A3).
 func _doigt(type: String, ou: Vector2) -> void:
-	var curseur: Node2D = current_scene.get("_curseur")
-	var doigt := Doigt.doigt_pour_pointe(curseur, ou, root.get_visible_rect())
+	var doigt := ou  # A3 : icones au doigt du joueur (avant : Doigt.doigt_pour_pointe, visee a la pointe)
 	if type == "glisse":
 		Doigt.glisser(root, _doigt_precedent, doigt)
 	else:

@@ -8,13 +8,13 @@
 #   R1 roue      : doigt brut SUR la roue, pointe dehors (au-dessus de la barre) → PRESSEE,
 #                  le clic recu porte le DOIGT (pas la pointe), coccinelle posee au doigt ;
 #   R2 eteindre  : idem ;
-#   R3 roue      : pointe SUR la roue, doigt dessous (marge basse, hors boutons) → pressee aussi
-#                  (la visee a la pointe n'est pas retiree, elle s'ajoute) ;
+#   R3 roue      : pointe SUR la roue, doigt dessous (marge basse, hors boutons) → PAS pressee
+#                  (A3, Fabrice 04-11 : roue et eteindre au doigt SEUL — inverse de l'origine #224) ;
 #   R4 derive    : appui brut sur la roue, doigt qui glisse de 10 px puis se leve → pressee
 #                  (l'exception tient jusqu'au relache) ;
 #   R5 Menu      : HORS exception — doigt brut sur « Menu », pointe dehors → boite FERMEE ;
-#   R6 icone jeu : HORS exception — doigt brut sur l'icone, pointe dehors → AUCUN lancement ;
-#                  pointe sur l'icone, doigt dehors → lancee (acquis 07-10 conserve).
+#   R6 icone jeu : AU DOIGT depuis A3 (Fabrice 04-11, inverse de l'acquis 07-10) — pointe sur
+#                  l'icone, doigt dehors → AUCUN lancement ; doigt brut sur l'icone, pointe dehors → lancee.
 # Les handlers reels des deux boutons (changement de scene / quit) sont debranches ici et
 # remplaces par des compteurs : la preuve verifie le signal `pressed`, pas la suite.
 # Lancement (user:// ISOLE) :
@@ -167,9 +167,9 @@ func _derouler() -> void:
 		return
 	_surveiller(roue, "R-roue", Callable(_bureau, "_aller_reglages"))
 	_surveiller(eteindre, "R-eteindre", Callable(_bureau, "_eteindre"))
-	var exception: Variant = _bureau.get("_boutons_au_doigt")  # absent sur l'origine → rouge, on continue
-	_verifier("exception bornee a DEUX boutons : roue + eteindre",
-		exception is Array and exception.size() == 2 and roue in exception and eteindre in exception, str(exception))
+	# A3 : roue et eteindre sont dans le groupe des elements pris au doigt (avec croix, icones…)
+	_verifier("roue + eteindre dans le groupe « au_doigt » (A3)",
+		roue.is_in_group(&"au_doigt") and eteindre.is_in_group(&"au_doigt"))
 
 	# R1 / R2 : doigt brut sur la roue, puis sur eteindre
 	await _cas_brut("R1 roue", "R-roue", roue)
@@ -185,9 +185,9 @@ func _derouler() -> void:
 	var avant: int = _presses["R-roue"]
 	_recus["R-roue"].clear()
 	await _tap(d)
-	_verifier("R3 pointe sur la roue : PRESSEE (visee a la pointe conservee)", _presses["R-roue"] == avant + 1)
-	_verifier("R3 le clic recu porte la POINTE", _recus["R-roue"].size() == 1 and (_recus["R-roue"][0] as Vector2).distance_to(p) < TOL,
-		"recus %s / pointe %s" % [_recus["R-roue"], p])
+	_verifier("R3 pointe sur la roue, doigt dehors : PAS pressee (au doigt SEUL, A3)", _presses["R-roue"] == avant,
+		"pressed %d fois" % (_presses["R-roue"] - avant))
+	_verifier("R3 la roue ne recoit aucun clic", _recus["R-roue"].is_empty(), "recus %s / pointe %s" % [_recus["R-roue"], p])
 
 	# R4 : derive de 10 px pendant l'appui brut → toujours pressee
 	d = Vector2(r.get_center().x - 5.0, r.position.y + MARGE)
@@ -222,18 +222,21 @@ func _derouler() -> void:
 	var lancements := []
 	jeu.lancee.connect(func(id: String) -> void: lancements.append(id))
 	var rj: Rect2 = (jeu.get("_btn") as Control).get_global_rect()
-	d = Vector2(rj.get_center().x, rj.position.y + MARGE)
-	p = _pointe(d)
-	_verifier("R6a mise en place : doigt SUR l'icone, pointe dehors", rj.has_point(d) and not rj.has_point(p), "doigt %s, pointe %s" % [d, p])
-	await _tap(d)
-	_verifier("R6a icone hors exception : AUCUN lancement au doigt brut", lancements.is_empty(), str(lancements))
+	# R6a (A3) : pointe sur l'icone, doigt dehors (sous l'icone, hors de toute autre) → rien
 	p = Vector2(rj.get_center().x, rj.end.y - MARGE)
 	d = _doigt_pour(p)
-	var scene_avant := current_scene
-	_verifier("R6b mise en place : pointe SUR l'icone, doigt dehors", rj.has_point(p) and not rj.has_point(d), "doigt %s, pointe %s" % [d, p])
+	_verifier("R6a mise en place : pointe SUR l'icone, doigt dehors", rj.has_point(p) and not rj.has_point(d), "doigt %s, pointe %s" % [d, p])
 	await _tap(d)
 	await _trames(4)
-	_verifier("R6b pointe sur l'icone : lancee (acquis 07-10 conserve)", not lancements.is_empty() or current_scene != scene_avant,
+	_verifier("R6a pointe sur l'icone, doigt dehors : AUCUN lancement (au doigt, A3)", lancements.is_empty(), str(lancements))
+	# R6b (A3) : doigt brut sur l'icone, pointe dehors → lancee
+	d = Vector2(rj.get_center().x, rj.position.y + MARGE)
+	p = _pointe(d)
+	var scene_avant := current_scene
+	_verifier("R6b mise en place : doigt SUR l'icone, pointe dehors", rj.has_point(d) and not rj.has_point(p), "doigt %s, pointe %s" % [d, p])
+	await _tap(d)
+	await _trames(4)
+	_verifier("R6b doigt brut sur l'icone : LANCEE (au doigt, A3)", not lancements.is_empty() or current_scene != scene_avant,
 		"lancements %s" % [lancements])
 	_fin()
 
