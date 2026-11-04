@@ -157,7 +157,7 @@ func _input(event: InputEvent) -> void:
 			_bouton_tenu = 0
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (clics, croix) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (clics) ; la croix au DOIGT (A2) — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur
@@ -186,6 +186,7 @@ func _creer_bouton_quitter() -> void:
 	icone.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(icone)
+	btn.add_to_group(&"au_doigt")  # Android : croix prise au doigt du joueur (A2, cf. visee_pointe.gd)
 	btn.pressed.connect(_quitter)
 	add_child(btn)
 

@@ -13,7 +13,8 @@
 ##
 ## Usage (jeux clavier, en mode tactile seulement — voir tactile.gd) :
 ##   _clavier = (load(dossier + "/clavier_virtuel.gd") as GDScript).new()
-##   _clavier.curseur = _curseur   # remontée à la portée de la pointe (voir plus bas)
+##   _clavier.curseur = _curseur   # FACULTATIF : remontée à la portée de la pointe (voir plus bas) —
+##                                 # plus aucun jeu ne l’utilise depuis A2 (touches au doigt du joueur)
 ##   _clavier.encombrement_change.connect(_ajuster_au_clavier)   # le contenu se pousse au-dessus
 ##   add_child(_clavier)
 ##   _curseur.move_to_front()   # le curseur-doigt reste visible sur les touches
@@ -60,6 +61,7 @@ func _ready() -> void:
 	# la taille courante (offsets compensatoires) — il faut aussi poser les offsets.
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # la bande avale les taps entre les touches
+	add_to_group(&"au_doigt")  # Android : touches prises au doigt du joueur (A2, cf. visee_pointe.gd)
 
 	# Le panneau lui-même ne peint rien : le fond crème est dessiné SOUS LES TOUCHES seulement
 	# (cf. _draw), la bande repose-doigt de la remontée laisse voir la prairie (demande Fabrice 07-10).

@@ -120,8 +120,7 @@ func _ready() -> void:
 	add_child(tactile)
 	tactile.appui_long.connect(_clic_droit)
 	if Tactile.actif():
-		_clavier = _Clavier.new()
-		_clavier.curseur = _curseur  # touches remontées à portée de la POINTE
+		_clavier = _Clavier.new()  # à sa place, en bas : touches prises au DOIGT (A2), plus de remontée
 		_clavier.encombrement_change.connect(_ajuster_au_clavier)
 		add_child(_clavier)
 		_curseur.move_to_front()  # le curseur-doigt reste visible sur les touches
@@ -168,7 +167,7 @@ func _creer_curseur() -> void:
 ## appel tant qu'aucune voix n'a été trouvée. Repli : n'importe quelle voix
 ## disponible (mieux qu'un silence). "" si le système n'a aucune voix.
 func _creer_bulle_et_mot() -> void:
-	# En mode tactile, le clavier dessiné (REMONTÉ à portée de la pointe du curseur réglé)
+	# En mode tactile, le clavier dessiné
 	# occupe le bas : il ne reste qu'une bande au-dessus. La bulle passe donc À
 	# CÔTÉ du tableau (une seule rangée) et prend la hauteur qui reste —
 	# cf. _ajuster_au_clavier.
@@ -307,7 +306,8 @@ func _ajuster_au_clavier(hauteur: float) -> void:
 	_label_lettre.add_theme_font_size_override("font_size", int(cote * 0.65))
 
 
-## Android : le doigt déplace le curseur, la POINTE vise (touches du clavier dessiné, caret, boutons) — cf. visee_pointe.gd.
+## Android : le doigt déplace le curseur, la POINTE vise (caret, boutons) ; touches du clavier dessiné
+## et croix de fermeture au DOIGT du joueur (A2) — cf. visee_pointe.gd.
 func _brancher_visee() -> void:
 	var visee: Node = ViseePointe.new()
 	visee.curseur = _curseur
@@ -550,6 +550,7 @@ func _creer_bouton_quitter() -> void:
 	icone.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(icone)
+	btn.add_to_group(&"au_doigt")  # Android : croix prise au doigt du joueur (A2, cf. visee_pointe.gd)
 	btn.pressed.connect(_quitter)
 	add_child(btn)
 

@@ -14,6 +14,7 @@ const UIStyle := preload("res://scripts/ui_style.gd")
 const IconeBureau := preload("res://scripts/icone_bureau.gd")
 const Pictogramme := preload("res://scripts/pictogramme.gd")
 const Fenetre := preload("res://scripts/fenetre.gd")
+const ViseePointe := preload("res://scripts/visee_pointe.gd")
 const PinConfig := preload("res://scripts/pin_config.gd")
 const AppliExternes := preload("res://scripts/applis_externes.gd")
 const CurseurOS := preload("res://scripts/effets/curseur.gd")
@@ -85,6 +86,7 @@ var _couche_bulle: CanvasLayer  # au-dessus des effets (5), sous le curseur (10)
 var _appui_sur_bureau := false  # le dernier appui gauche est tombé sur le bureau nu
 var _boutons_au_doigt: Array[Control] = []  # roue des réglages + éteindre : au doigt BRUT (#224)
 var _doigt_sur_bouton := false  # le doigt posé l'a été sur l'un d'eux : brut jusqu'au relâché
+var _croix_ecartees: Array = []  # croix sous la pointe, écartées le temps de l'appui (A2)
 
 
 func _ready() -> void:
@@ -255,6 +257,8 @@ func _gui_input(event: InputEvent) -> void:
 ## barre, c'est le doigt BRUT du joueur qui compte — le décalage doigt → pointe est annulé.
 ## Décidée à l'appui (le clic émulé et son ScreenTouch portent le même doigt brut), tenue
 ## jusqu'au relâché du vrai doigt (une petite dérive du doigt ne rebascule pas en visée).
+## EXCEPTION A2 (Fabrice, 04-11) : même règle pour toutes les CROIX DE FERMETURE (fenêtres des
+## dossiers, boîte à icônes — groupe ViseePointe.AU_DOIGT) ; et la pointe ne les prend plus.
 ## Tout le reste du bureau garde la visée à la pointe.
 func _enter_tree() -> void:
 	get_tree().root.window_input.connect(_viser_a_la_pointe)
@@ -262,6 +266,7 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	get_tree().root.window_input.disconnect(_viser_a_la_pointe)
+	ViseePointe.rendre(_croix_ecartees)
 
 
 func _viser_a_la_pointe(event: InputEvent) -> void:
@@ -275,7 +280,8 @@ func _viser_a_la_pointe(event: InputEvent) -> void:
 		return
 	var appui: bool = event is InputEventMouseButton or event is InputEventScreenTouch
 	if appui and event.pressed:
-		_doigt_sur_bouton = _bouton_au_doigt(event.position)
+		_doigt_sur_bouton = _bouton_au_doigt(event.position) \
+				or ViseePointe.sous_le_doigt(get_tree(), event.position)
 	if _doigt_sur_bouton:
 		# #224 : position BRUTE conservée, le bouton sous le doigt reçoit le tap. Le vrai
 		# doigt se relâche en dernier (le moteur livre d'abord le clic émulé) : c'est lui
@@ -284,11 +290,16 @@ func _viser_a_la_pointe(event: InputEvent) -> void:
 			_doigt_sur_bouton = false
 		return
 	var pointe: Vector2 = _pointe_fenetre(event.position)
+	if appui and event.pressed:
+		# A2 : la pointe ne prend pas les croix (doigt ailleurs) — cf. visee_pointe.gd
+		ViseePointe.neutraliser(get_tree(), pointe, _croix_ecartees)
 	if event is InputEventMouseMotion or event is InputEventScreenDrag:
 		event.relative = pointe - _pointe_fenetre(event.position - event.relative)
 	event.position = pointe
 	if event is InputEventMouse:
 		event.global_position = pointe
+	if event is InputEventScreenTouch and not event.pressed:
+		ViseePointe.rendre(_croix_ecartees)
 
 
 ## Pointe pour un doigt, en coordonnées de la FENÊTRE (l'étirement vers le viewport vient après).

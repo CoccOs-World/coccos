@@ -81,6 +81,7 @@ func _ready() -> void:
 	croix.set_anchors_preset(Control.PRESET_FULL_RECT)
 	croix.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_fermer.add_child(croix)
+	btn_fermer.add_to_group(&"au_doigt")  # Android : prise au doigt du joueur (A2, cf. visee_pointe.gd)
 	btn_fermer.pressed.connect(queue_free)
 	ligne.add_child(btn_fermer)
 
