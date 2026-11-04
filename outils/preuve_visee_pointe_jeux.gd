@@ -312,9 +312,10 @@ func _souris() -> void:
 		print("  (croix : aucun point « doigt dessus / pointe dehors » — bords fondus au coin ; doigt au centre)")
 	else:
 		d = _doigt_pour(p)
+	p = _pointe_pour(d)  # lue AVANT le tap : la croix ferme le jeu et libere son curseur
 	await _tap_doigt(d)
 	_verifier("Sb croix (A2) : doigt dessus → QUITTE", appuis[0] == 1,
-		"doigt %s, pointe %s, croix %s" % [d, _pointe_pour(d), r])
+		"doigt %s, pointe %s, croix %s" % [d, p, r])
 	await _demonter()
 
 
