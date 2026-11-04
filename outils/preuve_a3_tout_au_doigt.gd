@@ -57,11 +57,18 @@ func _tap_doigt(d: Vector2) -> void:
 	await _trames(3)
 
 
-## Le point n'est sur AUCUN element pris au doigt (marge 4 px) — un doigt « dehors » ne doit rien prendre.
+## Le point n'est sur AUCUN bouton d'un element pris au doigt (marge 4 px) — un doigt « dehors » ne
+## doit rien prendre (il peut tomber sur le libelle d'une icone : un libelle ne lance rien).
 func _libre(q: Vector2) -> bool:
 	for n in get_nodes_in_group(&"au_doigt"):
-		if n is Control and (n as Control).is_visible_in_tree() and (n as Control).get_global_rect().grow(4.0).has_point(q):
-			return false
+		if not (n is Control and (n as Control).is_visible_in_tree()):
+			continue
+		var boutons: Array = (n as Control).find_children("*", "BaseButton", true, false)
+		if n is BaseButton:
+			boutons.append(n)
+		for b in boutons:
+			if (b as Control).is_visible_in_tree() and (b as Control).get_global_rect().grow(4.0).has_point(q):
+				return false
 	return true
 
 
@@ -356,31 +363,26 @@ func _bureau_android() -> void:
 		if dans != null:
 			_verifier("I-fenetre s pas d'eclat au survol", _icone_eteinte(dans))
 
-		# Wm : doigt sur la fenetre, au-dessus d'une icone du bureau cachee → elle n'est pas prise
-		var cachee: Control = null
+		# Wm : doigt sur la fenetre, au-dessus d'une icone du bureau cachee → elle n'est pas prise.
+		# La fenetre est posee de sorte que son coin bas-gauche (marge, sans icone) couvre le jeu direct.
+		var cachee: Control = jeu
 		var point := Vector2.INF
-		var rf := fenetre.get_global_rect()
-		for ic in _icones(bureau):
-			var rb: Rect2 = (ic.get("_btn") as Control).get_global_rect()
-			var inter := rb.intersection(rf)
-			if inter.has_area():
-				for y in range(int(inter.position.y) + 3, int(inter.end.y) - 3, 4):
-					for x in range(int(inter.position.x) + 3, int(inter.end.x) - 3, 4):
-						var q := Vector2(x, y)
-						var sur_fenetre := false
-						for n in get_nodes_in_group(&"au_doigt"):
-							if n is Control and fenetre.is_ancestor_of(n) and (n as Control).get_global_rect().grow(4.0).has_point(q):
-								sur_fenetre = true
-						if not sur_fenetre and point == Vector2.INF:
-							point = q
-				if point != Vector2.INF:
-					cachee = ic
-					break
-		if cachee == null:
-			# aucune icone sous la fenetre : on la pose sur le jeu direct
-			fenetre.position = (jeu.get("_btn") as Control).get_global_rect().get_center() - Vector2(fenetre.size.x / 2.0, fenetre.size.y - 20.0)
-			await _trames(2)
-			_verifier("Wm mise en place : une icone du bureau sous la fenetre", false, "fenetre %s" % fenetre.get_global_rect())
+		var rb: Rect2 = (jeu.get("_btn") as Control).get_global_rect()
+		fenetre.position = rb.get_center() - Vector2(15.0, fenetre.size.y - 15.0)
+		await _trames(2)
+		var inter := rb.intersection(fenetre.get_global_rect())
+		for y in range(int(inter.position.y) + 3, int(inter.end.y) - 3, 4):
+			for x in range(int(inter.position.x) + 3, int(inter.end.x) - 3, 4):
+				var q := Vector2(x, y)
+				var sur_fenetre := false
+				for n in get_nodes_in_group(&"au_doigt"):
+					if n is Control and fenetre.is_ancestor_of(n) and (n as Control).get_global_rect().grow(4.0).has_point(q):
+						sur_fenetre = true
+				if not sur_fenetre and point == Vector2.INF:
+					point = q
+		if point == Vector2.INF:
+			_verifier("Wm mise en place : une icone du bureau sous la fenetre", false,
+				"fenetre %s, icone %s" % [fenetre.get_global_rect(), rb])
 		else:
 			var n_cachee := _compter_icone(cachee, Callable(bureau, "_lancer_appli"))
 			Doigt.toucher(root, point, true)
